@@ -1,7 +1,7 @@
 # `spdlog_setup`
 
 ## Overview
-spdlog file configuration setup for convenience in initializing spdlog. Requires `GCC` 5.0 / `MSVC2015` and above to support c++14 features. For testing purposes only.
+spdlog file configuration setup for convenience in initializing spdlog. Requires `GCC` 6.0 / `MSVC2015` and above to support c++14 features. For testing purposes only.
 
 [![Build Status](https://travis-ci.org/guangie88/spdlog_setup.svg?branch=master)](https://travis-ci.org/guangie88/spdlog_setup)
 [![codecov](https://codecov.io/gh/guangie88/spdlog_setup/branch/master/graph/badge.svg)](https://codecov.io/gh/guangie88/spdlog_setup)
