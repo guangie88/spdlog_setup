@@ -69,7 +69,6 @@ namespace spdlog_setup {
             using ::rustfp::Ok;
             using ::rustfp::Unit;
 
-            static constexpr auto LEVEL = "level";
             const auto value_opt = table->get_as<T>(field);
 
             if (value_opt) {
