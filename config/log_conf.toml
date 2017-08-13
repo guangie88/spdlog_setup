@@ -1,0 +1,38 @@
+# level is optional for both sinks and loggers
+# level for error logging is 'err', not 'error'
+
+# max_size supports suffix
+# - T (terabyte)
+# - G (gigabyte)
+# - M (megabyte)
+# - K (kilobyte)
+# - or simply no suffix (byte)
+
+[[sink]]
+name = "console"
+type = "color_stdout_sink_mt"
+
+[[sink]]
+name = "rotate_out"
+type = "rotating_file_sink_mt"
+base_filename = "../log/spdlog_setup.log"
+max_size = "1M"
+max_files = 10
+level = "info"
+
+[[sink]]
+name = "rotate_err"
+type = "rotating_file_sink_mt"
+base_filename = "../log/spdlog_setup_err.log"
+max_size = "1M"
+max_files = 10
+level = "err"
+
+[[logger]]
+name = "root"
+sinks = ["console", "rotate_out", "rotate_err"]
+level = "trace"
+
+[[logger]]
+name = "console"
+sinks = ["console"]

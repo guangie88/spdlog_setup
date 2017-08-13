@@ -1,0 +1,45 @@
+sudo: required
+dist: trusty
+
+language:
+- cpp
+
+before_install:
+# install the things required to build
+- sudo apt-get update -qq
+- sudo apt-get install software-properties-common python-software-properties -y
+- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+- sudo apt-get update -qq
+- sudo apt-get install gcc g++ gcc-5 g++-5 python doxygen curl wget -y
+- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
+- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 100
+
+# require CMake version >= 3.3
+- wget http://cmake.org/files/v3.9/cmake-3.9.0.tar.gz
+- tar xzf cmake-3.9.0.tar.gz
+- cd cmake-3.9.0
+- ./configure
+- make
+- sudo make install
+- cd "${TRAVIS_BUILD_DIR}"
+
+script:
+- git submodule update --init --recursive
+- mkdir build-debug
+- cd build-debug
+- cmake .. -DCMAKE_BUILD_TYPE=Debug
+- make
+- cd ..
+- mkdir build-release
+- cd build-release
+- cmake .. -DCMAKE_BUILD_TYPE=Release
+- make
+- cd ..
+
+after_success:
+- doxygen Doxyfile
+
+# run unit test and code coverage
+- ./build-debug/bin/unit_test
+- gcov ./build-debug/CMakeFiles/unit_test.dir/src/unit_test/unit_test.cpp.gcno
+- bash <(curl -s https://codecov.io/bash)
