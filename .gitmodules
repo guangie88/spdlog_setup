@@ -10,3 +10,6 @@
 [submodule "deps/Catch"]
 	path = deps/Catch
 	url = https://github.com/philsquared/Catch.git
+[submodule "deps/fmt"]
+	path = deps/fmt
+	url = https://github.com/fmtlib/fmt.git

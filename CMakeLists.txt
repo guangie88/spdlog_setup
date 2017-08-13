@@ -20,6 +20,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Builds all non-executable source directori
 include_directories(
   deps/Catch/include
   deps/cpptoml/include
+  deps/fmt
   deps/rustfp/src
   deps/rustfp/deps/Optional
   deps/rustfp/deps/variant/include
