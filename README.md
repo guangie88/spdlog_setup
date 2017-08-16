@@ -10,11 +10,10 @@ spdlog file configuration setup for convenience in initializing spdlog. Requires
 This guide prefers a CMake out-of-source build style and the unit test executable is assumed (and will be shown in the command line code below) to be in `build/` directory.
 
 In the root directory after `git` cloning:
-
-`mkdir build`
-`cd build`
-`cmake ..`
-`make`
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `make`
 
 Now the unit test executable should be compiled and residing in `build/bin/unit_test`.
 
