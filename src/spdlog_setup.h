@@ -138,7 +138,7 @@ namespace spdlog_setup {
         }
 
         template <class T, class Fn>
-        inline auto add_msg_on_err(
+        auto add_msg_on_err(
             ::rustfp::Result<T, std::string> &&res,
             Fn &&add_msg_on_err_fn) ->
             ::rustfp::Result<T, std::string> {
@@ -266,7 +266,7 @@ namespace spdlog_setup {
                 base_filename, max_filesize, max_files)));
         }
 
-        auto level_from_str(const std::string &level) ->
+        inline auto level_from_str(const std::string &level) ->
             ::rustfp::Result<::spdlog::level::level_enum, std::string> {
 
             // fmt

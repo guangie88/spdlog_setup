@@ -4,7 +4,7 @@ if(MSVC)
   set(CMAKE_CXX_COMPILER cl)
 else()
   set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standards to use (11|14)")
-  set(CMAKE_CXX_COMPILER clang++ CACHE STRING "Compiler to use")
+  set(CMAKE_CXX_COMPILER g++ CACHE STRING "Compiler to use")
 endif()
 
 include(CMakeToolsHelpers OPTIONAL)
