@@ -24,7 +24,8 @@ include_directories(
   deps/rustfp/src
   deps/rustfp/deps/Optional
   deps/rustfp/deps/variant/include
-  deps/spdlog/include)
+  deps/spdlog/include
+  deps/tag_fmt/src)
 
 # libraries finding
 if(${USE_STATIC})

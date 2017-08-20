@@ -15,6 +15,7 @@
 #include "rustfp/unit.h"
 #include "spdlog/sinks/null_sink.h"
 #include "spdlog/sinks/sink.h"
+#include "tag_fmt.h"
 
 #ifdef _WIN32
 #include "spdlog/sinks/wincolor_sink.h"
@@ -26,8 +27,10 @@
 
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <memory>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -397,38 +400,42 @@ namespace spdlog_setup {
                     return Ok(Unit);
                 });
         }
-    }
 
-    inline auto from_file(const std::string &toml_path) ->
-        ::rustfp::Result<::rustfp::unit_t, std::string> {
+        inline void assign_tag_formatter(::tag_fmt::formatter &f) {
+            // base case
+        }
 
-        // fmt
-        using ::fmt::format;
+        template <class P, class... Ps>
+        void assign_tag_formatter(::tag_fmt::formatter &f, const P &p, Ps &&... ps) {
+            f.set_mapping(p.first, p.second);
+            assign_tag_formatter(f, std::forward<Ps>(ps)...);
+        }
 
-        // rustfp
-        using ::rustfp::Err;
-        using ::rustfp::Ok;
-        using ::rustfp::Unit;
+        inline auto setup_impl(const std::shared_ptr<::cpptoml::table> &config) -> ::rustfp::Result<::rustfp::unit_t, std::string> {
+            // fmt
+            using ::fmt::format;
 
-        // std
-        using std::exception;
-        using std::make_shared;
-        using std::move;
-        using std::shared_ptr;
-        using std::string;
-        using std::unordered_map;
-        using std::vector;
-        
-        // table names
-        static constexpr auto SINK_TABLE = "sink";
-        static constexpr auto LOGGER_TABLE = "logger";
+            // rustfp
+            using ::rustfp::Err;
+            using ::rustfp::Ok;
+            using ::rustfp::Unit;
 
-        // common fields
-        static constexpr auto NAME = "name";
-        static constexpr auto SINKS = "sinks";
+            // std
+            using std::exception;
+            using std::make_shared;
+            using std::move;
+            using std::shared_ptr;
+            using std::string;
+            using std::unordered_map;
+            using std::vector;
+            
+            // table names
+            static constexpr auto SINK_TABLE = "sink";
+            static constexpr auto LOGGER_TABLE = "logger";
 
-        try {
-            const auto config = ::cpptoml::parse_file(toml_path);
+            // common fields
+            static constexpr auto NAME = "name";
+            static constexpr auto SINKS = "sinks";
 
             // set up sinks
             const auto sinks = config->get_table_array(SINK_TABLE);
@@ -487,7 +494,74 @@ namespace spdlog_setup {
             }
 
             return Ok(Unit);
+        }
+    }
 
+    template <class... Ps>
+    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) ->
+        ::rustfp::Result<::rustfp::unit_t, std::string> {
+
+        // fmt
+        using ::fmt::format;
+
+        // rustfp
+        using ::rustfp::Err;
+        using ::rustfp::Ok;
+        using ::rustfp::Unit;
+
+        // tag_fmt
+        using ::tag_fmt::make_formatter;
+
+        // std
+        using std::exception;
+        using std::forward;
+        using std::ifstream;
+        using std::string;
+        using std::stringstream;
+
+        try {
+            ifstream file_stream(pre_toml_path);
+
+            if (!file_stream) {
+                return Err(format("Error reading file at '{}'", pre_toml_path));
+            }
+
+            auto formatter = make_formatter();
+            details::assign_tag_formatter(formatter, forward<Ps>(ps)...);
+
+            stringstream pre_toml_ss;
+            pre_toml_ss << file_stream.rdbuf();
+
+            const auto pre_toml_content = pre_toml_ss.str();
+            auto toml_content_res = formatter.apply(pre_toml_content);
+            RUSTFP_LET(toml_content, toml_content_res);
+
+            stringstream toml_ss;
+            toml_ss << toml_content; 
+
+            ::cpptoml::parser parser{toml_ss};
+            const auto config = parser.parse();
+
+            return details::setup_impl(config);
+
+        } catch (const exception &e) {
+            return Err(string(e.what()));
+        }
+    }
+
+    inline auto from_file(const std::string &toml_path) ->
+        ::rustfp::Result<::rustfp::unit_t, std::string> {
+
+        // rustfp
+        using ::rustfp::Err;
+
+        // std
+        using std::exception;
+        using std::string;
+
+        try {
+            const auto config = ::cpptoml::parse_file(toml_path);
+            return details::setup_impl(config);
         } catch (const exception &e) {
             return Err(string(e.what()));
         }

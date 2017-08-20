@@ -13,3 +13,6 @@
 [submodule "deps/fmt"]
 	path = deps/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "deps/tag_fmt"]
+	path = deps/tag_fmt
+	url = https://github.com/guangie88/tag_fmt.git
