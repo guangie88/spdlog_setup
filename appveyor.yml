@@ -1,0 +1,19 @@
+environment:
+  global:
+    PROJECT_NAME: spdlog_setup
+
+  matrix:
+     - GENERATOR: "Visual Studio 14"
+       CONFIG: Debug
+     - GENERATOR: "Visual Studio 14"
+       CONFIG: Release
+
+clone_script:
+  - git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+  - git checkout -qf %APPVEYOR_REPO_COMMIT%
+
+build_script:
+  - mkdir build
+  - cd build
+  - cmake .. -G "%GENERATOR% Win64"
+  - msbuild /m:4 /p:Configuration=%CONFIG% spdlog_setup.sln

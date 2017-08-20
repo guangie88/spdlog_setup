@@ -4,6 +4,7 @@
 spdlog file configuration setup for convenience in initializing spdlog. Requires CMake 3.3 + `GCC` 6.0 / `MSVC2015` and above to support c++14 features. For testing purposes only.
 
 [![Build Status](https://travis-ci.org/guangie88/spdlog_setup.svg?branch=master)](https://travis-ci.org/guangie88/spdlog_setup)
+[![Build status](https://ci.appveyor.com/api/projects/status/srek5xih80104eds/branch/master?svg=true)](https://ci.appveyor.com/project/guangie88/spdlog-setup/branch/master)
 [![codecov](https://codecov.io/gh/guangie88/spdlog_setup/branch/master/graph/badge.svg)](https://codecov.io/gh/guangie88/spdlog_setup)
 
 ## How to Build
