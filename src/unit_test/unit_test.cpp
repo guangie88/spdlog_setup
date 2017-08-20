@@ -112,7 +112,8 @@ TEST_CASE("Parse TOML file for set-up", "[from_file]") {
 TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
     const auto res = ::spdlog_setup::from_file_with_tag_replacement(
         "config/log_conf.pre.toml",
-        make_pair("index", 123));
+        make_pair("index", 123),
+        make_pair("path", "spdlog_setup"));
 
     res.match(
         [](auto) {
@@ -139,5 +140,10 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
 
 TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {
     const auto res = ::spdlog_setup::from_file("config/no_such_file");
+    REQUIRE(res.is_err());
+}
+
+TEST_CASE("Parse pre-TOML file that does not exist", "[from_file_with_tag_replacement_no_such_file]") {
+    const auto res = ::spdlog_setup::from_file_with_tag_replacement("config/no_such_file");
     REQUIRE(res.is_err());
 }

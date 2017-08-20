@@ -10,25 +10,23 @@
 
 [[sink]]
 name = "console"
-type = "color_stdout_sink_mt"
+type = "stdout_sink_mt"
 
 [[sink]]
-name = "rotate_out"
-type = "rotating_file_sink_mt"
-base_filename = "log/{index}-spdlog_setup.log"
-max_size = "1M"
-max_files = 10
+name = "simple_out"
+type = "simple_file_sink_mt"
+filename = "log/simple-{index}-{path}.log"
+truncate = false
 level = "info"
 
 [[sink]]
-name = "rotate_err"
-type = "rotating_file_sink_mt"
-base_filename = "log/{index}-spdlog_setup_err.log"
-max_size = "1M"
-max_files = 10
+name = "simple_err"
+type = "simple_file_sink_mt"
+filename = "log/simple-{index}-{path}_err.log"
+truncate = false
 level = "err"
 
 [[logger]]
 name = "root"
-sinks = ["console", "rotate_out", "rotate_err"]
+sinks = ["console", "simple_out", "simple_err"]
 level = "trace"

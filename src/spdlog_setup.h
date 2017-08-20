@@ -13,8 +13,10 @@
 #include "rustfp/let.h"
 #include "rustfp/result.h"
 #include "rustfp/unit.h"
+#include "spdlog/sinks/file_sinks.h"
 #include "spdlog/sinks/null_sink.h"
 #include "spdlog/sinks/sink.h"
+#include "spdlog/sinks/stdout_sinks.h"
 #include "tag_fmt.h"
 
 #ifdef _WIN32
@@ -44,19 +46,47 @@ namespace spdlog_setup {
      * Describes the sink types in enumeration form.
      */
     enum class SinkType {
+        /** Represents stdout_sink_st **/
+        StdoutSinkSt,
+
+        /** Represents stdout_sink_mt **/
+        StdoutSinkMt,
+
+        /** Represents either wincolor_stdout_sink_st (Windows) or ansicolor_stdout_sink_st (Linux) **/
+        ColorStdoutSinkSt,
+
         /** Represents either wincolor_stdout_sink_mt (Windows) or ansicolor_stdout_sink_mt (Linux) **/
         ColorStdoutSinkMt,
 
-        /** Represents rotating_file_mt **/
-        RotatingFileMt,
+        /** Represents simple_file_sink_st **/
+        SimpleFileSinkSt,
+
+        /** Represents simple_file_sink_mt **/
+        SimpleFileSinkMt,
+
+        /** Represents rotating_file_sink_st **/
+        RotatingFileSinkSt,
+
+        /** Represents rotating_file_sink_mt **/
+        RotatingFileSinkMt,
     };
+
+    /**
+     * Performs spdlog configuration setup from file, with tag
+     * values to be replaced into various primitive values.
+     * @param pre_toml_path Path to the pre-TOML configuration file path.
+     * @return true if setup is successful, otherwise false.
+     */
+    template <class... Ps>
+    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) noexcept ->
+        ::rustfp::Result<::rustfp::unit_t, std::string>;
 
     /**
      * Performs spdlog configuration setup from file.
      * @param toml_path Path to the TOML configuration file path.
      * @return true if setup is successful, otherwise false.
      */
-    auto from_file(const std::string &toml_path) ->
+    auto from_file(const std::string &toml_path) noexcept ->
         ::rustfp::Result<::rustfp::unit_t, std::string>;
 
     // implementation section
@@ -227,23 +257,56 @@ namespace spdlog_setup {
             using std::unordered_map;
 
             static const unordered_map<string, SinkType> MAPPING {
+                {"stdout_sink_st", SinkType::StdoutSinkSt},
+                {"stdout_sink_mt", SinkType::StdoutSinkMt},
+                {"color_stdout_sink_st", SinkType::ColorStdoutSinkSt},
                 {"color_stdout_sink_mt", SinkType::ColorStdoutSinkMt},
-                {"rotating_file_sink_mt", SinkType::RotatingFileMt},
+                {"simple_file_sink_st", SinkType::SimpleFileSinkSt},
+                {"simple_file_sink_mt", SinkType::SimpleFileSinkMt},
+                {"rotating_file_sink_st", SinkType::RotatingFileSinkSt},
+                {"rotating_file_sink_mt", SinkType::RotatingFileSinkMt},
             };
 
             return find_value_from_map(MAPPING, type, format("Invalid sink type '{}' found", type));
         }
 
-        inline auto rotating_file_sink_mt_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
+        template <class SimpleFileSink>
+        auto simple_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
             ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
 
             // fmt
             using ::fmt::format;
 
             // rustfp
-            using ::rustfp::Err;
             using ::rustfp::Ok;
-            using ::rustfp::Result;
+
+            // std
+            using std::make_shared;
+            using std::shared_ptr;
+            using std::string;
+        
+            static constexpr auto FILENAME = "filename";
+            static constexpr auto TRUNCATE = "truncate";
+
+            RUSTFP_LET(filename, value_from_table<string>(
+                sink_table, FILENAME, format("Missing '{}' field of string value for simple_file_sink", FILENAME)));
+
+            RUSTFP_LET(truncate, value_from_table<bool>(
+                sink_table, TRUNCATE, format("Missing '{}' field of bool value for simple_file_sink", TRUNCATE)));
+
+            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<SimpleFileSink>(
+                filename, truncate)));
+        }
+
+        template <class RotatingFileSink>
+        auto rotating_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
+            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+
+            // fmt
+            using ::fmt::format;
+
+            // rustfp
+            using ::rustfp::Ok;
 
             // std
             using std::make_shared;
@@ -255,17 +318,17 @@ namespace spdlog_setup {
             static constexpr auto MAX_FILES = "max_files";
 
             RUSTFP_LET(base_filename, value_from_table<string>(
-                sink_table, BASE_FILENAME, format("Missing '{}' field of string value for rotating_file_sink_mt", BASE_FILENAME)));
+                sink_table, BASE_FILENAME, format("Missing '{}' field of string value for rotating_file_sink", BASE_FILENAME)));
 
             RUSTFP_LET(max_filesize_str, value_from_table<string>(
-                sink_table, MAX_SIZE, format("Missing '{}' field of string value for rotating_file_sink_mt", MAX_SIZE)));
+                sink_table, MAX_SIZE, format("Missing '{}' field of string value for rotating_file_sink", MAX_SIZE)));
 
             RUSTFP_LET(max_filesize, parse_max_size(max_filesize_str));
 
             RUSTFP_LET(max_files, value_from_table<uint64_t>(
-                sink_table, MAX_FILES, format("Missing '{}' field of u64 value for rotating_file_sink_mt", MAX_FILES)));
+                sink_table, MAX_FILES, format("Missing '{}' field of u64 value for rotating_file_sink", MAX_FILES)));
 
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<::spdlog::sinks::rotating_file_sink_mt>(
+            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<RotatingFileSink>(
                 base_filename, max_filesize, max_files)));
         }
 
@@ -338,6 +401,23 @@ namespace spdlog_setup {
             using ::rustfp::Ok;
             using ::rustfp::Result;
 
+            // spdlog
+            using ::spdlog::sinks::rotating_file_sink_mt;
+            using ::spdlog::sinks::rotating_file_sink_st;
+            using ::spdlog::sinks::simple_file_sink_mt;
+            using ::spdlog::sinks::simple_file_sink_st;
+            using ::spdlog::sinks::sink;
+            using ::spdlog::sinks::stdout_sink_mt;
+            using ::spdlog::sinks::stdout_sink_st;
+
+#ifdef _WIN32
+            using color_stdout_sink_st = ::spdlog::sinks::wincolor_stdout_sink_st;
+            using color_stdout_sink_mt = ::spdlog::sinks::wincolor_stdout_sink_mt;
+#else
+            using color_stdout_sink_st = ::spdlog::sinks::ansicolor_stdout_sink_st;
+            using color_stdout_sink_mt = ::spdlog::sinks::ansicolor_stdout_sink_mt;
+#endif
+
             // std
             using std::make_shared;
             using std::move;
@@ -345,13 +425,7 @@ namespace spdlog_setup {
             using std::string;
 
             static constexpr auto TYPE = "type";
-            using sink_result_t = Result<shared_ptr<::spdlog::sinks::sink>, string>;
-
-#ifdef _WIN32
-            using color_stdout_sink_mt = ::spdlog::sinks::wincolor_stdout_sink_mt;
-#else
-            using color_stdout_sink_mt = ::spdlog::sinks::ansicolor_stdout_sink_mt;
-#endif
+            using sink_result_t = Result<shared_ptr<sink>, string>;
 
             RUSTFP_LET(type, value_from_table<string>(sink_table, TYPE, format("Sink missing '{}' field", TYPE)));
 
@@ -359,17 +433,35 @@ namespace spdlog_setup {
                 .and_then([&sink_table, &type](const SinkType sink_type) -> sink_result_t {
                     // find the correct sink type to create
                     switch (sink_type) {
-                        case SinkType::ColorStdoutSinkMt:
-                            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<color_stdout_sink_mt>()));
+                        case SinkType::StdoutSinkSt:
+                            return Ok(shared_ptr<sink>(make_shared<stdout_sink_st>()));
 
-                        case SinkType::RotatingFileMt:
-                            return rotating_file_sink_mt_from_table(sink_table);
+                        case SinkType::StdoutSinkMt:
+                            return Ok(shared_ptr<sink>(make_shared<stdout_sink_mt>()));
+
+                        case SinkType::ColorStdoutSinkSt:
+                            return Ok(shared_ptr<sink>(make_shared<color_stdout_sink_st>()));
+
+                        case SinkType::ColorStdoutSinkMt:
+                            return Ok(shared_ptr<sink>(make_shared<color_stdout_sink_mt>()));
+
+                        case SinkType::SimpleFileSinkSt:
+                            return simple_file_sink_from_table<simple_file_sink_st>(sink_table);
+
+                        case SinkType::SimpleFileSinkMt:
+                            return simple_file_sink_from_table<simple_file_sink_mt>(sink_table);
+
+                        case SinkType::RotatingFileSinkSt:
+                            return rotating_file_sink_from_table<rotating_file_sink_st>(sink_table);
+
+                        case SinkType::RotatingFileSinkMt:
+                            return rotating_file_sink_from_table<rotating_file_sink_mt>(sink_table);
 
                         default:
                             return Err(format("Unexpected sink error with sink type '{}'", type));
                     }
                 })
-                .and_then([&sink_table](shared_ptr<::spdlog::sinks::sink> &&sink) -> sink_result_t {
+                .and_then([&sink_table](shared_ptr<sink> &&sink) -> sink_result_t {
                     // set optional parts and return back the same sink
                     RUSTFP_LET(_sink_level_set, set_sink_level_if_present(sink_table, sink));
                     return Ok(move(sink));
@@ -498,7 +590,7 @@ namespace spdlog_setup {
     }
 
     template <class... Ps>
-    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) ->
+    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) noexcept ->
         ::rustfp::Result<::rustfp::unit_t, std::string> {
 
         // fmt
@@ -549,7 +641,7 @@ namespace spdlog_setup {
         }
     }
 
-    inline auto from_file(const std::string &toml_path) ->
+    inline auto from_file(const std::string &toml_path) noexcept ->
         ::rustfp::Result<::rustfp::unit_t, std::string> {
 
         // rustfp
