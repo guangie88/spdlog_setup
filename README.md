@@ -140,6 +140,8 @@ base_filename = "log/spdlog_setup.log"
 max_size = "1M"
 max_files = 10
 level = "info"
+# optional flag to indicate the set-up to create the log dir first
+create_parent_dir = true
 
 [[sink]]
 name = "rotate_err"
@@ -148,6 +150,7 @@ base_filename = "log/spdlog_setup_err.log"
 max_size = "1M"
 max_files = 10
 level = "err"
+# to show that create_parent_dir is indeed optional (defaults to false)
 
 [[logger]]
 name = "root"
@@ -163,29 +166,42 @@ sinks = ["console"]
 ### Tagged-Base Pre-TOML File Configuration
 
 ```toml
+# level is optional for both sinks and loggers
+# level for error logging is 'err', not 'error'
+
+# max_size supports suffix
+# - T (terabyte)
+# - G (gigabyte)
+# - M (megabyte)
+# - K (kilobyte)
+# - or simply no suffix (byte)
+
 [[sink]]
 name = "console"
 type = "stdout_sink_mt"
 
 [[sink]]
-name = "simple_out"
-type = "simple_file_sink_mt"
-#{index} and {path} to be replaced
-filename = "log/simple-{index}-{path}.log"
-truncate = false
+name = "rotate_out"
+type = "rotating_file_sink_mt"
+base_filename = "log/{index}-info/simple-{path}.log"
+max_size = "1M"
+max_files = 10
 level = "info"
+# optional flag to indicate the set-up to create the log dir first
+create_parent_dir = true
 
 [[sink]]
 name = "simple_err"
 type = "simple_file_sink_mt"
-#{index} and {path} to be replaced
-filename = "log/simple-{index}-{path}_err.log"
+filename = "log/{index}-err/simple-{path}.log"
 truncate = false
 level = "err"
+# optional flag to indicate the set-up to create the log dir first
+create_parent_dir = true
 
 [[logger]]
 name = "root"
-sinks = ["console", "simple_out", "simple_err"]
+sinks = ["console", "rotate_out", "simple_err"]
 level = "trace"
 ```
 

@@ -92,16 +92,75 @@ namespace spdlog_setup {
     // implementation section
 
     namespace details {
+        inline auto get_parent_path(const std::string &file_path) -> std::string {
+            // string
+            using std::string;
+        
+#ifdef _WIN32
+            static constexpr auto DIR_SLASHES = "\\/";
+#else
+            static constexpr auto DIR_SLASHES = '/';
+#endif
+        
+            const auto last_slash_index = file_path.find_last_of(DIR_SLASHES);
+        
+            if (last_slash_index == string::npos) {
+                return "";
+            }
+        
+            return file_path.substr(0, last_slash_index);
+        }
+        
+        inline void native_create_dir(const std::string &dir_path) {
+#ifdef _WIN32
+            CreateDirectory(dir_path.c_str(), nullptr);
+#else
+            mkdir(dir_path.c_str(), 0775);
+#endif
+        }
+        
+        inline auto file_exists(const std::string &file_path) -> bool {
+            static constexpr auto FILE_NOT_FOUND = -1;
+        
+#ifdef _WIN32
+            return _access(file_path.c_str(), F_OK) != FILE_NOT_FOUND;
+#else
+            return access(file_path.c_str(), F_OK) != FILE_NOT_FOUND;
+#endif
+        }
+        
+        inline void create_dirs_impl(const std::string &dir_path) {
+#ifdef _WIN32
+                // check for both empty and drive letter
+            if (dir_path.empty() || (dir_path.length() == 2 && dir_path[1] == ':')) {
+                return;
+            }
+#else
+            if (dir_path.empty()) {
+                return;
+            }
+#endif
+        
+            if (!file_exists(dir_path)) {
+                create_dirs_impl(get_parent_path(dir_path));
+                native_create_dir(dir_path);
+            }
+        }
+        
+        inline void create_directories(const std::string &dir_path) { 
+            create_dirs_impl(dir_path);
+        }
+
         template <class T, class Fn>
         auto if_value_from_table(
             const std::shared_ptr<::cpptoml::table> &table,
             const char field[],
-            Fn &&if_value_fn) -> std::result_of_t<Fn(const std::string &)> {
+            Fn &&if_value_fn) -> std::result_of_t<Fn(const T &)> {
 
             // rustfp
             using ::rustfp::Ok;
             using ::rustfp::Unit;
-
+            
             const auto value_opt = table->get_as<T>(field);
 
             if (value_opt) {
@@ -270,66 +329,30 @@ namespace spdlog_setup {
             return find_value_from_map(MAPPING, type, format("Invalid sink type '{}' found", type));
         }
 
-        template <class SimpleFileSink>
-        auto simple_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
-
-            // fmt
-            using ::fmt::format;
+        inline auto create_parent_dir_if_present(
+            const std::shared_ptr<::cpptoml::table> &sink_table,
+            const std::string &filename) ->
+            ::rustfp::Result<::rustfp::unit_t, std::string> {
 
             // rustfp
             using ::rustfp::Ok;
+            using ::rustfp::Unit;
+            using ::rustfp::unit_t;
+            using ::rustfp::Result;
 
             // std
-            using std::make_shared;
-            using std::shared_ptr;
             using std::string;
-        
-            static constexpr auto FILENAME = "filename";
-            static constexpr auto TRUNCATE = "truncate";
 
-            RUSTFP_LET(filename, value_from_table<string>(
-                sink_table, FILENAME, format("Missing '{}' field of string value for simple_file_sink", FILENAME)));
+            static constexpr auto CREATE_PARENT_DIR = "create_parent_dir";
 
-            RUSTFP_LET(truncate, value_from_table<bool>(
-                sink_table, TRUNCATE, format("Missing '{}' field of bool value for simple_file_sink", TRUNCATE)));
-
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<SimpleFileSink>(
-                filename, truncate)));
-        }
-
-        template <class RotatingFileSink>
-        auto rotating_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
-
-            // fmt
-            using ::fmt::format;
-
-            // rustfp
-            using ::rustfp::Ok;
-
-            // std
-            using std::make_shared;
-            using std::shared_ptr;
-            using std::string;
-        
-            static constexpr auto BASE_FILENAME = "base_filename";
-            static constexpr auto MAX_SIZE = "max_size";
-            static constexpr auto MAX_FILES = "max_files";
-
-            RUSTFP_LET(base_filename, value_from_table<string>(
-                sink_table, BASE_FILENAME, format("Missing '{}' field of string value for rotating_file_sink", BASE_FILENAME)));
-
-            RUSTFP_LET(max_filesize_str, value_from_table<string>(
-                sink_table, MAX_SIZE, format("Missing '{}' field of string value for rotating_file_sink", MAX_SIZE)));
-
-            RUSTFP_LET(max_filesize, parse_max_size(max_filesize_str));
-
-            RUSTFP_LET(max_files, value_from_table<uint64_t>(
-                sink_table, MAX_FILES, format("Missing '{}' field of u64 value for rotating_file_sink", MAX_FILES)));
-
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<RotatingFileSink>(
-                base_filename, max_filesize, max_files)));
+            return if_value_from_table<bool>(sink_table, CREATE_PARENT_DIR,
+                [&filename](const bool flag) -> Result<unit_t, string> {
+                    if (flag) {
+                        create_directories(get_parent_path(filename));
+                    }
+                    
+                    return Ok(Unit);
+                });
         }
 
         inline auto level_from_str(const std::string &level) ->
@@ -379,15 +402,97 @@ namespace spdlog_setup {
             // std
             using std::string;
 
-            using unit_result_t = Result<unit_t, string>;
             static constexpr auto LEVEL = "level";
 
             return if_value_from_table<string>(sink_table, LEVEL,
-                [&sink](const string &level) -> unit_result_t {
-                    RUSTFP_LET(level_enum, level_from_str(level));
+                [&sink](const string &level) -> Result<unit_t, string> {
+                    auto level_enum_res = level_from_str(level);
+                    RUSTFP_LET(level_enum, level_enum_res);
+
                     sink->set_level(level_enum);
                     return Ok(Unit);
                 });
+        }
+
+        template <class SimpleFileSink>
+        auto simple_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
+            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+
+            // fmt
+            using ::fmt::format;
+
+            // rustfp
+            using ::rustfp::Ok;
+
+            // std
+            using std::make_shared;
+            using std::move;
+            using std::shared_ptr;
+            using std::string;
+        
+            static constexpr auto FILENAME = "filename";
+            static constexpr auto TRUNCATE = "truncate";
+
+            auto filename_res = value_from_table<string>(
+                sink_table, FILENAME, format("Missing '{}' field of string value for simple_file_sink", FILENAME));
+
+            RUSTFP_LET(filename, filename_res);
+
+            // must create the directory before creating the sink
+            auto create_parent_dir_res = create_parent_dir_if_present(sink_table, filename);
+            RUSTFP_RET_IF_ERR(create_parent_dir_res);
+
+            auto truncate_res = value_from_table<bool>(
+                sink_table, TRUNCATE, format("Missing '{}' field of bool value for simple_file_sink", TRUNCATE));
+
+            RUSTFP_LET(truncate, truncate_res);
+
+            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<SimpleFileSink>(filename, truncate)));
+        }
+
+        template <class RotatingFileSink>
+        auto rotating_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
+            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+
+            // fmt
+            using ::fmt::format;
+
+            // rustfp
+            using ::rustfp::Ok;
+
+            // std
+            using std::make_shared;
+            using std::shared_ptr;
+            using std::string;
+        
+            static constexpr auto BASE_FILENAME = "base_filename";
+            static constexpr auto MAX_SIZE = "max_size";
+            static constexpr auto MAX_FILES = "max_files";
+
+            auto base_filename_res = value_from_table<string>(
+                sink_table, BASE_FILENAME, format("Missing '{}' field of string value for rotating_file_sink", BASE_FILENAME));
+
+            RUSTFP_LET(base_filename, base_filename_res);
+
+            // must create the directory before creating the sink
+            auto create_parent_dir_res = create_parent_dir_if_present(sink_table, base_filename);
+            RUSTFP_RET_IF_ERR(create_parent_dir_res);
+
+            auto max_filesize_str_res = value_from_table<string>(
+                sink_table, MAX_SIZE, format("Missing '{}' field of string value for rotating_file_sink", MAX_SIZE));
+
+            RUSTFP_LET(max_filesize_str, max_filesize_str_res);
+
+            auto parse_max_size_res = parse_max_size(max_filesize_str);
+            RUSTFP_LET(max_filesize, parse_max_size_res);
+
+            auto max_files_res = value_from_table<uint64_t>(
+                sink_table, MAX_FILES, format("Missing '{}' field of u64 value for rotating_file_sink", MAX_FILES));
+
+            RUSTFP_LET(max_files, max_files_res);
+
+            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<RotatingFileSink>(
+                base_filename, max_filesize, max_files)));
         }
 
         inline auto sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
@@ -427,7 +532,8 @@ namespace spdlog_setup {
             static constexpr auto TYPE = "type";
             using sink_result_t = Result<shared_ptr<sink>, string>;
 
-            RUSTFP_LET(type, value_from_table<string>(sink_table, TYPE, format("Sink missing '{}' field", TYPE)));
+            auto type_res = value_from_table<string>(sink_table, TYPE, format("Sink missing '{}' field", TYPE));
+            RUSTFP_LET(type, type_res);
 
             return sink_type_from_str(type)
                 .and_then([&sink_table, &type](const SinkType sink_type) -> sink_result_t {
@@ -463,7 +569,8 @@ namespace spdlog_setup {
                 })
                 .and_then([&sink_table](shared_ptr<sink> &&sink) -> sink_result_t {
                     // set optional parts and return back the same sink
-                    RUSTFP_LET(_sink_level_set, set_sink_level_if_present(sink_table, sink));
+                    auto set_sink_level_res = set_sink_level_if_present(sink_table, sink);
+                    RUSTFP_RET_IF_ERR(set_sink_level_res);
                     return Ok(move(sink));
                 });
         }
@@ -487,7 +594,9 @@ namespace spdlog_setup {
 
             return if_value_from_table<string>(logger_table, LEVEL,
                 [&logger](const string &level) -> unit_result_t {
-                    RUSTFP_LET(level_enum, level_from_str(level));
+                    auto level_enum_res = level_from_str(level);
+                    RUSTFP_LET(level_enum, level_enum_res);
+
                     logger->set_level(level_enum);
                     return Ok(Unit);
                 });
@@ -539,14 +648,17 @@ namespace spdlog_setup {
             unordered_map<string, shared_ptr<::spdlog::sinks::sink>> sinks_map;
 
             for (const auto &sink_table : *sinks) {
-                RUSTFP_LET(name, details::value_from_table<string>(
-                    sink_table, NAME, format("One of the sinks does not have a '{}' field", NAME)));
+                auto name_res = details::value_from_table<string>(
+                    sink_table, NAME, format("One of the sinks does not have a '{}' field", NAME));
 
-                RUSTFP_LET_MUT(sink, details::add_msg_on_err(details::sink_from_table(sink_table),
+                RUSTFP_LET(name, name_res);
+
+                auto sink_res = details::add_msg_on_err(details::sink_from_table(sink_table),
                     [&name](const string &err_msg) {
                         return format("Sink '{}' error:\n > {}", name, err_msg);
-                    }));
+                    });
 
+                RUSTFP_LET_MUT(sink, sink_res);
                 sinks_map.emplace(name, move(sink));
             }
 
@@ -558,30 +670,36 @@ namespace spdlog_setup {
             }
 
             for (const auto &logger_table : *loggers) {
-                RUSTFP_LET(name, details::value_from_table<string>(
-                    logger_table, NAME, format("One of the loggers does not have a '{}' field", NAME)));
+                auto name_res = details::value_from_table<string>(
+                    logger_table, NAME, format("One of the loggers does not have a '{}' field", NAME));
 
-                RUSTFP_LET(sinks, details::array_from_table<string>(
-                    logger_table, SINKS, format("Logger '{}' does not have a '{}' field of sink names", name, SINKS)));
+                RUSTFP_LET(name, name_res);
+
+                auto sinks_res = details::array_from_table<string>(
+                    logger_table, SINKS, format("Logger '{}' does not have a '{}' field of sink names", name, SINKS));
+
+                RUSTFP_LET(sinks, sinks_res);
 
                 vector<shared_ptr<::spdlog::sinks::sink>> logger_sinks;
                 logger_sinks.reserve(sinks.size());
 
                 for (const auto &sink_name : sinks) {
-                    RUSTFP_LET_MUT(sink, details::find_value_from_map(sinks_map, sink_name,
-                        format("Unable to find sink '{}' for logger '{}'", sink_name, name)));
+                    auto sink_res = details::find_value_from_map(sinks_map, sink_name,
+                        format("Unable to find sink '{}' for logger '{}'", sink_name, name));
 
+                    RUSTFP_LET_MUT(sink, sink_res);
                     logger_sinks.push_back(move(sink));
                 }
 
                 const auto logger = make_shared<::spdlog::logger>(name, logger_sinks.cbegin(), logger_sinks.cend());
 
                 // optional fields
-                RUSTFP_LET(_level, details::add_msg_on_err(details::set_logger_level_if_present(logger_table, logger),
+                auto add_msg_res = details::add_msg_on_err(details::set_logger_level_if_present(logger_table, logger),
                     [&name](const string &err_msg) {
                         return format("Logger '{}' set level error:\n > {}", name, err_msg);
-                    }));
+                    });
 
+                RUSTFP_RET_IF_ERR(add_msg_res);
                 ::spdlog::register_logger(logger);
             }
 

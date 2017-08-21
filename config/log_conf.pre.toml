@@ -13,20 +13,25 @@ name = "console"
 type = "stdout_sink_mt"
 
 [[sink]]
-name = "simple_out"
-type = "simple_file_sink_mt"
-filename = "log/simple-{index}-{path}.log"
-truncate = false
+name = "rotate_out"
+type = "rotating_file_sink_mt"
+base_filename = "log/{index}-info/simple-{path}.log"
+max_size = "1M"
+max_files = 10
 level = "info"
+# optional flag to indicate the set-up to create the log dir first
+create_parent_dir = true
 
 [[sink]]
 name = "simple_err"
 type = "simple_file_sink_mt"
-filename = "log/simple-{index}-{path}_err.log"
+filename = "log/{index}-err/simple-{path}.log"
 truncate = false
 level = "err"
+# optional flag to indicate the set-up to create the log dir first
+create_parent_dir = true
 
 [[logger]]
 name = "root"
-sinks = ["console", "simple_out", "simple_err"]
+sinks = ["console", "rotate_out", "simple_err"]
 level = "trace"

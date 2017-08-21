@@ -19,6 +19,8 @@ base_filename = "log/spdlog_setup.log"
 max_size = "1M"
 max_files = 10
 level = "info"
+# optional flag to indicate the set-up to create the log dir first
+create_parent_dir = true
 
 [[sink]]
 name = "rotate_err"
@@ -27,12 +29,14 @@ base_filename = "log/spdlog_setup_err.log"
 max_size = "1M"
 max_files = 10
 level = "err"
+# to show that create_parent_dir is indeed optional (defaults to false)
 
 [[logger]]
 name = "root"
 sinks = ["console", "rotate_out", "rotate_err"]
 level = "trace"
 
+# unused, for demonstrating that multiple loggers can be created
 [[logger]]
 name = "console"
 sinks = ["console"]
