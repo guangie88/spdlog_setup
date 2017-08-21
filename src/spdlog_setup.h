@@ -6,7 +6,9 @@
 
 #pragma once
 
+#ifndef FMT_HEADER_ONLY
 #define FMT_HEADER_ONLY
+#endif
 
 #include "cpptoml.h"
 #include "fmt/format.h"
@@ -38,6 +40,18 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#ifdef _WIN32
+#include <io.h>
+#include <Windows.h>
+
+#ifndef F_OK
+#define F_OK 0
+#endif
+#else
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 namespace spdlog_setup {
     // declaration section
