@@ -127,7 +127,7 @@ namespace spdlog_setup {
         
         inline void native_create_dir(const std::string &dir_path) {
 #ifdef _WIN32
-            CreateDirectory(dir_path.c_str(), nullptr);
+            CreateDirectoryA(dir_path.c_str(), nullptr);
 #else
             mkdir(dir_path.c_str(), 0775);
 #endif
