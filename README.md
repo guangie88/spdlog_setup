@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/guangie88/spdlog_setup/branch/master/graph/badge.svg)](https://codecov.io/gh/guangie88/spdlog_setup)
 
 ## Requirements
-Requires at least `CMake 3.3`, `GCC 5.0` for Linux, or `MSVC2015` with `MSBuild` for Windows to support c++14 features.
+Requires at least `CMake 3.3`, `GCC 5.0` for Linux, or `MSVC2015` with `MSBuild` for Windows to support C++14 features.
 
 ## Features
 - Initialization of `spdlog` sinks and loggers based on `TOML` configuration file.
@@ -225,7 +225,7 @@ int main(const int argc, const char * argv[]) {
 
     // Rust-like match expression syntax
     // able to type check for success and error safely
-    // but unable to perform early return since .match 
+    // but unable to perform early return because of closure usage
     const auto value = res.match([](auto) {
         // success case
         // assumes that root logger has been initialized
