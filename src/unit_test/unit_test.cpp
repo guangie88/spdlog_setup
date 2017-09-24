@@ -1,3 +1,7 @@
+#ifndef SPDLOG_ENABLE_SYSLOG
+#define SPDLOG_ENABLE_SYSLOG
+#endif
+
 #include "spdlog_setup.h"
 
 #define CATCH_CONFIG_MAIN
@@ -84,7 +88,8 @@ TEST_CASE("Parse max size error", "[parse_max_size_error]") {
 }
 
 TEST_CASE("Parse TOML file for set-up", "[from_file]") {
-    const auto res = ::spdlog_setup::from_file("config/log_conf.toml");
+    const auto res = ::spdlog_setup::from_file("config/log_conf.toml")
+        .or_else([](auto &&) { return ::spdlog_setup::from_file("../config/log_conf.toml"); });
 
     res.match(
         [](auto) {
@@ -110,10 +115,14 @@ TEST_CASE("Parse TOML file for set-up", "[from_file]") {
 }
 
 TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
+    static const auto INDEX_PAIR = make_pair("index", 123);
+    static const auto PATH_PAIR = make_pair("path", "spdlog_setup");
+
     const auto res = ::spdlog_setup::from_file_with_tag_replacement(
-        "config/log_conf.pre.toml",
-        make_pair("index", 123),
-        make_pair("path", "spdlog_setup"));
+        "config/log_conf.pre.toml", INDEX_PAIR, PATH_PAIR).or_else([](auto &&) {
+            return ::spdlog_setup::from_file_with_tag_replacement(
+                "../config/log_conf.pre.toml", INDEX_PAIR, PATH_PAIR);
+        });
 
     res.match(
         [](auto) {
