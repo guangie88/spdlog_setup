@@ -68,6 +68,7 @@ type = "null_sink_st"
 name = "null_sink_mt"
 type = "null_sink_mt"
 
+# only works for Linux
 [[sink]]
 name = "syslog"
 type = "syslog_sink"

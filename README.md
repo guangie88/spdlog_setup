@@ -67,7 +67,7 @@ Now the unit test executable should be compiled and residing in `build/bin/Debug
 - `rotating_file_sink_mt`
 - `null_sink_st`
 - `null_sink_mt`
-- `syslog_sink` (`SPDLOG_ENABLE_SYSLOG` preprocessor definition must be defined before any `spdlog`/`spdlog_setup` header is included)
+- `syslog_sink` (only for Linux, `SPDLOG_ENABLE_SYSLOG` preprocessor definition must be defined before any `spdlog`/`spdlog_setup` header is included)
 
 ## TOML Configuration Example
 
@@ -144,6 +144,7 @@ type = "null_sink_st"
 name = "null_sink_mt"
 type = "null_sink_mt"
 
+# only works for Linux
 [[sink]]
 name = "syslog"
 type = "syslog_sink"
