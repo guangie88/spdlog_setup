@@ -65,9 +65,15 @@ Now the unit test executable should be compiled and residing in `build/bin/Debug
 - `simple_file_sink_mt`
 - `rotating_file_sink_st`
 - `rotating_file_sink_mt`
+- `daily_file_sink_st`
+- `daily_file_sink_mt`
 - `null_sink_st`
 - `null_sink_mt`
 - `syslog_sink` (only for Linux, `SPDLOG_ENABLE_SYSLOG` preprocessor definition must be defined before any `spdlog`/`spdlog_setup` header is included)
+
+Currently `ostream_sink` and `dist_sink` do not fit into the use case and are not supported.
+
+For more information about how the above sinks work in `spdlog`, please refer to the original `spdlog` sinks wiki page at: [https://github.com/gabime/spdlog/wiki/4.-Sinks](https://github.com/gabime/spdlog/wiki/4.-Sinks).
 
 ## TOML Configuration Example
 
@@ -137,6 +143,22 @@ max_files = 10
 level = "err"
 
 [[sink]]
+name = "daily_out"
+type = "daily_file_sink_st"
+base_filename = "log/daily_spdlog_setup.log"
+rotation_hour = 17
+rotation_minute = 30
+level = "info"
+
+[[sink]]
+name = "daily_err"
+type = "daily_file_sink_mt"
+base_filename = "log/daily_spdlog_setup_err.log"
+rotation_hour = 17
+rotation_minute = 30
+level = "err"
+
+[[sink]]
 name = "null_sink_st"
 type = "null_sink_st"
 
@@ -148,7 +170,7 @@ type = "null_sink_mt"
 [[sink]]
 name = "syslog"
 type = "syslog_sink"
-# typically no need to fill up the optional fields below
+# generally no need to fill up the optional fields below
 # ident = "" (default)
 # syslog_option = 0 (default)
 # syslog_facility = LOG_USER (default macro value)
@@ -158,6 +180,7 @@ name = "root"
 sinks = [
     "console_st", "console_mt",
     "color_console_st", "color_console_mt",
+    "daily_out", "daily_err",
     "file_out", "file_err",
     "rotate_out", "rotate_err",
     "null_sink_st", "null_sink_mt",
@@ -167,7 +190,7 @@ level = "trace"
 # unused, for demonstrating that multiple loggers can be created
 [[logger]]
 name = "console"
-sinks = []
+sinks = ["console_st", "console_mt"]
 ```
 
 ### Tagged-Base Pre-TOML File Configuration
@@ -309,4 +332,4 @@ int main(const int argc, const char * argv[]) {
 
 ## Notes
 - Make sure that the directory for the log files to reside in exists before using `spdlog`, unless the `create_parent_dir` flag is set to true for the sink.
-- For the current set of unit tests, the working directory must be at the git root directory so that the `config` and `log` directories can be found.
+- For the current set of unit tests, the working directory must be at the git root directory so that the files in `config` directory can be found.

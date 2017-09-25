@@ -85,14 +85,20 @@ namespace spdlog_setup {
         /** Represents rotating_file_sink_mt */
         RotatingFileSinkMt,
 
-        /** Represents syslog_sink */
-        SyslogSink,
+        /** Represents daily_file_sink_st */
+        DailyFileSinkSt,
+
+        /** Represents daily_file_sink_mt */
+        DailyFileSinkMt,
 
         /** Represents null_sink_st */
         NullSinkSt,
 
         /** Represents null_sink_mt */
         NullSinkMt,
+
+        /** Represents syslog_sink */
+        SyslogSink,        
     };
 
     /**
@@ -367,6 +373,8 @@ namespace spdlog_setup {
                 {"simple_file_sink_mt", SinkType::SimpleFileSinkMt},
                 {"rotating_file_sink_st", SinkType::RotatingFileSinkSt},
                 {"rotating_file_sink_mt", SinkType::RotatingFileSinkMt},
+                {"daily_file_sink_st", SinkType::DailyFileSinkSt},
+                {"daily_file_sink_mt", SinkType::DailyFileSinkMt},
                 {"null_sink_st", SinkType::NullSinkSt},
                 {"null_sink_mt", SinkType::NullSinkMt},
 
@@ -544,6 +552,48 @@ namespace spdlog_setup {
                 base_filename, max_filesize, max_files)));
         }
 
+        template <class DailyFileSink>
+        auto daily_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
+            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+
+            // fmt
+            using ::fmt::format;
+            
+            // rustfp
+            using ::rustfp::Ok;
+
+            // std
+            using std::make_shared;
+            using std::shared_ptr;
+            using std::string;
+        
+            static constexpr auto BASE_FILENAME = "base_filename";
+            static constexpr auto ROTATION_HOUR = "rotation_hour";
+            static constexpr auto ROTATION_MINUTE = "rotation_minute";
+
+            auto base_filename_res = value_from_table<string>(
+                sink_table, BASE_FILENAME, format("Missing '{}' field of string value for daily_file_sink", BASE_FILENAME));
+
+            RUSTFP_LET(base_filename, base_filename_res);
+
+            // must create the directory before creating the sink
+            auto create_parent_dir_res = create_parent_dir_if_present(sink_table, base_filename);
+            RUSTFP_RET_IF_ERR(create_parent_dir_res);
+
+            auto rotation_hour_res = value_from_table<int32_t>(
+                sink_table, ROTATION_HOUR, format("Missing '{}' field of string value for daily_file_sink", ROTATION_HOUR));
+
+            RUSTFP_LET(rotation_hour, rotation_hour_res);
+
+            auto rotation_minute_res = value_from_table<int32_t>(
+                sink_table, ROTATION_MINUTE, format("Missing '{}' field of string value for daily_file_sink", ROTATION_MINUTE));
+
+            RUSTFP_LET(rotation_minute, rotation_minute_res);
+
+            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<DailyFileSink>(
+                base_filename, rotation_hour, rotation_minute)));
+        }
+
 #ifdef SPDLOG_ENABLE_SYSLOG
 
         inline auto syslog_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
@@ -599,6 +649,8 @@ namespace spdlog_setup {
             using ::rustfp::Result;
 
             // spdlog
+            using ::spdlog::sinks::daily_file_sink_mt;
+            using ::spdlog::sinks::daily_file_sink_st;
             using ::spdlog::sinks::null_sink_mt;
             using ::spdlog::sinks::null_sink_st;
             using ::spdlog::sinks::rotating_file_sink_mt;
@@ -657,6 +709,12 @@ namespace spdlog_setup {
                         case SinkType::RotatingFileSinkMt:
                             return rotating_file_sink_from_table<rotating_file_sink_mt>(sink_table);
 
+                        case SinkType::DailyFileSinkSt:
+                            return daily_file_sink_from_table<daily_file_sink_st>(sink_table);
+
+                        case SinkType::DailyFileSinkMt:
+                            return daily_file_sink_from_table<daily_file_sink_mt>(sink_table);
+
                         case SinkType::NullSinkSt:
                             return Ok(shared_ptr<sink>(make_shared<null_sink_st>()));
 
@@ -664,10 +722,8 @@ namespace spdlog_setup {
                             return Ok(shared_ptr<sink>(make_shared<null_sink_mt>()));
 
 #ifdef SPDLOG_ENABLE_SYSLOG
-
                         case SinkType::SyslogSink:
                             return syslog_sink_from_table(sink_table);
-
 #endif
 
                         default:

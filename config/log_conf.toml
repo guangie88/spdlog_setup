@@ -61,6 +61,22 @@ max_files = 10
 level = "err"
 
 [[sink]]
+name = "daily_out"
+type = "daily_file_sink_st"
+base_filename = "log/daily_spdlog_setup.log"
+rotation_hour = 17
+rotation_minute = 30
+level = "info"
+
+[[sink]]
+name = "daily_err"
+type = "daily_file_sink_mt"
+base_filename = "log/daily_spdlog_setup_err.log"
+rotation_hour = 17
+rotation_minute = 30
+level = "err"
+
+[[sink]]
 name = "null_sink_st"
 type = "null_sink_st"
 
@@ -72,7 +88,7 @@ type = "null_sink_mt"
 [[sink]]
 name = "syslog"
 type = "syslog_sink"
-# typically no need to fill up the optional fields below
+# generally no need to fill up the optional fields below
 # ident = "" (default)
 # syslog_option = 0 (default)
 # syslog_facility = LOG_USER (default macro value)
@@ -82,6 +98,7 @@ name = "root"
 sinks = [
     "console_st", "console_mt",
     "color_console_st", "color_console_mt",
+    "daily_out", "daily_err",
     "file_out", "file_err",
     "rotate_out", "rotate_err",
     "null_sink_st", "null_sink_mt",
@@ -91,4 +108,4 @@ level = "trace"
 # unused, for demonstrating that multiple loggers can be created
 [[logger]]
 name = "console"
-sinks = []
+sinks = ["console_st", "console_mt"]
