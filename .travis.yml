@@ -9,28 +9,41 @@ addons:
     packages:
       - gcc-5
       - g++-5
-      - cmake3
       - doxygen
+
+install:
+- DEPS="${TRAVIS_BUILD_DIR}/deps"
+- mkdir -p ${DEPS}
+- |
+  if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+    brew update
+    brew upgrade cmake
+  elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+    travis_retry wget --no-check-certificate https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.sh
+    bash cmake-3.8.2-Linux-x86_64.sh --skip-license --prefix="${DEPS}"
+    export PATH="${DEPS}/bin:${PATH}"
+  fi
 
 script:
 - export CC=/usr/bin/gcc-5 CXX=/usr/bin/g++-5
 - git submodule update --init --recursive
 - mkdir build-debug
 - cd build-debug
-- cmake .. -DCMAKE_BUILD_TYPE=Debug
+- cmake .. -DCMAKE_BUILD_TYPE=Debug -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON
 - cmake --build . -- -j2
 - cd ..
 - mkdir build-release
 - cd build-release
-- cmake .. -DCMAKE_BUILD_TYPE=Release
-- cmake --build . -- -j2
+- cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install
+- cmake --build . --target install -- -j2
 - cd ..
 
 after_success:
 - doxygen Doxyfile
 
 # run unit test and code coverage
-- ./build-debug/bin/unit_test
-- gcov ./build-debug/CMakeFiles/unit_test.dir/src/unit_test/unit_test.cpp.gcno
-- bash <(curl -s https://codecov.io/bash)
+- ./build-debug/spdlog_setup_unit_test -s
+- ./build-release/spdlog_setup_unit_test -s
+# - gcov ./build-debug/CMakeFiles/spdlog_setup_unit_test.dir/src/unit_test/unit_test.cpp.gcno
+# - bash <(curl -s https://codecov.io/bash)
 

@@ -1,12 +1,18 @@
+image:
+  - Visual Studio 2015
+  - Visual Studio 2017
+
+platform:
+  - Win32 
+  - x64
+
+configuration:
+  - Debug
+  - Release
+
 environment:
   global:
     PROJECT_NAME: spdlog_setup
-
-  matrix:
-     - GENERATOR: "Visual Studio 14"
-       CONFIG: Debug
-     - GENERATOR: "Visual Studio 14"
-       CONFIG: Release
 
 clone_script:
   - git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
@@ -15,5 +21,10 @@ clone_script:
 build_script:
   - mkdir build
   - cd build
-  - cmake .. -G "%GENERATOR% Win64"
-  - msbuild /m:4 /p:Configuration=%CONFIG% spdlog_setup.sln
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" set CMAKE_GENERATOR_VS=Visual Studio 14 2015
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" set CMAKE_GENERATOR_VS=Visual Studio 15 2017
+  - if "%PLATFORM%"=="Win32" set CMAKE_GENERATOR_NAME=%CMAKE_GENERATOR_VS%
+  - if "%PLATFORM%"=="x64" set CMAKE_GENERATOR_NAME=%CMAKE_GENERATOR_VS% Win64
+  - cmake .. -G "%CMAKE_GENERATOR_NAME%" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install
+  - cmake --build . --config %CONFIGURATION% --target install
+  - "%CONFIGURATION%\\spdlog_setup_unit_test.exe -s"

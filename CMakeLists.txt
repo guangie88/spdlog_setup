@@ -1,93 +1,77 @@
 cmake_minimum_required(VERSION 3.3)
 
-set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standards to use (11|14)")
-include(CMakeToolsHelpers OPTIONAL)
-
 # project variables
-project(spdlog_setup)
-set(BIN_DIRS unit_test)
-set(USE_STATIC OFF CACHE BOOL "Uses only external static libraries for linking")
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Builds all non-executable source directories as shared libraries")
-
-# deps paths
-# overrides external dependencies
-include_directories(
-  deps/Catch/include
-  deps/cpptoml/include
-  deps/fmt
-  deps/rustfp/src
-  deps/rustfp/deps/Optional
-  deps/rustfp/deps/variant/include
-  deps/spdlog/include
-  deps/tag_fmt/src)
-
-# libraries finding
-if(${USE_STATIC})
-  if(MSVC)
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib)
-  else()
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-  endif()
-endif()
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
-# general fixed project variables
-set(SRC_ROOT_DIR src)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+project(spdlog_setup VERSION 0.1.0 LANGUAGES CXX)
 
 # general fixed compiler settings
-if(MSVC)
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Wall")
+if(${MSVC})
+  set(DEBUG_FLAGS "/W4;")
 else()
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -coverage")
+  set(DEBUG_FLAGS "-Wall;")
 endif()
 
-# performs static/shared libraries global settings
-if(${USE_STATIC})
-  if(MSVC)
-    string(REGEX REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-    string(REGEX REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-    string(REGEX REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL})
-    string(REGEX REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
-  else()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-  endif()
+add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
+include(CMakeToolsHelpers OPTIONAL)
+
+# Catch does not have modular CMake mechanism
+add_subdirectory(deps/cpptoml)
+add_subdirectory(deps/spdlog)
+add_subdirectory(deps/tag_fmt)
+
+# spdlog_setup
+add_library(spdlog_setup INTERFACE)
+
+target_include_directories(spdlog_setup
+  INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(spdlog_setup
+  INTERFACE
+    cpptoml
+    spdlog
+    tag_fmt)
+
+install(TARGETS spdlog_setup EXPORT spdlog_setup)
+install(FILES include/spdlog_setup.h DESTINATION include)
+
+install(EXPORT spdlog_setup
+  FILE spdlog_setup-targets.cmake
+  NAMESPACE spdlog_setup::
+  DESTINATION lib/cmake/spdlog_setup)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  cmake/spdlog_setup-config.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config.cmake"
+  INSTALL_DESTINATION lib/cmake/spdlog_setup
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
+  VERSION ${spdlog_setup_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+install(
+  FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
+  DESTINATION lib/cmake/spdlog_setup)
+
+# spdlog_setup_unit_test
+if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
+  add_executable(spdlog_setup_unit_test
+    src/unit_test/unit_test.cpp)
+
+  set_property(TARGET spdlog_setup_unit_test PROPERTY CXX_STANDARD 14)
+
+  target_include_directories(spdlog_setup_unit_test
+    PRIVATE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch/include>)
+
+  target_link_libraries(spdlog_setup_unit_test
+    PRIVATE
+      spdlog_setup)
 endif()
-
-# recursive build
-file(GLOB SRC_DIRS ${CMAKE_SOURCE_DIR}/${SRC_ROOT_DIR}/*)
-
-# performs action on directories with source files
-foreach(SRC_DIR ${SRC_DIRS})
-  file(GLOB CXX_SRC_FILES ${SRC_DIR}/*.cpp ${SRC_DIR}/*.cxx)
-
-  # filters out directories with no source files
-  if(CXX_SRC_FILES)
-    get_filename_component(PROJ_NAME ${SRC_DIR} NAME)
-
-    # check if to build as executable or library
-    if(PROJ_NAME IN_LIST BIN_DIRS)
-      add_executable(${PROJ_NAME} ${CXX_SRC_FILES})
-    else()
-      add_library(${PROJ_NAME} ${CXX_SRC_FILES})
-    endif()
-
-    # add in all the include and library dependencies
-    ## need to evaluate all the project libraries into the actual library file paths
-    set(SUBST_PROJ_LIBS)
-
-    if(PROJ_LIBS_${PROJ_NAME})
-      foreach(PROJ_LIB ${PROJ_LIBS_${PROJ_NAME}})
-        list(APPEND SUBST_PROJ_LIBS ${${PROJ_LIB}})
-      endforeach()
-    endif()
-
-    target_include_directories(${PROJ_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/${SRC_ROOT_DIR})
-    target_link_libraries(${PROJ_NAME} ${LOCAL_PROJ_LIBS_${PROJ_NAME}} ${SUBST_PROJ_LIBS} Threads::Threads)
-  endif()
-endforeach()
