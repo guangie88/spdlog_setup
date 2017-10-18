@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/guangie88/spdlog_setup/branch/master/graph/badge.svg)](https://codecov.io/gh/guangie88/spdlog_setup)
 
 ## Requirements
-Requires at least `CMake 3.3`, `GCC 5.0` for Linux, or `MSVC2015` with `MSBuild` for Windows to support C++14 features.
+Requires at least `CMake 3.6`, `GCC 5.0` for Linux, or `MSVC2015` with `MSBuild` for Windows to support C++14 features.
 
 ## Features
 - Initialization of `spdlog` sinks and loggers based on `TOML` configuration file.
@@ -25,36 +25,55 @@ If the repository has already been cloned without the submodules, then instead r
 in order to clone all the submodule dependencies.
 
 ## Dependencies
-This repository uses the following dependencies:
+This repository uses the following dependencies directly:
 - [`Catch`](https://github.com/philsquared/Catch)
 - [`cpptoml`](https://github.com/skystrife/cpptoml)
-- [`fmt`](https://github.com/fmtlib/fmt)
-- [`rustfp`](https://github.com/guangie88/rustfp)
 - [`spdlog`](https://github.com/gabime/spdlog)
 - [`tag_fmt`](https://github.com/guangie88/tag_fmt)
 
 ## How to Build
-This guide prefers a `CMake` out-of-source build style.
+This guide prefers a `CMake` out-of-source build style. For build with unit tests, add `-DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON` during the CMake configuration.
+
+## How to Install
+The installation step of `CMake` copies out the entire list of header files required for `spdlog_setup` into the installation directory. To change the installation directory, add `-DCMAKE_INSTALL_PREFIX:PATH=install` during the CMake configuration.
 
 ### Linux (`GCC`)
 In the root directory after `git` cloning:
-- `mkdir build`
-- `cd build`
-- (Debug) `cmake .. -DCMAKE_BUILD_TYPE=Debug` / (Release) `cmake .. -DCMAKE_BUILD_TYPE=Release`
+
+#### Debug without Installation
+- `mkdir build-debug`
+- `cd build-debug`
+- `cmake .. -DCMAKE_BUILD_TYPE=Debug -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON`
 - `cmake --build .`
 
-Now the unit test executable should be compiled and residing in `build/bin/unit_test`.
+Now the unit test executable should be compiled and residing in `build-debug/spdlog_setup_unit_test`.
+
+#### Release with Installation
+- `mkdir build-release`
+- `cd build-release`
+- `cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install`
+- `cmake --build . --target install`
+
+Now the unit test executable should be compiled and residing in `build-release/spdlog_setup_unit_test`.
+
+The header files should be installed in `build-release/install/include`.
 
 ### Windows (`MSVC2015`)
 Ensure that [`Microsoft Build Tools 2015`](https://www.microsoft.com/en-sg/download/details.aspx?id=48159) and [`Visual C++ Build Tools 2015`](http://landinghub.visualstudio.com/visual-cpp-build-tools) (or `Visual Studio 2015`) have been installed.
 
 In the root directory after `git` cloning:
+
 - `mkdir build`
 - `cd build`
-- `cmake .. -G "Visual Studio 14 Win64"`
-- (Debug) `cmake --build . -- -p:Configuration=Debug spdlog_setup.sln` / (Release) `cmake --build . -- -p:Configuration=Release spdlog_setup.sln`
+- `cmake .. -G "Visual Studio 14 Win64" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install`
+- (Debug) `cmake --build . --config Debug`
+- (Release with installation) `cmake --build . --config Release --target install`
 
-Now the unit test executable should be compiled and residing in `build/bin/Debug/unit_test.exe` / `build/bin/Release/unit_test.exe`.
+Now the unit test executable should be compiled and residing in
+- (Debug) `build/Debug/spdlog_setup_unit_test.exe` or
+- (Release) `build/Release/spdlog_setup_unit_test.exe`.
+
+The header files should be installed in `build/install/include`.
 
 ## Supported Sinks
 - `stdout_sink_st`
@@ -332,4 +351,4 @@ int main(const int argc, const char * argv[]) {
 
 ## Notes
 - Make sure that the directory for the log files to reside in exists before using `spdlog`, unless the `create_parent_dir` flag is set to true for the sink.
-- For the current set of unit tests, the working directory must be at the git root directory so that the files in `config` directory can be found.
+- For the current set of unit tests, the working directory must be at the git root directory or in `build` directory so that the TOML configuration files in `config` directory can be found.
