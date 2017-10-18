@@ -90,8 +90,13 @@ TEST_CASE("Parse max size error", "[parse_max_size_error]") {
 }
 
 TEST_CASE("Parse TOML file for set-up", "[from_file]") {
-    const auto res = ::spdlog_setup::from_file("config/log_conf.toml")
-        .or_else([](auto &&) { return ::spdlog_setup::from_file("../config/log_conf.toml"); });
+#ifdef _WIN32
+    const auto res = ::spdlog_setup::from_file("config/log_conf_win.toml")
+        .or_else([](auto &&) { return ::spdlog_setup::from_file("../config/log_conf_win.toml"); });
+#else
+    const auto res = ::spdlog_setup::from_file("config/log_conf_linux.toml")
+        .or_else([](auto &&) { return ::spdlog_setup::from_file("../config/log_conf_linux.toml"); });
+#endif
 
     res.match(
         [](auto) {
