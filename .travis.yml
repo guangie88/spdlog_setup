@@ -68,7 +68,7 @@ script:
         set -x
         cmake -DCMAKE_BUILD_TYPE="${BUILD}"          \
               -DCMAKE_INSTALL_PREFIX:PATH=install    \
-              -DRUSTFP_INCLUDE_UNIT_TESTS=ON ..
+              -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON ..
       )
       cmake --build . --target install -- -j 2
       ./spdlog_setup_unit_test -s
