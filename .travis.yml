@@ -1,6 +1,8 @@
-dist: trusty
 sudo: false
 language: cpp
+
+git:
+  submodules: true
 
 addons:
   apt:
@@ -11,39 +13,72 @@ addons:
       - g++-5
       - doxygen
 
+matrix:
+  include:
+    # ubuntu 14.04, gcc-5
+    - env: VER=5
+      compiler: gcc
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["g++-5", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, gcc-6
+    - env: VER=6
+      compiler: gcc
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["g++-6", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, gcc-7
+    - env: VER=7
+      compiler: gcc
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["g++-7", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
 install:
-- DEPS="${TRAVIS_BUILD_DIR}/deps"
-- mkdir -p ${DEPS}
-- |
-  if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
-    brew update
-    brew upgrade cmake
-  elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
-    travis_retry wget --no-check-certificate https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.sh
-    bash cmake-3.8.2-Linux-x86_64.sh --skip-license --prefix="${DEPS}"
-    export PATH="${DEPS}/bin:${PATH}"
-  fi
+  # set the correct `CC` and `CXX` environment variables.
+  - |
+    if [ -n "${VER}" ]; then
+      export CC="${CC}-${VER}"
+      export CXX="${CXX}-${VER}"
+    fi
+  - ${CXX} --version
+  # directory for dependency installation.
+  - DEPS="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p ${DEPS}
+  # install newer cmake.
+  - |
+    if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      brew update
+      brew upgrade cmake
+    elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+      travis_retry wget --no-check-certificate https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.sh
+      bash cmake-3.8.2-Linux-x86_64.sh --skip-license --prefix="${DEPS}"
+      export PATH="${DEPS}/bin:${PATH}"
+    fi
 
 script:
-- export CC=/usr/bin/gcc-5 CXX=/usr/bin/g++-5
-- git submodule update --init --recursive
-- mkdir build-debug
-- cd build-debug
-- cmake .. -DCMAKE_BUILD_TYPE=Debug -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON
-- cmake --build . -- -j2
-- cd ..
-- mkdir build-release
-- cd build-release
-- cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install
-- cmake --build . --target install -- -j2
-- cd ..
+  - BUILDS=(Debug Release)
+  - mkdir build
+  - pushd build
+  - |
+    for BUILD in "${BUILDS[@]}"; do
+      (
+        set -x
+        cmake -DCMAKE_BUILD_TYPE="${BUILD}"          \
+              -DCMAKE_INSTALL_PREFIX:PATH=install    \
+              -DRUSTFP_INCLUDE_UNIT_TESTS=ON ..
+      )
+      cmake --build . --target install -- -j 2
+      ./rustfp_unit_test -s
+      # ctest -V
+    done
+  - popd
 
 after_success:
-- doxygen Doxyfile
-
-# run unit test and code coverage
-- ./build-debug/spdlog_setup_unit_test -s
-- ./build-release/spdlog_setup_unit_test -s
-# - gcov ./build-debug/CMakeFiles/spdlog_setup_unit_test.dir/src/unit_test/unit_test.cpp.gcno
-# - bash <(curl -s https://codecov.io/bash)
-
+  # generate document
+  - doxygen Doxyfile
+  # generate code coverage
+  #- gcov ./build-debug/CMakeFiles/rustfp_unit_test.dir/src/rustfp_unit_test/unit_test.cpp.gcno
+  #- bash <(curl -s https://codecov.io/bash)

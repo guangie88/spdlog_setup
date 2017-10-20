@@ -108,7 +108,7 @@ namespace spdlog_setup {
      * @return true if setup is successful, otherwise false.
      */
     template <class... Ps>
-    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) noexcept ->
+    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) ->
         ::rustfp::Result<::rustfp::unit_t, std::string>;
 
     /**
@@ -116,7 +116,7 @@ namespace spdlog_setup {
      * @param toml_path Path to the TOML configuration file path.
      * @return true if setup is successful, otherwise false.
      */
-    auto from_file(const std::string &toml_path) noexcept ->
+    auto from_file(const std::string &toml_path) ->
         ::rustfp::Result<::rustfp::unit_t, std::string>;
 
     // implementation section
@@ -871,7 +871,7 @@ namespace spdlog_setup {
     }
 
     template <class... Ps>
-    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) noexcept ->
+    auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) ->
         ::rustfp::Result<::rustfp::unit_t, std::string> {
 
         // fmt
@@ -922,7 +922,7 @@ namespace spdlog_setup {
         }
     }
 
-    inline auto from_file(const std::string &toml_path) noexcept ->
+    inline auto from_file(const std::string &toml_path) ->
         ::rustfp::Result<::rustfp::unit_t, std::string> {
 
         // rustfp
