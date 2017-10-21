@@ -20,7 +20,6 @@
 #include "spdlog/sinks/sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/syslog_sink.h"
-#include "tag_fmt.h"
 
 #ifdef _WIN32
 #include "spdlog/sinks/wincolor_sink.h"
@@ -109,7 +108,7 @@ namespace spdlog_setup {
      */
     template <class... Ps>
     auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) ->
-        ::rustfp::Result<::rustfp::unit_t, std::string>;
+        rustfp::Result<rustfp::unit_t, std::string>;
 
     /**
      * Performs spdlog configuration setup from file.
@@ -117,7 +116,7 @@ namespace spdlog_setup {
      * @return true if setup is successful, otherwise false.
      */
     auto from_file(const std::string &toml_path) ->
-        ::rustfp::Result<::rustfp::unit_t, std::string>;
+        rustfp::Result<rustfp::unit_t, std::string>;
 
     // implementation section
 
@@ -183,13 +182,13 @@ namespace spdlog_setup {
 
         template <class T, class Fn>
         auto if_value_from_table(
-            const std::shared_ptr<::cpptoml::table> &table,
+            const std::shared_ptr<cpptoml::table> &table,
             const char field[],
             Fn &&if_value_fn) -> std::result_of_t<Fn(const T &)> {
 
             // rustfp
-            using ::rustfp::Ok;
-            using ::rustfp::Unit;
+            using rustfp::Ok;
+            using rustfp::Unit;
             
             const auto value_opt = table->get_as<T>(field);
 
@@ -202,13 +201,13 @@ namespace spdlog_setup {
 
         template <class T>
         auto value_from_table_or(
-            const std::shared_ptr<::cpptoml::table> &table,
+            const std::shared_ptr<cpptoml::table> &table,
             const char field[],
             const T &alt_val) -> T {
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
+            using rustfp::Err;
+            using rustfp::Ok;
 
             const auto value_opt = table->get_as<T>(field);
 
@@ -221,14 +220,14 @@ namespace spdlog_setup {
 
         template <class T>
         auto value_from_table(
-            const std::shared_ptr<::cpptoml::table> &table,
+            const std::shared_ptr<cpptoml::table> &table,
             const char field[],
             const std::string &err_msg) ->
-            ::rustfp::Result<T, std::string> {
+            rustfp::Result<T, std::string> {
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
+            using rustfp::Err;
+            using rustfp::Ok;
 
             const auto value_opt = table->get_as<T>(field);
 
@@ -241,14 +240,14 @@ namespace spdlog_setup {
 
         template <class T>
         auto array_from_table(
-            const std::shared_ptr<::cpptoml::table> &table,
+            const std::shared_ptr<cpptoml::table> &table,
             const char field[],
             const std::string &err_msg) ->
-            ::rustfp::Result<std::vector<T>, std::string> {
+            rustfp::Result<std::vector<T>, std::string> {
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
+            using rustfp::Err;
+            using rustfp::Ok;
 
             const auto array_opt = table->get_array_of<T>(field);
 
@@ -263,11 +262,11 @@ namespace spdlog_setup {
         auto find_value_from_map(
             const Map &m,
             const Key &key,
-            const std::string &err_msg) -> ::rustfp::Result<typename Map::mapped_type, std::string> {
+            const std::string &err_msg) -> rustfp::Result<typename Map::mapped_type, std::string> {
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
+            using rustfp::Err;
+            using rustfp::Ok;
 
             const auto iter = m.find(key);
 
@@ -280,9 +279,9 @@ namespace spdlog_setup {
 
         template <class T, class Fn>
         auto add_msg_on_err(
-            ::rustfp::Result<T, std::string> &&res,
+            rustfp::Result<T, std::string> &&res,
             Fn &&add_msg_on_err_fn) ->
-            ::rustfp::Result<T, std::string> {
+            rustfp::Result<T, std::string> {
 
             // std
             using std::move;
@@ -295,14 +294,14 @@ namespace spdlog_setup {
         }
 
         inline auto parse_max_size(const std::string &max_size_str) ->
-            ::rustfp::Result<uint64_t, std::string> {
+            rustfp::Result<uint64_t, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
+            using rustfp::Err;
+            using rustfp::Ok;
 
             // std
             using std::exception;
@@ -351,14 +350,14 @@ namespace spdlog_setup {
         }
 
         inline auto sink_type_from_str(const std::string &type) ->
-            ::rustfp::Result<SinkType, std::string> {
+            rustfp::Result<SinkType, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustup
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
+            using rustfp::Err;
+            using rustfp::Ok;
 
             // std
             using std::string;
@@ -387,15 +386,15 @@ namespace spdlog_setup {
         }
 
         inline auto create_parent_dir_if_present(
-            const std::shared_ptr<::cpptoml::table> &sink_table,
+            const std::shared_ptr<cpptoml::table> &sink_table,
             const std::string &filename) ->
-            ::rustfp::Result<::rustfp::unit_t, std::string> {
+            rustfp::Result<rustfp::unit_t, std::string> {
 
             // rustfp
-            using ::rustfp::Ok;
-            using ::rustfp::Unit;
-            using ::rustfp::unit_t;
-            using ::rustfp::Result;
+            using rustfp::Ok;
+            using rustfp::Unit;
+            using rustfp::unit_t;
+            using rustfp::Result;
 
             // std
             using std::string;
@@ -413,15 +412,15 @@ namespace spdlog_setup {
         }
 
         inline auto level_from_str(const std::string &level) ->
-            ::rustfp::Result<::spdlog::level::level_enum, std::string> {
+            rustfp::Result<::spdlog::level::level_enum, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
-            using ::rustfp::Result;
+            using rustfp::Err;
+            using rustfp::Ok;
+            using rustfp::Result;
 
             // spdlog
             namespace lv = ::spdlog::level;
@@ -446,15 +445,15 @@ namespace spdlog_setup {
         }
         
         inline auto set_sink_level_if_present(
-            const std::shared_ptr<::cpptoml::table> &sink_table,
+            const std::shared_ptr<cpptoml::table> &sink_table,
             const std::shared_ptr<::spdlog::sinks::sink> &sink) ->
-            ::rustfp::Result<::rustfp::unit_t, std::string> {
+            rustfp::Result<rustfp::unit_t, std::string> {
 
             // rustfp
-            using ::rustfp::Ok;
-            using ::rustfp::Unit;
-            using ::rustfp::unit_t;
-            using ::rustfp::Result;
+            using rustfp::Ok;
+            using rustfp::Unit;
+            using rustfp::unit_t;
+            using rustfp::Result;
 
             // std
             using std::string;
@@ -472,14 +471,14 @@ namespace spdlog_setup {
         }
 
         template <class SimpleFileSink>
-        auto simple_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+        auto simple_file_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
+            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustfp
-            using ::rustfp::Ok;
+            using rustfp::Ok;
 
             // std
             using std::make_shared;
@@ -508,14 +507,14 @@ namespace spdlog_setup {
         }
 
         template <class RotatingFileSink>
-        auto rotating_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+        auto rotating_file_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
+            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustfp
-            using ::rustfp::Ok;
+            using rustfp::Ok;
 
             // std
             using std::make_shared;
@@ -553,14 +552,14 @@ namespace spdlog_setup {
         }
 
         template <class DailyFileSink>
-        auto daily_file_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+        auto daily_file_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
+            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
             
             // rustfp
-            using ::rustfp::Ok;
+            using rustfp::Ok;
 
             // std
             using std::make_shared;
@@ -596,17 +595,17 @@ namespace spdlog_setup {
 
 #ifdef SPDLOG_ENABLE_SYSLOG
 
-        inline auto syslog_sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+        inline auto syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
+            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
 
             // spdlog
             using ::spdlog::sinks::syslog_sink;
         
             // fmt
-            using ::fmt::format;
+            using fmt::format;
             
             // rustfp
-            using ::rustfp::Ok;
+            using rustfp::Ok;
 
             // std
             using std::make_shared;
@@ -637,16 +636,16 @@ namespace spdlog_setup {
 
 #endif
 
-        inline auto sink_from_table(const std::shared_ptr<::cpptoml::table> &sink_table) ->
-            ::rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+        inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
+            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
 
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
-            using ::rustfp::Result;
+            using rustfp::Err;
+            using rustfp::Ok;
+            using rustfp::Result;
 
             // spdlog
             using ::spdlog::sinks::daily_file_sink_mt;
@@ -739,15 +738,15 @@ namespace spdlog_setup {
         }
 
         inline auto set_logger_level_if_present(
-            const std::shared_ptr<::cpptoml::table> &logger_table,
+            const std::shared_ptr<cpptoml::table> &logger_table,
             const std::shared_ptr<::spdlog::logger> &logger) ->
-            ::rustfp::Result<::rustfp::unit_t, std::string> {
+            rustfp::Result<rustfp::unit_t, std::string> {
 
             // rustfp
-            using ::rustfp::Ok;
-            using ::rustfp::Unit;
-            using ::rustfp::unit_t;
-            using ::rustfp::Result;
+            using rustfp::Ok;
+            using rustfp::Unit;
+            using rustfp::unit_t;
+            using rustfp::Result;
 
             // std
             using std::string;
@@ -765,24 +764,14 @@ namespace spdlog_setup {
                 });
         }
 
-        inline void assign_tag_formatter(::tag_fmt::formatter &f) {
-            // base case
-        }
-
-        template <class P, class... Ps>
-        void assign_tag_formatter(::tag_fmt::formatter &f, const P &p, Ps &&... ps) {
-            f.set_mapping(p.first, p.second);
-            assign_tag_formatter(f, std::forward<Ps>(ps)...);
-        }
-
-        inline auto setup_impl(const std::shared_ptr<::cpptoml::table> &config) -> ::rustfp::Result<::rustfp::unit_t, std::string> {
+        inline auto setup_impl(const std::shared_ptr<cpptoml::table> &config) -> rustfp::Result<rustfp::unit_t, std::string> {
             // fmt
-            using ::fmt::format;
+            using fmt::format;
 
             // rustfp
-            using ::rustfp::Err;
-            using ::rustfp::Ok;
-            using ::rustfp::Unit;
+            using rustfp::Err;
+            using rustfp::Ok;
+            using rustfp::Unit;
 
             // std
             using std::exception;
@@ -872,18 +861,15 @@ namespace spdlog_setup {
 
     template <class... Ps>
     auto from_file_with_tag_replacement(const std::string &pre_toml_path, Ps &&... ps) ->
-        ::rustfp::Result<::rustfp::unit_t, std::string> {
+        rustfp::Result<rustfp::unit_t, std::string> {
 
         // fmt
-        using ::fmt::format;
+        using fmt::format;
 
         // rustfp
-        using ::rustfp::Err;
-        using ::rustfp::Ok;
-        using ::rustfp::Unit;
-
-        // tag_fmt
-        using ::tag_fmt::make_formatter;
+        using rustfp::Err;
+        using rustfp::Ok;
+        using rustfp::Unit;
 
         // std
         using std::exception;
@@ -899,20 +885,18 @@ namespace spdlog_setup {
                 return Err(format("Error reading file at '{}'", pre_toml_path));
             }
 
-            auto formatter = make_formatter();
-            details::assign_tag_formatter(formatter, forward<Ps>(ps)...);
-
             stringstream pre_toml_ss;
             pre_toml_ss << file_stream.rdbuf();
 
             const auto pre_toml_content = pre_toml_ss.str();
-            auto toml_content_res = formatter.apply(pre_toml_content);
-            RUSTFP_LET(toml_content, toml_content_res);
+
+            const auto toml_content = format(
+                pre_toml_content, std::forward<Ps>(ps)...);
 
             stringstream toml_ss;
             toml_ss << toml_content; 
 
-            ::cpptoml::parser parser{toml_ss};
+            cpptoml::parser parser{toml_ss};
             const auto config = parser.parse();
 
             return details::setup_impl(config);
@@ -923,17 +907,17 @@ namespace spdlog_setup {
     }
 
     inline auto from_file(const std::string &toml_path) ->
-        ::rustfp::Result<::rustfp::unit_t, std::string> {
+        rustfp::Result<rustfp::unit_t, std::string> {
 
         // rustfp
-        using ::rustfp::Err;
+        using rustfp::Err;
 
         // std
         using std::exception;
         using std::string;
 
         try {
-            const auto config = ::cpptoml::parse_file(toml_path);
+            const auto config = cpptoml::parse_file(toml_path);
             return details::setup_impl(config);
         } catch (const exception &e) {
             return Err(string(e.what()));

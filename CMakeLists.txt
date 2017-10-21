@@ -13,10 +13,10 @@ endif()
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-# Catch does not have modular CMake mechanism
+# fmt and Catch do not have modular CMake mechanism
 add_subdirectory(deps/cpptoml)
+add_subdirectory(deps/rustfp)
 add_subdirectory(deps/spdlog)
-add_subdirectory(deps/tag_fmt)
 
 # spdlog_setup
 add_library(spdlog_setup INTERFACE)
@@ -25,13 +25,14 @@ target_include_directories(spdlog_setup
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/fmt>
     $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(spdlog_setup
   INTERFACE
     cpptoml
-    spdlog
-    tag_fmt)
+    rustfp
+    spdlog)
 
 install(TARGETS spdlog_setup EXPORT spdlog_setup)
 install(FILES include/spdlog_setup.h DESTINATION include)
@@ -75,3 +76,4 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
     PRIVATE
       spdlog_setup)
 endif()
+

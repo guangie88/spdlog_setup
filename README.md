@@ -8,12 +8,20 @@
 [![codecov](https://codecov.io/gh/guangie88/spdlog_setup/branch/master/graph/badge.svg)](https://codecov.io/gh/guangie88/spdlog_setup)
 
 ## Requirements
-Requires at least `CMake 3.6`, `GCC 5.0` for Linux, or `MSVC2015` with `MSBuild` for Windows to support C++14 features.
+Requires at least `CMake 3.6`, `g++-5` for Linux, or `MSVC2015` with `MSBuild` for Windows to support C++14 features.
+
+Tested against:
+- `g++-5`
+- `g++-6`
+- `g++-7`
+- `cl` (v140 / MSVC2015)
+- `cl` (v141 / MSVC2017)
 
 ## Features
 - Initialization of `spdlog` sinks and loggers based on `TOML` configuration file.
 - Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration file.
-- Does not throw exception (unless `std::string` constructor throws `bad_alloc` for now).
+- Uses Rust-like `Result` (or C++ `std::expected`) error handling style.
+- Generally does not throw exception (unless `std::string` constructor throws `bad_alloc`).
 
 ## Repository Checkout
 Since this repository has other git-based dependencies as `git` submodules, use the command:
@@ -28,14 +36,15 @@ in order to clone all the submodule dependencies.
 This repository uses the following dependencies directly:
 - [`Catch`](https://github.com/philsquared/Catch)
 - [`cpptoml`](https://github.com/skystrife/cpptoml)
+- [`fmt`](https://github.com/fmtlib/fmt.git)
+- [`rustfp`](https://github.com/guangie88/rustfp)
 - [`spdlog`](https://github.com/gabime/spdlog)
-- [`tag_fmt`](https://github.com/guangie88/tag_fmt)
 
 ## How to Build
 This guide prefers a `CMake` out-of-source build style. For build with unit tests, add `-DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON` during the CMake configuration.
 
 ## How to Install
-The installation step of `CMake` copies out the entire list of header files required for `spdlog_setup` into the installation directory. To change the installation directory, add `-DCMAKE_INSTALL_PREFIX:PATH=install` during the CMake configuration.
+The installation step of `CMake` copies out the entire list of header files required for `spdlog_setup` into the installation directory. To change the installation directory, add `-DCMAKE_INSTALL_PREFIX=install` during the CMake configuration.
 
 ### Linux (`GCC`)
 In the root directory after `git` cloning:
@@ -51,7 +60,7 @@ Now the unit test executable should be compiled and residing in `build-debug/spd
 #### Release with Installation
 - `mkdir build-release`
 - `cd build-release`
-- `cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install`
+- `cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX=install`
 - `cmake --build . --target install`
 
 Now the unit test executable should be compiled and residing in `build-release/spdlog_setup_unit_test`.
@@ -65,7 +74,7 @@ In the root directory after `git` cloning:
 
 - `mkdir build`
 - `cd build`
-- `cmake .. -G "Visual Studio 14 Win64" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install`
+- `cmake .. -G "Visual Studio 14 Win64" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX=install`
 - (Debug) `cmake --build . --config Debug`
 - (Release with installation) `cmake --build . --config Release --target install`
 
@@ -300,7 +309,6 @@ int main() {
 #include "spdlog_setup.h"
 
 #include <string>
-#include <utility>
 
 int main(const int argc, const char * argv[]) {
     // assumes both index and path are given by command line arguments
@@ -315,10 +323,10 @@ int main(const int argc, const char * argv[]) {
     // tags are anything content that contains {xxx}, where xxx is the name of the tag
     // to be replaced
     const auto res = spdlog_setup::from_file_with_tag_replacement("log_conf.pre.toml",
-        // replaces {index} with actual value in current variable index
-        std::make_pair("index", index),
+        // replaces {index} with actual value in current variable index via fmt mechanism
+        fmt::arg("index", index),
         // replaces {path} with actual value in current variable path
-        std::make_pair("path", path));
+        fmt::arg("path", path));
 
     // Rust-like match expression syntax
     // able to type check for success and error safely
