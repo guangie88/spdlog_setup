@@ -36,6 +36,8 @@ target_link_libraries(spdlog_setup
 
 install(TARGETS spdlog_setup EXPORT spdlog_setup)
 install(FILES include/spdlog_setup.h DESTINATION include)
+install(DIRECTORY deps/fmt/fmt DESTINATION include
+  PATTERN deps/fmt/fmt/*.txt EXCLUDE)
 
 install(EXPORT spdlog_setup
   FILE spdlog_setup-targets.cmake
