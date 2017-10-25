@@ -71,7 +71,7 @@ script:
               -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON ..
       )
       cmake --build . --target install -- -j 2
-      ctest -V
+      ctest -R spdlog_setup_unit_test -V
     done
   - popd
 
