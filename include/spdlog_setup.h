@@ -789,6 +789,7 @@ namespace spdlog_setup {
             // common fields
             static constexpr auto NAME = "name";
             static constexpr auto SINKS = "sinks";
+            static constexpr auto GLOBAL_PATTERN = "global_pattern";
 
             // set up sinks
             const auto sinks = config->get_table_array(SINK_TABLE);
@@ -853,6 +854,18 @@ namespace spdlog_setup {
 
                 RUSTFP_RET_IF_ERR(add_msg_res);
                 ::spdlog::register_logger(logger);
+            }
+
+            // set up possibly the global pattern if present
+            // this must be done after sink and logger setup
+            const auto global_pattern = config->get_as<string>(GLOBAL_PATTERN);
+
+            if (global_pattern) {
+                try {
+                    ::spdlog::set_pattern(*global_pattern);
+                } catch (const exception &e) {
+                    return Err(format("Error setting global pattern: {}", e.what()));
+                }
             }
 
             return Ok(Unit);

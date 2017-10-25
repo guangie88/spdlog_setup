@@ -120,6 +120,9 @@ For more information about how the above sinks work in `spdlog`, please refer to
 # - K (kilobyte)
 # - or simply no suffix (byte)
 
+# check out https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
+global_pattern = "[%Y-%m-%dT%T%z] [%L] <%n>: %v"
+
 [[sink]]
 name = "console_st"
 type = "stdout_sink_st"
