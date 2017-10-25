@@ -27,4 +27,4 @@ build_script:
   - if "%PLATFORM%"=="x64" set CMAKE_GENERATOR_NAME=%CMAKE_GENERATOR_VS% Win64
   - cmake .. -G "%CMAKE_GENERATOR_NAME%" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install
   - cmake --build . --config %CONFIGURATION% --target install
-  - "%CONFIGURATION%\\spdlog_setup_unit_test.exe -s"
+  - ctest -V

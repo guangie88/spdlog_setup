@@ -70,6 +70,9 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
 
   set_property(TARGET spdlog_setup_unit_test PROPERTY CXX_STANDARD 14)
 
+  enable_testing()
+  add_test(spdlog_setup_unit_test spdlog_setup_unit_test -s --force-colour)
+
   target_include_directories(spdlog_setup_unit_test
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch/include>)
