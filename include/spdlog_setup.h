@@ -235,6 +235,9 @@ namespace spdlog_setup {
             using rustfp::None;
             using rustfp::Some;
 
+            // std
+            using std::string;
+
             const auto value_ptr = table->get_as<string>(field);
             return value_ptr ? Some(*value_ptr) : None;
         }
