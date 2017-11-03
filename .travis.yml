@@ -16,7 +16,7 @@ addons:
 matrix:
   include:
     # ubuntu 14.04, gcc-5
-    - env: VER=5
+    - env: VER=5 COV=YES
       compiler: gcc
       os: linux
       dist: trusty
@@ -66,18 +66,21 @@ script:
     for BUILD in "${BUILDS[@]}"; do
       (
         set -x
-        cmake -DCMAKE_BUILD_TYPE="${BUILD}"          \
-              -DCMAKE_INSTALL_PREFIX:PATH=install    \
-              -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON ..
+        cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
+              -DCMAKE_INSTALL_PREFIX:PATH=install        \
+              -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \
+              -DSPDLOG_SETUP_INCLUDE_TEST_COVERAGE=ON ..
       )
       cmake --build . --target install -- -j 2
       ctest -R spdlog_setup_unit_test -V
+
+      if [ "${COV}" = "YES" ] && [ "${BUILD}" = "Debug" ]; then
+        gcov ./CMakeFiles/spdlog_setup_unit_test.dir/src/unit_test/unit_test.cpp.gcno
+        bash <(curl -s https://codecov.io/bash)
+      fi
     done
   - popd
 
 after_success:
   # generate document
   - doxygen Doxyfile
-  # generate code coverage
-  #- gcov ./build-debug/CMakeFiles/spdlog_setup_unit_test.dir/src/spdlog_setup_unit_test/unit_test.cpp.gcno
-  #- bash <(curl -s https://codecov.io/bash)
