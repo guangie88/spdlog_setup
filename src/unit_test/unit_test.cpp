@@ -91,6 +91,8 @@ TEST_CASE("Parse max size error", "[parse_max_size_error]") {
 }
 
 TEST_CASE("Parse TOML file for set-up", "[from_file]") {
+    ::spdlog::drop_all();
+    
 #ifdef _WIN32
     const auto res = spdlog_setup::from_file("config/log_conf_win.toml")
         .or_else([](auto &&) { return spdlog_setup::from_file("../config/log_conf_win.toml"); });
@@ -102,27 +104,31 @@ TEST_CASE("Parse TOML file for set-up", "[from_file]") {
     res.match(
         [](auto) {
             const auto root_logger = ::spdlog::get("root");
+            REQUIRE(root_logger != nullptr);
 
-            if (root_logger != nullptr) {
-                root_logger->trace("Test Message - Trace!");
-                root_logger->debug("Test Message - Debug!");
-                root_logger->info("Test Message - Info!");
-                root_logger->warn("Test Message - Warn!");
-                root_logger->error("Test Message - Error!");
-                root_logger->critical("Test Message - Critical!");
-            } else {
-                cerr << "Unable to get root logger!\n";
-            }
+            root_logger->trace("Test Message - Trace!");
+            root_logger->debug("Test Message - Debug!");
+            root_logger->info("Test Message - Info!");
+            root_logger->warn("Test Message - Warn!");
+            root_logger->error("Test Message - Error!");
+            root_logger->critical("Test Message - Critical!");
+
+            const auto console_logger = ::spdlog::get("console");
+            REQUIRE(console_logger != nullptr);
+
+            console_logger->info("Console Message - Info!");
+            console_logger->error("Console Message - Error!");
         },
         [](const string &msg) {
             cerr << "spdlog_setup::from_file error: " << msg << '\n';
         });
 
     REQUIRE(res.is_ok());
-    ::spdlog::drop_all();
 }
 
 TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
+    ::spdlog::drop_all();
+
     const auto index_arg = arg("index", 123);
     const auto path_arg = arg("path", "spdlog_setup");
 
@@ -135,24 +141,20 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
     res.match(
         [](auto) {
             const auto root_logger = ::spdlog::get("root");
+            REQUIRE(root_logger != nullptr);
 
-            if (root_logger != nullptr) {
-                root_logger->trace("Test Message - Trace!");
-                root_logger->debug("Test Message - Debug!");
-                root_logger->info("Test Message - Info!");
-                root_logger->warn("Test Message - Warn!");
-                root_logger->error("Test Message - Error!");
-                root_logger->critical("Test Message - Critical!");
-            } else {
-                cerr << "Unable to get root logger!\n";
-            }
+            root_logger->trace("Test Message - Trace!");
+            root_logger->debug("Test Message - Debug!");
+            root_logger->info("Test Message - Info!");
+            root_logger->warn("Test Message - Warn!");
+            root_logger->error("Test Message - Error!");
+            root_logger->critical("Test Message - Critical!");
         },
         [](const string &msg) {
             cerr << "spdlog_setup::from_file_with_tag_replacement error: " << msg << '\n';
         });
 
     REQUIRE(res.is_ok());
-    ::spdlog::drop_all();
 }
 
 TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {

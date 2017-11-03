@@ -121,6 +121,33 @@ namespace spdlog_setup {
     // implementation section
 
     namespace details {
+        namespace names {
+            // table names
+            static constexpr auto LOGGER_TABLE = "logger";
+            static constexpr auto PATTERN_TABLE = "pattern";
+            static constexpr auto SINK_TABLE = "sink";
+
+            // field names
+            static constexpr auto BASE_FILENAME = "base_filename";
+            static constexpr auto CREATE_PARENT_DIR = "create_parent_dir";
+            static constexpr auto FILENAME = "filename";
+            static constexpr auto GLOBAL_PATTERN = "global_pattern";
+            static constexpr auto IDENT = "ident";
+            static constexpr auto LEVEL = "level";
+            static constexpr auto MAX_FILES = "max_files";
+            static constexpr auto MAX_SIZE = "max_size";
+            static constexpr auto NAME = "name";
+            static constexpr auto PATTERN = "pattern";
+            static constexpr auto ROTATION_HOUR = "rotation_hour";
+            static constexpr auto ROTATION_MINUTE = "rotation_minute";
+            static constexpr auto SINKS = "sinks";
+            static constexpr auto SYSLOG_FACILITY = "syslog_facility";
+            static constexpr auto SYSLOG_OPTION = "syslog_option";
+            static constexpr auto TRUNCATE = "truncate";
+            static constexpr auto TYPE = "type";
+            static constexpr auto VALUE = "value";
+        }
+
         inline auto get_parent_path(const std::string &file_path) -> std::string {
             // string
             using std::string;
@@ -197,6 +224,19 @@ namespace spdlog_setup {
             }
 
             return Ok(Unit);
+        }
+
+        template <class T>
+        auto value_from_table_opt(
+            const std::shared_ptr<cpptoml::table> &table,
+            const char field[]) -> rustfp::Option<T> {
+
+            // rustfp
+            using rustfp::None;
+            using rustfp::Some;
+
+            const auto value_ptr = table->get_as<string>(field);
+            return value_ptr ? Some(*value_ptr) : None;
         }
 
         template <class T>
@@ -390,6 +430,8 @@ namespace spdlog_setup {
             const std::string &filename) ->
             rustfp::Result<rustfp::unit_t, std::string> {
 
+            using names::CREATE_PARENT_DIR;
+
             // rustfp
             using rustfp::Ok;
             using rustfp::Unit;
@@ -398,8 +440,6 @@ namespace spdlog_setup {
 
             // std
             using std::string;
-
-            static constexpr auto CREATE_PARENT_DIR = "create_parent_dir";
 
             return if_value_from_table<bool>(sink_table, CREATE_PARENT_DIR,
                 [&filename](const bool flag) -> Result<unit_t, string> {
@@ -412,7 +452,7 @@ namespace spdlog_setup {
         }
 
         inline auto level_from_str(const std::string &level) ->
-            rustfp::Result<::spdlog::level::level_enum, std::string> {
+            rustfp::Result<spdlog::level::level_enum, std::string> {
 
             // fmt
             using fmt::format;
@@ -423,7 +463,7 @@ namespace spdlog_setup {
             using rustfp::Result;
 
             // spdlog
-            namespace lv = ::spdlog::level;
+            namespace lv = spdlog::level;
 
             // std
             using std::move;
@@ -446,8 +486,10 @@ namespace spdlog_setup {
         
         inline auto set_sink_level_if_present(
             const std::shared_ptr<cpptoml::table> &sink_table,
-            const std::shared_ptr<::spdlog::sinks::sink> &sink) ->
+            const std::shared_ptr<spdlog::sinks::sink> &sink) ->
             rustfp::Result<rustfp::unit_t, std::string> {
+
+            using names::LEVEL;
 
             // rustfp
             using rustfp::Ok;
@@ -457,8 +499,6 @@ namespace spdlog_setup {
 
             // std
             using std::string;
-
-            static constexpr auto LEVEL = "level";
 
             return if_value_from_table<string>(sink_table, LEVEL,
                 [&sink](const string &level) -> Result<unit_t, string> {
@@ -472,7 +512,11 @@ namespace spdlog_setup {
 
         template <class SimpleFileSink>
         auto simple_file_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
-            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+            rustfp::Result<std::shared_ptr<spdlog::sinks::sink>, std::string> {
+
+            using names::FILENAME;
+            using names::LEVEL;
+            using names::TRUNCATE;
 
             // fmt
             using fmt::format;
@@ -485,9 +529,6 @@ namespace spdlog_setup {
             using std::move;
             using std::shared_ptr;
             using std::string;
-        
-            static constexpr auto FILENAME = "filename";
-            static constexpr auto TRUNCATE = "truncate";
 
             static constexpr auto DEFAULT_TRUNCATE = false;
 
@@ -503,12 +544,16 @@ namespace spdlog_setup {
             const auto truncate = value_from_table_or<bool>(
                 sink_table, TRUNCATE, DEFAULT_TRUNCATE);
 
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<SimpleFileSink>(filename, truncate)));
+            return Ok(shared_ptr<spdlog::sinks::sink>(make_shared<SimpleFileSink>(filename, truncate)));
         }
 
         template <class RotatingFileSink>
         auto rotating_file_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
-            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+            rustfp::Result<std::shared_ptr<spdlog::sinks::sink>, std::string> {
+
+            using names::BASE_FILENAME;
+            using names::MAX_FILES;
+            using names::MAX_SIZE;
 
             // fmt
             using fmt::format;
@@ -520,10 +565,6 @@ namespace spdlog_setup {
             using std::make_shared;
             using std::shared_ptr;
             using std::string;
-        
-            static constexpr auto BASE_FILENAME = "base_filename";
-            static constexpr auto MAX_SIZE = "max_size";
-            static constexpr auto MAX_FILES = "max_files";
 
             auto base_filename_res = value_from_table<string>(
                 sink_table, BASE_FILENAME, format("Missing '{}' field of string value for rotating_file_sink", BASE_FILENAME));
@@ -547,13 +588,17 @@ namespace spdlog_setup {
 
             RUSTFP_LET(max_files, max_files_res);
 
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<RotatingFileSink>(
+            return Ok(shared_ptr<spdlog::sinks::sink>(make_shared<RotatingFileSink>(
                 base_filename, max_filesize, max_files)));
         }
 
         template <class DailyFileSink>
         auto daily_file_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
-            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+            rustfp::Result<std::shared_ptr<spdlog::sinks::sink>, std::string> {
+
+            using names::BASE_FILENAME;
+            using names::ROTATION_HOUR;
+            using names::ROTATION_MINUTE;
 
             // fmt
             using fmt::format;
@@ -565,10 +610,6 @@ namespace spdlog_setup {
             using std::make_shared;
             using std::shared_ptr;
             using std::string;
-        
-            static constexpr auto BASE_FILENAME = "base_filename";
-            static constexpr auto ROTATION_HOUR = "rotation_hour";
-            static constexpr auto ROTATION_MINUTE = "rotation_minute";
 
             auto base_filename_res = value_from_table<string>(
                 sink_table, BASE_FILENAME, format("Missing '{}' field of string value for daily_file_sink", BASE_FILENAME));
@@ -589,17 +630,21 @@ namespace spdlog_setup {
 
             RUSTFP_LET(rotation_minute, rotation_minute_res);
 
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<DailyFileSink>(
+            return Ok(shared_ptr<spdlog::sinks::sink>(make_shared<DailyFileSink>(
                 base_filename, rotation_hour, rotation_minute)));
         }
 
 #ifdef SPDLOG_ENABLE_SYSLOG
 
         inline auto syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
-            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+            rustfp::Result<std::shared_ptr<spdlog::sinks::sink>, std::string> {
+
+            using names::IDENT;
+            using names::SYSLOG_FACILITY;
+            using names::SYSLOG_OPTION;
 
             // spdlog
-            using ::spdlog::sinks::syslog_sink;
+            using spdlog::sinks::syslog_sink;
         
             // fmt
             using fmt::format;
@@ -613,10 +658,6 @@ namespace spdlog_setup {
             using std::string;
 
             // all are optional fields
-            static constexpr auto IDENT = "ident";
-            static constexpr auto SYSLOG_OPTION = "syslog_option";
-            static constexpr auto SYSLOG_FACILITY = "syslog_facility";
-        
             static constexpr auto DEFAULT_IDENT = "";
             static constexpr auto DEFAULT_SYSLOG_OPTION = 0;
             static constexpr auto DEFAULT_SYSLOG_FACILITY = LOG_USER;
@@ -630,14 +671,16 @@ namespace spdlog_setup {
             const auto syslog_facility = value_from_table_or<int32_t>(
                 sink_table, SYSLOG_FACILITY, DEFAULT_SYSLOG_FACILITY);
 
-            return Ok(shared_ptr<::spdlog::sinks::sink>(make_shared<syslog_sink>(
+            return Ok(shared_ptr<spdlog::sinks::sink>(make_shared<syslog_sink>(
                 ident, syslog_option, syslog_facility)));
         }
 
 #endif
 
         inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table) ->
-            rustfp::Result<std::shared_ptr<::spdlog::sinks::sink>, std::string> {
+            rustfp::Result<std::shared_ptr<spdlog::sinks::sink>, std::string> {
+
+            using names::TYPE;
 
             // fmt
             using fmt::format;
@@ -648,24 +691,24 @@ namespace spdlog_setup {
             using rustfp::Result;
 
             // spdlog
-            using ::spdlog::sinks::daily_file_sink_mt;
-            using ::spdlog::sinks::daily_file_sink_st;
-            using ::spdlog::sinks::null_sink_mt;
-            using ::spdlog::sinks::null_sink_st;
-            using ::spdlog::sinks::rotating_file_sink_mt;
-            using ::spdlog::sinks::rotating_file_sink_st;
-            using ::spdlog::sinks::simple_file_sink_mt;
-            using ::spdlog::sinks::simple_file_sink_st;
-            using ::spdlog::sinks::sink;
-            using ::spdlog::sinks::stdout_sink_mt;
-            using ::spdlog::sinks::stdout_sink_st;
+            using spdlog::sinks::daily_file_sink_mt;
+            using spdlog::sinks::daily_file_sink_st;
+            using spdlog::sinks::null_sink_mt;
+            using spdlog::sinks::null_sink_st;
+            using spdlog::sinks::rotating_file_sink_mt;
+            using spdlog::sinks::rotating_file_sink_st;
+            using spdlog::sinks::simple_file_sink_mt;
+            using spdlog::sinks::simple_file_sink_st;
+            using spdlog::sinks::sink;
+            using spdlog::sinks::stdout_sink_mt;
+            using spdlog::sinks::stdout_sink_st;
 
 #ifdef _WIN32
-            using color_stdout_sink_st = ::spdlog::sinks::wincolor_stdout_sink_st;
-            using color_stdout_sink_mt = ::spdlog::sinks::wincolor_stdout_sink_mt;
+            using color_stdout_sink_st = spdlog::sinks::wincolor_stdout_sink_st;
+            using color_stdout_sink_mt = spdlog::sinks::wincolor_stdout_sink_mt;
 #else
-            using color_stdout_sink_st = ::spdlog::sinks::ansicolor_stdout_sink_st;
-            using color_stdout_sink_mt = ::spdlog::sinks::ansicolor_stdout_sink_mt;
+            using color_stdout_sink_st = spdlog::sinks::ansicolor_stdout_sink_st;
+            using color_stdout_sink_mt = spdlog::sinks::ansicolor_stdout_sink_mt;
 #endif
 
             // std
@@ -674,7 +717,6 @@ namespace spdlog_setup {
             using std::shared_ptr;
             using std::string;
 
-            static constexpr auto TYPE = "type";
             using sink_result_t = Result<shared_ptr<sink>, string>;
 
             auto type_res = value_from_table<string>(sink_table, TYPE, format("Sink missing '{}' field", TYPE));
@@ -739,8 +781,10 @@ namespace spdlog_setup {
 
         inline auto set_logger_level_if_present(
             const std::shared_ptr<cpptoml::table> &logger_table,
-            const std::shared_ptr<::spdlog::logger> &logger) ->
+            const std::shared_ptr<spdlog::logger> &logger) ->
             rustfp::Result<rustfp::unit_t, std::string> {
+
+            using names::LEVEL;
 
             // rustfp
             using rustfp::Ok;
@@ -752,7 +796,6 @@ namespace spdlog_setup {
             using std::string;
 
             using unit_result_t = Result<unit_t, string>;
-            static constexpr auto LEVEL = "level";
 
             return if_value_from_table<string>(logger_table, LEVEL,
                 [&logger](const string &level) -> unit_result_t {
@@ -764,13 +807,119 @@ namespace spdlog_setup {
                 });
         }
 
-        inline auto setup_impl(const std::shared_ptr<cpptoml::table> &config) -> rustfp::Result<rustfp::unit_t, std::string> {
+        inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
+            -> rustfp::Result<
+                std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>,
+                std::string> {
+
+            using names::NAME;
+            using names::SINK_TABLE;
+
             // fmt
             using fmt::format;
 
             // rustfp
             using rustfp::Err;
             using rustfp::Ok;
+
+            // std
+            using std::move;
+            using std::shared_ptr;
+            using std::string;
+            using std::unordered_map;
+
+            const auto sinks = config->get_table_array(SINK_TABLE);
+            
+            if (!sinks) {
+                return Err(string("No sinks configured for set-up"));
+            }
+
+            unordered_map<string, shared_ptr<spdlog::sinks::sink>> sinks_map;
+
+            for (const auto &sink_table : *sinks) {
+                auto name_res = value_from_table<string>(
+                    sink_table, NAME, format("One of the sinks does not have a '{}' field", NAME));
+
+                RUSTFP_LET(name, name_res);
+
+                auto sink_res = add_msg_on_err(sink_from_table(sink_table),
+                    [&name](const string &err_msg) {
+                        return format("Sink '{}' error:\n > {}", name, err_msg);
+                    });
+
+                RUSTFP_LET_MUT(sink, sink_res);
+                sinks_map.emplace(move(name), move(sink));
+            }
+
+            return Ok(move(sinks_map));
+        }
+
+        inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
+            -> rustfp::Result<
+                std::unordered_map<std::string, std::string>,
+                std::string> {
+
+            using names::NAME;
+            using names::PATTERN_TABLE;
+            using names::VALUE;
+
+            // fmt
+            using fmt::format;
+
+            // rustfp
+            using rustfp::Err;
+            using rustfp::Ok;
+
+            // std
+            using std::move;
+            using std::string;
+            using std::unordered_map;
+
+            // possible to return an entire empty pattern map
+            unordered_map<string, string> patterns_map;
+
+            const auto formats = config->get_table_array(PATTERN_TABLE);
+            
+            if (formats) {
+                for (const auto &format_table : *formats) {
+                    auto name_res = value_from_table<string>(
+                        format_table, NAME, format("One of the formats does not have a '{}' field", NAME));
+    
+                    RUSTFP_LET(name, name_res);
+    
+                    auto value_res = value_from_table<string>(
+                        format_table, VALUE, format("Format '{}' does not have '{}' field", name, VALUE));
+    
+                    RUSTFP_LET_MUT(value, value_res);
+                    patterns_map.emplace(move(name), move(value));
+                }
+            }
+
+            return Ok(move(patterns_map));
+        }
+
+        inline auto setup_loggers_impl(
+            const std::shared_ptr<cpptoml::table> &config,
+            const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>> &sinks_map,
+            const std::unordered_map<std::string, std::string> &patterns_map)
+            -> rustfp::Result<rustfp::unit_t, std::string> {
+
+            using names::GLOBAL_PATTERN;
+            using names::LOGGER_TABLE;
+            using names::NAME;
+            using names::PATTERN;
+            using names::SINKS;
+
+            // fmt
+            using fmt::format;
+
+            // rustfp
+            using rustfp::Err;
+            using rustfp::Ok;
+            using rustfp::Option;
+            using rustfp::None;
+            using rustfp::Result;
+            using rustfp::Some;
             using rustfp::Unit;
 
             // std
@@ -779,94 +928,109 @@ namespace spdlog_setup {
             using std::move;
             using std::shared_ptr;
             using std::string;
-            using std::unordered_map;
             using std::vector;
-            
-            // table names
-            static constexpr auto SINK_TABLE = "sink";
-            static constexpr auto LOGGER_TABLE = "logger";
 
-            // common fields
-            static constexpr auto NAME = "name";
-            static constexpr auto SINKS = "sinks";
-            static constexpr auto GLOBAL_PATTERN = "global_pattern";
-
-            // set up sinks
-            const auto sinks = config->get_table_array(SINK_TABLE);
-
-            if (!sinks) {
-                return Err(string("No sinks configured for set-up"));
-            }
-
-            unordered_map<string, shared_ptr<::spdlog::sinks::sink>> sinks_map;
-
-            for (const auto &sink_table : *sinks) {
-                auto name_res = details::value_from_table<string>(
-                    sink_table, NAME, format("One of the sinks does not have a '{}' field", NAME));
-
-                RUSTFP_LET(name, name_res);
-
-                auto sink_res = details::add_msg_on_err(details::sink_from_table(sink_table),
-                    [&name](const string &err_msg) {
-                        return format("Sink '{}' error:\n > {}", name, err_msg);
-                    });
-
-                RUSTFP_LET_MUT(sink, sink_res);
-                sinks_map.emplace(name, move(sink));
-            }
-
-            // set up loggers 
             const auto loggers = config->get_table_array(LOGGER_TABLE);
-
+            
             if (!loggers) {
                 return Err(string("No loggers configured for set-up"));
             }
 
+            // set up possibly the global pattern if present
+            const auto global_pattern_opt = value_from_table_opt<string>(config, GLOBAL_PATTERN);
+
             for (const auto &logger_table : *loggers) {
-                auto name_res = details::value_from_table<string>(
+                auto name_res = value_from_table<string>(
                     logger_table, NAME, format("One of the loggers does not have a '{}' field", NAME));
 
                 RUSTFP_LET(name, name_res);
 
-                auto sinks_res = details::array_from_table<string>(
+                auto sinks_res = array_from_table<string>(
                     logger_table, SINKS, format("Logger '{}' does not have a '{}' field of sink names", name, SINKS));
 
                 RUSTFP_LET(sinks, sinks_res);
 
-                vector<shared_ptr<::spdlog::sinks::sink>> logger_sinks;
+                vector<shared_ptr<spdlog::sinks::sink>> logger_sinks;
                 logger_sinks.reserve(sinks.size());
 
                 for (const auto &sink_name : sinks) {
-                    auto sink_res = details::find_value_from_map(sinks_map, sink_name,
+                    auto sink_res = find_value_from_map(sinks_map, sink_name,
                         format("Unable to find sink '{}' for logger '{}'", sink_name, name));
 
                     RUSTFP_LET_MUT(sink, sink_res);
                     logger_sinks.push_back(move(sink));
                 }
 
-                const auto logger = make_shared<::spdlog::logger>(name, logger_sinks.cbegin(), logger_sinks.cend());
+                const auto logger = make_shared<spdlog::logger>(
+                    name,
+                    logger_sinks.cbegin(),
+                    logger_sinks.cend());
 
                 // optional fields
-                auto add_msg_res = details::add_msg_on_err(details::set_logger_level_if_present(logger_table, logger),
+                auto add_msg_res = add_msg_on_err(set_logger_level_if_present(logger_table, logger),
                     [&name](const string &err_msg) {
                         return format("Logger '{}' set level error:\n > {}", name, err_msg);
                     });
 
                 RUSTFP_RET_IF_ERR(add_msg_res);
-                ::spdlog::register_logger(logger);
-            }
 
-            // set up possibly the global pattern if present
-            // this must be done after sink and logger setup
-            const auto global_pattern = config->get_as<string>(GLOBAL_PATTERN);
+                const auto pattern_name_opt = value_from_table_opt<string>(logger_table, PATTERN);
 
-            if (global_pattern) {
+                auto pattern_value_opt_res = pattern_name_opt.match(
+                    [&name, &patterns_map](const string &pattern_name) -> Result<Option<string>, string> {
+                        auto pattern_value_res = find_value_from_map(patterns_map, pattern_name,
+                            format("Pattern name '{}' cannot be found for logger '{}'",
+                                pattern_name,
+                                name));
+
+                        return move(pattern_value_res).map([](string &&pattern_value) {
+                            return Some(move(pattern_value));
+                        });
+                    },
+
+                    [] { return Ok(Option<string>(None)); });
+
+                RUSTFP_LET_MUT(pattern_value_opt, pattern_value_opt_res);
+                auto cloned_global_pattern_opt = global_pattern_opt;
+
+                const auto selected_pattern_opt = move(pattern_value_opt)
+                    .or_else([&cloned_global_pattern_opt] {
+                        return move(cloned_global_pattern_opt);
+                    });
+                
                 try {
-                    ::spdlog::set_pattern(*global_pattern);
+                    selected_pattern_opt.match_some([&logger](const string &pattern) {
+                        logger->set_pattern(pattern);
+                    });
                 } catch (const exception &e) {
-                    return Err(format("Error setting global pattern: {}", e.what()));
+                    return Err(format("Error setting pattern to logger '{}'", name));
                 }
+
+                spdlog::register_logger(logger);
             }
+
+            return Ok(Unit);
+        }
+
+        inline auto setup_impl(const std::shared_ptr<cpptoml::table> &config)
+            -> rustfp::Result<rustfp::unit_t, std::string> {
+
+            // rustfp
+            using rustfp::Err;
+            using rustfp::Ok;
+            using rustfp::Unit;
+
+            // set up sinks
+            auto sinks_map_res = setup_sinks_impl(config);
+            RUSTFP_LET(sinks_map, sinks_map_res);
+
+            // set up patterns
+            auto patterns_map_res = setup_formats_impl(config);
+            RUSTFP_LET(patterns_map, patterns_map_res);
+
+            // set up loggers, setting the respective sinks and patterns
+            auto loggers_setup_res = setup_loggers_impl(config, sinks_map, patterns_map);
+            RUSTFP_LET(loggers_setup, loggers_setup_res);
 
             return Ok(Unit);
         }

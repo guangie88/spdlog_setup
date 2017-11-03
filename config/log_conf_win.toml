@@ -96,6 +96,10 @@ type = "null_sink_mt"
 # syslog_option = 0 (default)
 # syslog_facility = LOG_USER (default macro value)
 
+[[pattern]]
+name = "succient"
+value = "%c-%L: %v"
+
 [[logger]]
 name = "root"
 sinks = [
@@ -107,7 +111,7 @@ sinks = [
     "null_sink_st", "null_sink_mt"]
 level = "trace"
 
-# unused, for demonstrating that multiple loggers can be created
 [[logger]]
 name = "console"
 sinks = ["console_st", "console_mt"]
+pattern = "succient"

@@ -18,7 +18,7 @@ Tested against:
 - `cl` (v141 / MSVC2017)
 
 ## Features
-- Initialization of `spdlog` sinks and loggers based on `TOML` configuration file.
+- Initialization of `spdlog` sinks, patterns and loggers based on `TOML` configuration file.
 - Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration file.
 - Uses Rust-like `Result` (or C++ `std::expected`) error handling style.
 - Generally does not throw exception (unless `std::string` constructor throws `bad_alloc`).
@@ -206,6 +206,10 @@ type = "syslog_sink"
 # syslog_option = 0 (default)
 # syslog_facility = LOG_USER (default macro value)
 
+[[pattern]]
+name = "succient"
+value = "%c-%L: %v"
+
 [[logger]]
 name = "root"
 sinks = [
@@ -218,10 +222,10 @@ sinks = [
     "syslog"]
 level = "trace"
 
-# unused, for demonstrating that multiple loggers can be created
 [[logger]]
 name = "console"
 sinks = ["console_st", "console_mt"]
+pattern = "succient"
 ```
 
 ### Tagged-Base Pre-TOML File Configuration
