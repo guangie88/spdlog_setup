@@ -92,13 +92,19 @@ TEST_CASE("Parse max size error", "[parse_max_size_error]") {
 
 TEST_CASE("Parse TOML file for set-up", "[from_file]") {
     ::spdlog::drop_all();
-    
+
 #ifdef _WIN32
-    const auto res = spdlog_setup::from_file("config/log_conf_win.toml")
-        .or_else([](auto &&) { return spdlog_setup::from_file("../config/log_conf_win.toml"); });
+    const auto res =
+        spdlog_setup::from_file("config/log_conf_win.toml")
+            .or_else([](auto &&) {
+                return spdlog_setup::from_file("../config/log_conf_win.toml");
+            });
 #else
-    const auto res = spdlog_setup::from_file("config/log_conf_linux.toml")
-        .or_else([](auto &&) { return spdlog_setup::from_file("../config/log_conf_linux.toml"); });
+    const auto res =
+        spdlog_setup::from_file("config/log_conf_linux.toml")
+            .or_else([](auto &&) {
+                return spdlog_setup::from_file("../config/log_conf_linux.toml");
+            });
 #endif
 
     res.match(
@@ -132,11 +138,13 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
     const auto index_arg = arg("index", 123);
     const auto path_arg = arg("path", "spdlog_setup");
 
-    const auto res = spdlog_setup::from_file_with_tag_replacement(
-        "config/log_conf.pre.toml", index_arg, path_arg).or_else([&index_arg, &path_arg](auto &&) {
-            return spdlog_setup::from_file_with_tag_replacement(
-                "../config/log_conf.pre.toml", index_arg, path_arg);
-        });
+    const auto res =
+        spdlog_setup::from_file_with_tag_replacement(
+            "config/log_conf.pre.toml", index_arg, path_arg)
+            .or_else([&index_arg, &path_arg](auto &&) {
+                return spdlog_setup::from_file_with_tag_replacement(
+                    "../config/log_conf.pre.toml", index_arg, path_arg);
+            });
 
     res.match(
         [](auto) {
@@ -151,7 +159,8 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
             root_logger->critical("Test Message - Critical!");
         },
         [](const string &msg) {
-            cerr << "spdlog_setup::from_file_with_tag_replacement error: " << msg << '\n';
+            cerr << "spdlog_setup::from_file_with_tag_replacement error: "
+                 << msg << '\n';
         });
 
     REQUIRE(res.is_ok());
@@ -162,7 +171,12 @@ TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {
     REQUIRE(res.is_err());
 }
 
-TEST_CASE("Parse pre-TOML file that does not exist", "[from_file_with_tag_replacement_no_such_file]") {
-    const auto res = spdlog_setup::from_file_with_tag_replacement("config/no_such_file");
+TEST_CASE(
+    "Parse pre-TOML file that does not exist",
+    "[from_file_with_tag_replacement_no_such_file]") {
+
+    const auto res =
+        spdlog_setup::from_file_with_tag_replacement("config/no_such_file");
+
     REQUIRE(res.is_err());
 }

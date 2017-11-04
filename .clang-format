@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM
+
+Language: Cpp
+AlignAfterOpenBracket: AlwaysBreak
+BinPackArguments: false
+BinPackParameters: false
+IndentWidth: 4
+ReflowComments: true
