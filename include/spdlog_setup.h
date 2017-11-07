@@ -1096,9 +1096,7 @@ inline auto setup_loggers_impl(
         auto cloned_global_pattern_opt = global_pattern_opt;
 
         const auto selected_pattern_opt =
-            move(pattern_value_opt).or_else([&cloned_global_pattern_opt] {
-                return move(cloned_global_pattern_opt);
-            });
+            move(pattern_value_opt).or_(move(cloned_global_pattern_opt));
 
         try {
             selected_pattern_opt.match_some([&logger](const string &pattern) {

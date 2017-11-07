@@ -6,6 +6,7 @@ project(spdlog_setup VERSION 0.1.0 LANGUAGES CXX)
 # general fixed compiler settings
 if(${MSVC})
   set(DEBUG_FLAGS "/W4;")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 else()
   set(DEBUG_FLAGS "-Wall;")
 endif()
