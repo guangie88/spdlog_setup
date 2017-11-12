@@ -1,7 +1,7 @@
-# `spdlog_setup`
+# `spdlog_setup` (spdlog setup)
 
 ## Overview
-[`spdlog`](https://github.com/gabime/spdlog) file configuration setup for convenience in initializing spdlog. Inspired by [`spdlog-config`](https://github.com/objectx/spdlog-config) for using [`TOML`](https://github.com/toml-lang/toml) configuration, a format that is simple and easy-to-read. Also heavily influenced by [`Rust`](https://www.rust-lang.org) language, leaning towards monadic return type style instead of throwing exceptions. Not battle-tested for production use yet.
+Header-only [`spdlog`](https://github.com/gabime/spdlog) file-based setup library for convenience in initializing spdlog. Inspired by [`spdlog-config`](https://github.com/objectx/spdlog-config) for using [`TOML`](https://github.com/toml-lang/toml) configuration, a format that is simple and easy-to-read. Also heavily influenced by [`Rust`](https://www.rust-lang.org) language, leaning towards monadic return type style instead of throwing exceptions. Not battle-tested for production use yet.
 
 [![Build Status](https://travis-ci.org/guangie88/spdlog_setup.svg?branch=master)](https://travis-ci.org/guangie88/spdlog_setup)
 [![Build status](https://ci.appveyor.com/api/projects/status/srek5xih80104eds/branch/master?svg=true)](https://ci.appveyor.com/project/guangie88/spdlog-setup/branch/master)
@@ -18,6 +18,7 @@ Tested against:
 - `cl` (v141 / MSVC2017)
 
 ## Features
+- Header-only (check [`How to Install`](#how-to-install) to extract out the header files).
 - Initialization of `spdlog` sinks, patterns and loggers based on `TOML` configuration file.
 - Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration file.
 - Uses Rust-like `Result` (or C++ `std::expected`) error handling style.
