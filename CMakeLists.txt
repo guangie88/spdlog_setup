@@ -5,10 +5,10 @@ project(spdlog_setup VERSION 0.1.0 LANGUAGES CXX)
 
 # general fixed compiler settings
 if(${MSVC})
-  set(DEBUG_FLAGS "/W4;")
+  set(DEBUG_FLAGS /W4)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 else()
-  set(DEBUG_FLAGS "-Wall;")
+  set(DEBUG_FLAGS -Wall)
 endif()
 
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
@@ -67,6 +67,7 @@ install(
 # spdlog_setup_unit_test
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   add_executable(spdlog_setup_unit_test
+    src/unit_test/unit_test_main.cpp
     src/unit_test/unit_test.cpp)
 
   set_property(TARGET spdlog_setup_unit_test PROPERTY CXX_STANDARD 14)

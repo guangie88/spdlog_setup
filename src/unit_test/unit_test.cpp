@@ -1,3 +1,5 @@
+#include "catch.hpp"
+
 #if defined(unix) || defined(__unix__) || defined(__unix)
 #ifndef SPDLOG_ENABLE_SYSLOG
 #define SPDLOG_ENABLE_SYSLOG
@@ -5,9 +7,6 @@
 #endif
 
 #include "spdlog_setup.h"
-
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
 
 #include <iostream>
 #include <string>
