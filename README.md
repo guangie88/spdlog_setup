@@ -19,21 +19,21 @@ for Windows to support C++11 features.
 
 Tested against:
 
-- `g++-5`
-- `g++-6`
-- `g++-7`
-- `cl` (v140 / MSVC2015)
-- `cl` (v141 / MSVC2017)
+* `g++-5`
+* `g++-6`
+* `g++-7`
+* `cl` (v140 / MSVC2015)
+* `cl` (v141 / MSVC2017)
 
 ## Features
 
-- Header-only (check [`How to Install`](#how-to-install) to extract out the
+* Header-only (check [`How to Install`](#how-to-install) to extract out the
   header files).
-- Initialization of `spdlog` sinks, patterns and loggers based on `TOML`
+* Initialization of `spdlog` sinks, patterns and loggers based on `TOML`
   configuration file.
-- Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration
+* Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration
   file.
-- Throws exception on any form of error.
+* Throws exception on any form of error.
 
 ## Repository Checkout
 
@@ -50,13 +50,13 @@ submodule dependencies.
 
 This repository uses the following external dependencies directly:
 
-- [`Catch`](https://github.com/philsquared/Catch) (only for unit-tests)
-- [`spdlog`](https://github.com/gabime/spdlog)
+* [`Catch`](https://github.com/philsquared/Catch) (only for unit-tests)
+* [`spdlog`](https://github.com/gabime/spdlog)
 
 In addition, the following dependencies are inlined as part of the include:
 
-- [`cpptoml`](https://github.com/skystrife/cpptoml)
-- [`fmt`](https://github.com/fmtlib/fmt.git)
+* [`cpptoml`](https://github.com/skystrife/cpptoml)
+* [`fmt`](https://github.com/fmtlib/fmt.git)
 
 ## How to Build
 
@@ -77,20 +77,20 @@ In the root directory after `git` cloning:
 
 #### Debug without Installation
 
-- `mkdir build-debug`
-- `cd build-debug`
-- `cmake .. -DCMAKE_BUILD_TYPE=Debug -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON`
-- `cmake --build .`
+* `mkdir build-debug`
+* `cd build-debug`
+* `cmake .. -DCMAKE_BUILD_TYPE=Debug -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON`
+* `cmake --build .`
 
 Now the unit test executable should be compiled and residing in
 `build-debug/spdlog_setup_unit_test`.
 
 #### Release with Installation
 
-- `mkdir build-release`
-- `cd build-release`
-- `cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX=install`
-- `cmake --build . --target install`
+* `mkdir build-release`
+* `cd build-release`
+* `cmake .. -DCMAKE_BUILD_TYPE=Release -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX=install`
+* `cmake --build . --target install`
 
 Now the unit test executable should be compiled and residing in
 `build-release/spdlog_setup_unit_test`.
@@ -105,34 +105,34 @@ and [`Visual C++ Build Tools 2015`](http://landinghub.visualstudio.com/visual-cp
 
 In the root directory after `git` cloning:
 
-- `mkdir build`
-- `cd build`
-- `cmake .. -G "Visual Studio 14 Win64" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX=install`
-- (Debug) `cmake --build . --config Debug`
-- (Release with installation) `cmake --build . --config Release --target install`
+* `mkdir build`
+* `cd build`
+* `cmake .. -G "Visual Studio 14 Win64" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX=install`
+* (Debug) `cmake --build . --config Debug`
+* (Release with installation) `cmake --build . --config Release --target install`
 
 Now the unit test executable should be compiled and residing in
 
-- (Debug) `build/Debug/spdlog_setup_unit_test.exe` or
-- (Release) `build/Release/spdlog_setup_unit_test.exe`.
+* (Debug) `build/Debug/spdlog_setup_unit_test.exe` or
+* (Release) `build/Release/spdlog_setup_unit_test.exe`.
 
 The header files should be installed in `build/install/include`.
 
 ## Supported Sinks
 
-- `stdout_sink_st`
-- `stdout_sink_mt`
-- `color_stdout_sink_st`
-- `color_stdout_sink_mt`
-- `simple_file_sink_st`
-- `simple_file_sink_mt`
-- `rotating_file_sink_st`
-- `rotating_file_sink_mt`
-- `daily_file_sink_st`
-- `daily_file_sink_mt`
-- `null_sink_st`
-- `null_sink_mt`
-- `syslog_sink` (only for Linux, `SPDLOG_ENABLE_SYSLOG` preprocessor definition
+* `stdout_sink_st`
+* `stdout_sink_mt`
+* `color_stdout_sink_st`
+* `color_stdout_sink_mt`
+* `simple_file_sink_st`
+* `simple_file_sink_mt`
+* `rotating_file_sink_st`
+* `rotating_file_sink_mt`
+* `daily_file_sink_st`
+* `daily_file_sink_mt`
+* `null_sink_st`
+* `null_sink_mt`
+* `syslog_sink` (only for Linux, `SPDLOG_ENABLE_SYSLOG` preprocessor definition
   must be defined before any `spdlog`/`spdlog_setup` header is included)
 
 Currently `ostream_sink` and `dist_sink` do not fit into the use case and are
@@ -410,9 +410,9 @@ int main(const int argc, const char * argv[]) {
 
 ## Notes
 
-- Make sure that the directory for the log files to reside in exists before
+* Make sure that the directory for the log files to reside in exists before
   using `spdlog`, unless the `create_parent_dir` flag is set to true for the
   sink.
-- For the current set of unit tests, the working directory must be at the git
+* For the current set of unit tests, the working directory must be at the git
   root directory or in `build` directory so that the TOML configuration files in
   `config` directory can be found.
