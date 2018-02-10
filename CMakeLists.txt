@@ -73,7 +73,7 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   set_property(TARGET spdlog_setup_unit_test PROPERTY CXX_STANDARD 14)
 
   enable_testing()
-  add_test(spdlog_setup_unit_test spdlog_setup_unit_test -s --force-colour)
+  add_test(spdlog_setup_unit_test spdlog_setup_unit_test -s)
 
   target_include_directories(spdlog_setup_unit_test
     PRIVATE
