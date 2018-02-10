@@ -62,7 +62,6 @@ install(
 # spdlog_setup_unit_test
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   add_executable(spdlog_setup_unit_test
-    src/unit_test/unit_test_main.cpp
     src/unit_test/unit_test.cpp)
 
   set_property(TARGET spdlog_setup_unit_test PROPERTY CXX_STANDARD 14)
