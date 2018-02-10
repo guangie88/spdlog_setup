@@ -14,17 +14,19 @@ simple and easy-to-read.
 
 ## Requirements
 
-Requires at least `CMake 3.3`, `g++-4.8` for Linux, or `MSVC2013` with `MSBuild`
+Requires at least `CMake 3.3`, `g++-4.9` for Linux, or `MSVC2015` with `MSBuild`
 for Windows, providing sufficient C++11 features.
+
+`g++-4.8` will notably fail because of the missing `std::regex` implementation.
+`MSVC2013` will fail too as it does not accept `noexcept`, which is used in some
+of the functions.
 
 Tested against:
 
-* `g++-4.8`
 * `g++-4.9`
 * `g++-5`
 * `g++-6`
 * `g++-7`
-* `cl` (v120 / MSVC2013)
 * `cl` (v140 / MSVC2015)
 * `cl` (v141 / MSVC2017)
 

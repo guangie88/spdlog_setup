@@ -6,13 +6,6 @@ git:
 
 matrix:
   include:
-    # ubuntu 14.04, gcc-4.8
-    - env: VER=4.8
-      compiler: gcc
-      os: linux
-      dist: trusty
-      addons: { apt: { packages: ["g++-4.8", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
-
     # ubuntu 14.04, gcc-4.9
     - env: VER=4.9
       compiler: gcc
