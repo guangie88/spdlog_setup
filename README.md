@@ -33,7 +33,7 @@ Tested against:
   configuration file.
 * Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration
   file.
-* Throws exception on any form of error.
+* Throws exception with description on the error in the config file.
 
 ## Repository Checkout
 
@@ -147,19 +147,19 @@ the original `spdlog` sinks wiki page at:
 ### Static File Configuration
 
 ```toml
-# level is optional for both sinks and loggers
-# level for error logging is 'err', not 'error'
-# _st => single threaded, _mt => multi threaded
-# syslog_sink is automatically thread-safe by default, no need for _mt suffix
+#level is optional for both sinks and loggers
+#level for error logging is 'err', not'error'
+#_st = > single threaded, _mt = > multi threaded
+#syslog_sink is automatically thread - safe by default, no need for _mt suffix
 
-# max_size supports suffix
-# - T (terabyte)
-# - G (gigabyte)
-# - M (megabyte)
-# - K (kilobyte)
-# - or simply no suffix (byte)
+#max_size supports suffix
+#- T(terabyte)
+#- G(gigabyte)
+#- M(megabyte)
+#- K(kilobyte)
+#- or simply no suffix(byte)
 
-# check out https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
+#check out https: // github.com/gabime/spdlog/wiki/3.-Custom-formatting
 global_pattern = "[%Y-%m-%dT%T%z] [%L] <%n>: %v"
 
 [[sink]]
@@ -182,10 +182,10 @@ type = "color_stdout_sink_mt"
 name = "file_out"
 type = "simple_file_sink_st"
 filename = "log/spdlog_setup.log"
-# truncate field is optional
-# truncate = false (default)
+#truncate field is optional
+#truncate = false(default)
 level = "info"
-# optional flag to indicate the set-up to create the log dir first
+#optional flag to indicate the set - up to create the log dir first
 create_parent_dir = true
 
 [[sink]]
@@ -194,7 +194,7 @@ type = "simple_file_sink_mt"
 filename = "log/spdlog_setup_err.log"
 truncate = true
 level = "err"
-# to show that create_parent_dir is indeed optional (defaults to false)
+#to show that create_parent_dir is indeed optional(defaults to false)
 
 [[sink]]
 name = "rotate_out"
@@ -236,14 +236,14 @@ type = "null_sink_st"
 name = "null_sink_mt"
 type = "null_sink_mt"
 
-# only works for Linux
+#only works for Linux
 [[sink]]
 name = "syslog"
 type = "syslog_sink"
-# generally no need to fill up the optional fields below
-# ident = "" (default)
-# syslog_option = 0 (default)
-# syslog_facility = LOG_USER (default macro value)
+#generally no need to fill up the optional fields below
+#ident = ""(default)
+#syslog_option = 0(default)
+#syslog_facility = LOG_USER(default macro value)
 
 [[pattern]]
 name = "succient"
@@ -270,15 +270,15 @@ pattern = "succient"
 ### Tagged-Base Pre-TOML File Configuration
 
 ```toml
-# level is optional for both sinks and loggers
-# level for error logging is 'err', not 'error'
+#level is optional for both sinks and loggers
+#level for error logging is 'err', not'error'
 
-# max_size supports suffix
-# - T (terabyte)
-# - G (gigabyte)
-# - M (megabyte)
-# - K (kilobyte)
-# - or simply no suffix (byte)
+#max_size supports suffix
+#- T(terabyte)
+#- G(gigabyte)
+#- M(megabyte)
+#- K(kilobyte)
+#- or simply no suffix(byte)
 
 [[sink]]
 name = "console"
@@ -291,7 +291,7 @@ base_filename = "log/{index}-info/simple-{path}.log"
 max_size = "1M"
 max_files = 10
 level = "info"
-# optional flag to indicate the set-up to create the log dir first
+#optional flag to indicate the set - up to create the log dir first
 create_parent_dir = true
 
 [[sink]]
@@ -300,7 +300,7 @@ type = "simple_file_sink_mt"
 filename = "log/{index}-err/simple-{path}.log"
 truncate = false
 level = "err"
-# optional flag to indicate the set-up to create the log dir first
+#optional flag to indicate the set - up to create the log dir first
 create_parent_dir = true
 
 [[logger]]
@@ -320,35 +320,25 @@ level = "trace"
 #include <string>
 
 int main() {
-    // generally no exception will be thrown unless std::bad_alloc due to
-    // std::string
-    const auto res = spdlog_setup::from_file("log_conf.toml");
+    try {
+        // spdlog_setup::setup_error thrown if file not found
+        spdlog_setup::from_file("log_conf.toml");
 
-    // if-else syntax, has advantage of being able to perform early return out
-    // of main
-    if (res.is_err()) {
-        std::cerr << res.get_err_unchecked() << '\n';
-        return 127;
+        // assumes that root logger has been initialized
+        auto logger = spdlog::get("root");
+        logger->trace("trace message");
+        logger->debug("debug message");
+        logger->info("info message");
+        logger->warn("warn message");
+        logger->error("error message");
+        logger->critical("critical message");
+
+        // ...
+    } catch (const spdlog_setup::setup_error &) {
+        // ...
+    } catch (const std::exception &) {
+        // ...
     }
-
-    // (alternative) Rust-like match (error) syntax
-    // able to type check for error safely but unable to perform early return
-    // out of main
-    res.match_err([](const std::string &err_msg) {
-        // error parsing the TOML config file
-        // you may choose to throw an exception with err_msg if preferred
-    });
-
-    // assumes that root logger has been initialized
-    auto logger = spdlog::get("root");
-    logger->trace("trace message");
-    logger->debug("debug message");
-    logger->info("info message");
-    logger->warn("warn message");
-    logger->error("error message");
-    logger->critical("critical message");
-
-    return 0;
 }
 ```
 
@@ -362,48 +352,30 @@ int main() {
 int main(const int argc, const char * argv[]) {
     // assumes both index and path are given by command line arguments
 
-    // gets index integer, e.g. 123
-    const auto index = std::stoi(argv[1]);
+    try {
+        // gets index integer, e.g. 123
+        const auto index = std::stoi(argv[1]);
 
-    // gets path string, e.g. a/b/c
-    const auto path = std::string(argv[2]);
+        // gets path string, e.g. a/b/c
+        const auto path = std::string(argv[2]);
 
-    // performs parsing with dynamic tag value replacements
-    // tags are anything content that contains {xxx}, where xxx is the name of
-    // the tag to be replaced
-    const auto res = spdlog_setup::from_file_with_tag_replacement(
-        "log_conf.pre.toml",
-        // replaces {index} with actual value in current variable index via fmt
-        // mechanism
-        fmt::arg("index", index),
-        // replaces {path} with actual value in current variable path
-        fmt::arg("path", path));
+        // performs parsing with dynamic tag value replacements
+        // tags are anything content that contains {xxx}, where xxx is the name
+        // of the tag to be replaced
+        spdlog_setup::from_file_with_tag_replacement(
+            "log_conf.pre.toml",
+            // replaces {index} with actual value in current variable index via
+            // fmt mechanism
+            fmt::arg("index", index),
+            // replaces {path} with actual value in current variable path
+            fmt::arg("path", path));
 
-    // Rust-like match expression syntax
-    // able to type check for success and error safely
-    // but unable to perform early return because of closure usage
-    const auto value = res.match([](auto) {
-        // success case
-        // assumes that root logger has been initialized
         auto logger = spdlog::get("root");
-
         // ...
-        return 0;
-
-    }, [](const std::string &err_msg) {
-        // error case
-        // return value type must be similar to the success case
-        return 127;
-    });
-
-    // (alternative) if-else syntax
-    if (res.is_ok()) {
-        // success case
+    } catch (const spdlog_setup::setup_error &) {
         // ...
-
-        return 0;
-    } else {
-        return 127;
+    } catch (const std::exception &) {
+        // ...
     }
 }
 ```
