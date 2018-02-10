@@ -14,7 +14,7 @@ endif()
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-# fmt and Catch do not have modular CMake mechanism
+# fmt and Catch2 do not have modular CMake mechanism
 add_subdirectory(deps/cpptoml)
 add_subdirectory(deps/rustfp)
 add_subdirectory(deps/spdlog)
@@ -77,7 +77,7 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
 
   target_include_directories(spdlog_setup_unit_test
     PRIVATE
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch/include>)
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
 
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
