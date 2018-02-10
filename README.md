@@ -14,14 +14,17 @@ simple and easy-to-read.
 
 ## Requirements
 
-Requires at least `CMake 3.6`, `g++-5` for Linux, or `MSVC2015` with `MSBuild`
-for Windows to support C++11 features.
+Requires at least `CMake 3.3`, `g++-4.8` for Linux, or `MSVC2013` with `MSBuild`
+for Windows, providing sufficient C++11 features.
 
 Tested against:
 
+* `g++-4.8`
+* `g++-4.9`
 * `g++-5`
 * `g++-6`
 * `g++-7`
+* `cl` (v120 / MSVC2013)
 * `cl` (v140 / MSVC2015)
 * `cl` (v141 / MSVC2017)
 
@@ -33,7 +36,23 @@ Tested against:
   configuration file.
 * Tag replacement (e.g. "{tagname}-log.txt") within the `TOML` configuration
   file.
-* Throws exception with description on the error in the config file.
+* Throw exception describing the error during the parsing of the config file.
+
+## Difference from `v0.1` to `v0.2`
+
+* Use `spdlog_setup/conf.h` instead of `spdlog_setup.h`. Reason for change is
+  to allow inlining of `cpptoml` and `fmt` libraries.
+* No changes to the `TOML` configuration format.
+* Back to exception based strategy for handling error.
+  `spdlog_setup::setup_error` exception contains error messages similar to
+  `v0.1`. Rationale of change is to align to C++ idiomatic approach of using
+  exception of handling error.
+* Changing to exception based handling means a change of API, so check out the
+  [examples](#use-examples) to observe the changes.
+* Stripped down many `git` submodules, leaving only `Catch2` (unit-test) and
+  `spdlog` only, which is much better for installation. For `spdlog`, it is
+  replaceable and likely to work if replaced with custom and newer versions,
+  unless there are major API changes.
 
 ## Repository Checkout
 
@@ -50,7 +69,8 @@ submodule dependencies.
 
 This repository uses the following external dependencies directly:
 
-* [`Catch`](https://github.com/philsquared/Catch) (only for unit-tests)
+* [`Catch`](https://github.com/philsquared/Catch) (only for unit-tests, not
+  included in installation)
 * [`spdlog`](https://github.com/gabime/spdlog)
 
 In addition, the following dependencies are inlined as part of the include:
@@ -66,10 +86,15 @@ configuration.
 
 ## How to Install
 
-The installation step of `CMake` copies out the entire list of header files
-required for `spdlog_setup` into the installation directory. To change the
-installation directory, add `-DCMAKE_INSTALL_PREFIX=install` during the CMake
-configuration.
+If a recent enough `spdlog` is already available, and unit tests are not to be
+run, it is possible to just copy the `spdlog_setup` directory within `include`
+into another solution for header-only include, as long as `spdlog` can be found
+in that solution.
+
+If `spdlog` is not available, the installation step of `CMake` can copy out the
+entire list of header files required for `spdlog_setup` into the installation
+directory, including `spdlog`. To change the installation directory, add
+`-DCMAKE_INSTALL_PREFIX=<path-to-install>` during the CMake configuration.
 
 ### Linux (`GCC`)
 
@@ -97,7 +122,7 @@ Now the unit test executable should be compiled and residing in
 
 The header files should be installed in `build-release/install/include`.
 
-### Windows (`MSVC2015`)
+### Windows (`MSVC2015` as Example)
 
 Ensure that [`Microsoft Build Tools 2015`](https://www.microsoft.com/en-sg/download/details.aspx?id=48159)
 and [`Visual C++ Build Tools 2015`](http://landinghub.visualstudio.com/visual-cpp-build-tools)
@@ -309,7 +334,7 @@ sinks = ["console", "rotate_out", "simple_err"]
 level = "trace"
 ```
 
-## Use Example
+## Use Examples
 
 ### Static Configuration File
 
