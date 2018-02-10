@@ -10,15 +10,23 @@ configuration:
   - Debug
   - Release
 
+branches:
+  only:
+    - master
+
+build:
+  parallel: true
+
+matrix:
+  fast_finish: true
+
 environment:
   global:
     PROJECT_NAME: spdlog_setup
 
-clone_script:
-  - git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
-  - git checkout -qf %APPVEYOR_REPO_COMMIT%
-
 build_script:
+  - git rev-parse HEAD
+  - git submodule update --init --recursive
   - mkdir build
   - cd build
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" set CMAKE_GENERATOR_VS=Visual Studio 14 2015

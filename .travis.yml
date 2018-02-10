@@ -59,6 +59,7 @@ install:
     fi
 
 script:
+  - git rev-parse HEAD
   - BUILDS=(Debug Release)
   - mkdir build
   - pushd build
@@ -88,3 +89,7 @@ script:
 # after_success:
   # generate document
   # - doxygen Doxyfile
+
+branches:
+  only:
+    - master
