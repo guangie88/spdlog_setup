@@ -1,3 +1,10 @@
+/**
+ * Unit tests implementation.
+ * @author Chen Weiguang
+ * @version 0.2.0
+ */
+
+#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 #if defined(unix) || defined(__unix__) || defined(__unix)
@@ -6,7 +13,7 @@
 #endif
 #endif
 
-#include "spdlog_setup.h"
+#include "spdlog_setup/conf.h"
 
 #include <iostream>
 #include <string>

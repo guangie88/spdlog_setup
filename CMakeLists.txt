@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 # project variables
-project(spdlog_setup VERSION 0.1.0 LANGUAGES CXX)
+project(spdlog_setup VERSION 0.2.0 LANGUAGES CXX)
 
 # general fixed compiler settings
 if(${MSVC})
@@ -14,8 +14,7 @@ endif()
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-# fmt and Catch2 do not have modular CMake mechanism
-add_subdirectory(deps/cpptoml)
+# Catch2 do not have modular CMake mechanism
 add_subdirectory(deps/rustfp)
 add_subdirectory(deps/spdlog)
 
@@ -26,19 +25,15 @@ target_include_directories(spdlog_setup
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/fmt>
     $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(spdlog_setup
   INTERFACE
-    cpptoml
     rustfp
     spdlog)
 
 install(TARGETS spdlog_setup EXPORT spdlog_setup)
-install(FILES include/spdlog_setup.h DESTINATION include)
-install(DIRECTORY deps/fmt/fmt DESTINATION include
-  PATTERN deps/fmt/fmt/*.txt EXCLUDE)
+install(DIRECTORY include/spdlog_setup DESTINATION include)
 
 install(EXPORT spdlog_setup
   FILE spdlog_setup-targets.cmake

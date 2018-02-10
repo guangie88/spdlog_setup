@@ -276,7 +276,7 @@ level = "trace"
 ### Static Configuration File
 
 ```c++
-#include "spdlog_setup.h"
+#include "spdlog_setup/conf.h"
 
 #include <iostream>
 #include <string>
@@ -314,7 +314,7 @@ int main() {
 ### Tagged Based Configuration File
 
 ```c++
-#include "spdlog_setup.h"
+#include "spdlog_setup/conf.h"
 
 #include <string>
 

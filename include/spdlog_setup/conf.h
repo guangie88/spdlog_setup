@@ -1,7 +1,7 @@
 /**
  * Implementation of spdlog_setup in entirety.
  * @author Chen Weiguang
- * @version 0.1.0
+ * @version 0.2.0
  */
 
 #pragma once
@@ -10,8 +10,9 @@
 #define FMT_HEADER_ONLY
 #endif
 
-#include "cpptoml.h"
-#include "fmt/format.h"
+#include "details/cpptoml.h"
+#include "details/fmt/format.h"
+
 #include "rustfp/let.h"
 #include "rustfp/result.h"
 #include "rustfp/unit.h"
