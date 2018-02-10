@@ -4,17 +4,15 @@ language: cpp
 git:
   submodules: true
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-5
-      - g++-5
-      - doxygen
-
 matrix:
   include:
+    # ubuntu 14.04, gcc-4.9
+    - env: VER=4.9
+      compiler: gcc
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["g++-4.9", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
     # ubuntu 14.04, gcc-5
     - env: VER=5 COV=YES
       compiler: gcc
