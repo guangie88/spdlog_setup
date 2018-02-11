@@ -1,3 +1,4 @@
 coverage:
   ignore:
+   - "include/spdlog_setup/details/*"
    - "src/unit_test/*"
