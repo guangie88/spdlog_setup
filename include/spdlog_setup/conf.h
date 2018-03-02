@@ -175,6 +175,22 @@ void from_file(const std::string &toml_path);
 void from_files(
     const std::string &base_toml_path, const std::string &override_toml_path);
 
+/**
+ * Serializes the current logger level tagged with its logger name, and persists
+ * into the override file. May choose to add the serialized content to the
+ * override file, or completely overwrite the file with just this serialized
+ * content.
+ * @param logger Logger to serialize and persist.
+ * @param override_toml_path Path to persist the serialized content into.
+ * @param is_add_on Default true to add content into override file, false to
+ * ignore the existing file if present, and overwrite the file.
+ * @throw setup_error
+ */
+void persist_logger(
+    const std::shared_ptr<spdlog::logger> &logger,
+    const std::string &override_toml_path,
+    const bool is_add_on = true);
+
 // implementation section
 
 namespace details {
