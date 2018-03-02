@@ -34,6 +34,69 @@ matrix:
       dist: trusty
       addons: { apt: { packages: ["g++-7", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
 
+    # ubuntu 14.04, clang-3.3
+    - env: ["VER=3.3"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.3", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-3.4
+    - env: ["VER=3.4"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.4", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-3.5
+    - env: ["VER=3.5"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.5", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-3.6
+    - env: ["VER=3.6"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.6", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-3.7
+    - env: ["VER=3.7"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.7", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-3.8
+    - env: ["VER=3.8"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.8", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-3.9
+    - env: ["VER=3.9"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-3.9", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-4
+    - env: ["VER=4"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-4", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
+    # ubuntu 14.04, clang-5
+    - env: ["VER=5"]
+      compiler: clang
+      os: linux
+      dist: trusty
+      addons: { apt: { packages: ["clang-5", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+
 install:
   # set the correct `CC` and `CXX` environment variables.
   - |
