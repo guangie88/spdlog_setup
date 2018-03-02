@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 # project variables
-project(spdlog_setup VERSION 0.2.0 LANGUAGES CXX)
+project(spdlog_setup VERSION 0.3.0 LANGUAGES CXX)
 
 # general fixed compiler settings
 if(${MSVC})

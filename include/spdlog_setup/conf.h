@@ -1,7 +1,7 @@
 /**
  * Implementation of spdlog_setup in entirety.
  * @author Chen Weiguang
- * @version 0.2.0
+ * @version 0.3.0
  */
 
 #pragma once
@@ -121,7 +121,7 @@ class setup_error : public std::exception {
      * @param msg Error message to contain.
      * @throw std::bad_alloc
      */
-    setup_error(const std::string &msg);
+    setup_error(std::string msg);
 
     /**
      * Returns the error message.
@@ -144,11 +144,36 @@ void from_file_with_tag_replacement(
     const std::string &pre_toml_path, Ps &&... ps);
 
 /**
+ * Performs spdlog configuration setup from both base and override files, with
+ * tag values to be replaced into various primitive values for both files.
+ * @param base_pre_toml_path Path to the base pre-TOML configuration file path.
+ * @param override_pre_toml_path Path to the override pre-TOML configuration
+ * file path.
+ * @throw setup_error
+ */
+template <class... Ps>
+void from_files_with_tag_replacement(
+    const std::string &base_pre_toml_path,
+    const std::string &override_pre_toml_path,
+    Ps &&... ps);
+
+/**
  * Performs spdlog configuration setup from file.
  * @param toml_path Path to the TOML configuration file path.
  * @throw setup_error
  */
 void from_file(const std::string &toml_path);
+
+/**
+ * Performs spdlog configuration setup from both base and override files.
+ * The configuration values from the override file will be merged into the base
+ * configuration values to form the overall configuration values.
+ * @param base_toml_path Path to the base TOML configuration file path.
+ * @param override_toml_path Path to the override TOML configuration file path.
+ * @throw setup_error
+ */
+void from_files(
+    const std::string &base_toml_path, const std::string &override_toml_path);
 
 // implementation section
 
@@ -361,7 +386,8 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     using std::string;
 
     try {
-        static const regex RE(R"_(^\s*(\d+)\s*(T|G|M|K|)(:?B|)\s*$)_", icase);
+        static const regex RE(
+            R"_(^\s*(\d+)\s*(T|G|M|K|)(:?B|)\s*$)_", icase);
 
         smatch matches;
         const auto has_match = regex_match(max_size_str, matches, RE);
@@ -986,7 +1012,7 @@ inline void setup_impl(const std::shared_ptr<cpptoml::table> &config) {
 
 setup_error::setup_error(const char *const msg) : msg(msg) {}
 
-setup_error::setup_error(const std::string &msg) : msg(msg) {}
+setup_error::setup_error(std::string msg) : msg(std::move(msg)) {}
 
 auto setup_error::what() const noexcept -> const char * { return msg.c_str(); }
 
