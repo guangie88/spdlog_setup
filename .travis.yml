@@ -11,91 +11,180 @@ matrix:
       compiler: gcc
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["g++-4.9", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - g++-4.9
+            - doxygen
+          sources:
+            - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, gcc-5
     - env: ["VER=5", "COV=YES"]
       compiler: gcc
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["g++-5", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - g++-5
+            - doxygen
+          sources:
+            - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, gcc-6
     - env: ["VER=6"]
       compiler: gcc
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["g++-6", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - g++-6
+            - doxygen
+          sources:
+            - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, gcc-7
     - env: ["VER=7"]
       compiler: gcc
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["g++-7", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
-
-    # ubuntu 14.04, clang-3.3
-    - env: ["VER=3.3"]
-      compiler: clang
-      os: linux
-      dist: trusty
-      addons: { apt: { packages: ["clang-3.3", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - g++-7
+            - doxygen
+          sources:
+            - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, clang-3.4
     - env: ["VER=3.4"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-3.4", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-3.4
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.4 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.5
     - env: ["VER=3.5"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-3.5", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-3.5
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.5 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.6
     - env: ["VER=3.6"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-3.6", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-3.6
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.6 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.7
     - env: ["VER=3.7"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-3.7", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-3.7
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.7 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.8
     - env: ["VER=3.8"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-3.8", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-3.8
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.8 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.9
     - env: ["VER=3.9"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-3.9", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-3.9
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
-    # ubuntu 14.04, clang-4
-    - env: ["VER=4"]
+    # ubuntu 14.04, clang-4.0
+    - env: ["VER=4.0"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-4", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-4.0
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
-    # ubuntu 14.04, clang-5
-    - env: ["VER=5"]
+    # ubuntu 14.04, clang-5.0
+    - env: ["VER=5.0"]
       compiler: clang
       os: linux
       dist: trusty
-      addons: { apt: { packages: ["clang-5", "doxygen"], sources: ["ubuntu-toolchain-r-test"] } }
+      addons:
+        apt:
+          packages:
+            - clang-5.0
+            - libc++-dev
+            - libc++abi-dev
+            - doxygen
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
 install:
   # set the correct `CC` and `CXX` environment variables.
@@ -128,12 +217,20 @@ script:
     for BUILD in "${BUILDS[@]}"; do
       (
         set -x
-        cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
-              -DCMAKE_INSTALL_PREFIX:PATH=install        \
-              -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \
-              -DSPDLOG_SETUP_INCLUDE_TEST_COVERAGE=ON ..
+
+        if [ "${COV}" = "YES" ] && [ "${BUILD}" = "Debug" ]; then
+          cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
+                -DCMAKE_INSTALL_PREFIX:PATH=install        \
+                -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \
+                -DSPDLOG_SETUP_INCLUDE_TEST_COVERAGE=ON ..
+        else
+          cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
+                -DCMAKE_INSTALL_PREFIX:PATH=install        \
+                -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON ..
+        fi
       )
-      cmake --build . --target install -- -j 2
+
+      cmake --build . --target install
       ctest -R spdlog_setup_unit_test -V
       ec=$?
 
