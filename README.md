@@ -33,8 +33,9 @@ Tested against:
 * `clang-3.7`
 * `clang-3.8`
 * `clang-3.9`
-* `clang-4`
-* `clang-5`
+* `clang-4.0`
+* `clang-5.0`
+* `clang-6.0`
 * `cl` (v140 / MSVC2015)
 * `cl` (v141 / MSVC2017)
 
