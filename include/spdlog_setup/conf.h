@@ -156,7 +156,7 @@ template <class... Ps>
 void from_file_and_override_with_tag_replacement(
     const std::string &base_pre_toml_path,
     const std::string &override_pre_toml_path,
-    Ps &&... ps);
+    const Ps &... ps);
 
 /**
  * Performs spdlog configuration setup from file.
@@ -303,6 +303,44 @@ inline void create_dirs_impl(const std::string &dir_path) {
 
 inline void create_directories(const std::string &dir_path) {
     create_dirs_impl(dir_path);
+}
+
+template <class... Ps>
+auto read_template_file_into_stringstream(
+    const std::string &file_path, Ps &&... ps) -> std::stringstream {
+
+    // fmt
+    using fmt::format;
+
+    // std
+    using std::exception;
+    using std::forward;
+    using std::ifstream;
+    using std::move;
+    using std::string;
+    using std::stringstream;
+
+    try {
+        ifstream file_stream(file_path);
+
+        if (!file_stream) {
+            throw setup_error(format("Error reading file at '{}'", file_path));
+        }
+
+        stringstream pre_toml_ss;
+        pre_toml_ss << file_stream.rdbuf();
+
+        const auto pre_toml_content = pre_toml_ss.str();
+
+        const auto toml_content =
+            format(pre_toml_content, std::forward<Ps>(ps)...);
+
+        stringstream toml_ss;
+        toml_ss << toml_content;
+        return move(toml_ss);
+    } catch (const exception &e) {
+        throw setup_error(e.what());
+    }
 }
 
 inline void merge_toml_config(
@@ -1061,39 +1099,52 @@ template <class... Ps>
 void from_file_with_tag_replacement(
     const std::string &pre_toml_path, Ps &&... ps) {
 
-    // fmt
-    using fmt::format;
-
     // std
     using std::exception;
     using std::forward;
-    using std::ifstream;
-    using std::string;
-    using std::stringstream;
 
     try {
-        ifstream file_stream(pre_toml_path);
-
-        if (!file_stream) {
-            throw setup_error(
-                format("Error reading file at '{}'", pre_toml_path));
-        }
-
-        stringstream pre_toml_ss;
-        pre_toml_ss << file_stream.rdbuf();
-
-        const auto pre_toml_content = pre_toml_ss.str();
-
-        const auto toml_content =
-            format(pre_toml_content, std::forward<Ps>(ps)...);
-
-        stringstream toml_ss;
-        toml_ss << toml_content;
+        auto toml_ss = details::read_template_file_into_stringstream(
+            pre_toml_path, forward<Ps>(ps)...);
 
         cpptoml::parser parser{toml_ss};
         const auto config = parser.parse();
 
         return details::setup_impl(config);
+    } catch (const setup_error &) {
+        throw;
+    } catch (const exception &e) {
+        throw setup_error(e.what());
+    }
+}
+
+template <class... Ps>
+void from_file_and_override_with_tag_replacement(
+    const std::string &base_pre_toml_path,
+    const std::string &override_pre_toml_path,
+    const Ps &... ps) {
+
+    // std
+    using std::exception;
+    using std::forward;
+
+    try {
+        auto base_toml_ss = details::read_template_file_into_stringstream(
+            base_pre_toml_path, ps...);
+
+        cpptoml::parser base_parser{base_toml_ss};
+        auto merged_config = base_parser.parse();
+
+        auto override_toml_ss = details::read_template_file_into_stringstream(
+            override_pre_toml_path, ps...);
+
+        cpptoml::parser override_parser{override_toml_ss};
+        const auto override_config = override_parser.parse();
+
+        details::merge_toml_config(merged_config, override_config);
+        return details::setup_impl(merged_config);
+    } catch (const setup_error &) {
+        throw;
     } catch (const exception &e) {
         throw setup_error(e.what());
     }
