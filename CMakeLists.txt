@@ -7,6 +7,11 @@ project(spdlog_setup VERSION 0.2.0 LANGUAGES CXX)
 if(${MSVC})
   set(DEBUG_FLAGS /W4)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  # using regular Clang or AppleClang
+  set(DEBUG_FLAGS -Wall)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
 else()
   set(DEBUG_FLAGS -Wall)
 endif()
@@ -82,7 +87,7 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
 
     target_link_libraries(spdlog_setup_unit_test
       PRIVATE
-        gcov)
+        --coverage)
   endif()
 endif()
 
