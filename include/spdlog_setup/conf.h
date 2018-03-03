@@ -145,14 +145,15 @@ void from_file_with_tag_replacement(
 
 /**
  * Performs spdlog configuration setup from both base and override files, with
- * tag values to be replaced into various primitive values for both files.
+ * tag values to be replaced into various primitive values for both files. The
+ * base file is required while the override file is optional.
  * @param base_pre_toml_path Path to the base pre-TOML configuration file path.
  * @param override_pre_toml_path Path to the override pre-TOML configuration
  * file path.
  * @throw setup_error
  */
 template <class... Ps>
-void from_files_with_tag_replacement(
+void from_file_and_override_with_tag_replacement(
     const std::string &base_pre_toml_path,
     const std::string &override_pre_toml_path,
     Ps &&... ps);
@@ -165,31 +166,46 @@ void from_files_with_tag_replacement(
 void from_file(const std::string &toml_path);
 
 /**
- * Performs spdlog configuration setup from both base and override files.
+ * Performs spdlog configuration setup from both base and override files. The
+ * base file is required while the override file is optional.
  * The configuration values from the override file will be merged into the base
  * configuration values to form the overall configuration values.
  * @param base_toml_path Path to the base TOML configuration file path.
  * @param override_toml_path Path to the override TOML configuration file path.
  * @throw setup_error
  */
-void from_files(
+void from_file_and_override(
     const std::string &base_toml_path, const std::string &override_toml_path);
 
 /**
- * Serializes the current logger level tagged with its logger name, and persists
+ * Serializes the current logger level tagged with its logger name, and saves
  * into the override file. May choose to add the serialized content to the
  * override file, or completely overwrite the file with just this serialized
- * content.
- * @param logger Logger to serialize and persist.
- * @param override_toml_path Path to persist the serialized content into.
- * @param is_add_on Default true to add content into override file, false to
+ * content. Currently only able to save the logger name and level.
+ * @param logger Logger to serialize and save.
+ * @param override_toml_path Path to save the serialized content into.
+ * @param overwrite Default false to add content into override file, true to
  * ignore the existing file if present, and overwrite the file.
  * @throw setup_error
  */
-void persist_logger(
+void save_logger_to_override(
     const std::shared_ptr<spdlog::logger> &logger,
     const std::string &override_toml_path,
-    const bool is_add_on = true);
+    const bool overwrite = true);
+
+/**
+ * Resets the given logger back to its base configuration from file, while
+ * removing the entry in the override file. Throws exception if the base file
+ * does not contain any configuration for the logger.
+ * @param logger Logger to serialize and save.
+ * @param base_toml_path Path whose file to load the logger configuration from.
+ * @param override_toml_path Path whose file to remove the logger entry.
+ * @throw setup_error
+ */
+void reset_logger_to_base(
+    const std::shared_ptr<spdlog::logger> &logger,
+    const std::string &base_toml_path,
+    const std::string &override_toml_path);
 
 // implementation section
 
