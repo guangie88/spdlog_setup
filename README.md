@@ -27,7 +27,6 @@ Tested against:
 * `g++-5`
 * `g++-6`
 * `g++-7`
-* `clang-3.3`
 * `clang-3.4`
 * `clang-3.5`
 * `clang-3.6`
@@ -176,7 +175,7 @@ not supported.
 
 For more information about how the above sinks work in `spdlog`, please refer to
 the original `spdlog` sinks wiki page at:
-[https://github.com/gabime/spdlog/wiki/4.-Sinks](https://github.com/gabime/spdlog/wiki/4.-Sinks).
+<https://github.com/gabime/spdlog/wiki/4.-Sinks>.
 
 ## TOML Configuration Example
 
