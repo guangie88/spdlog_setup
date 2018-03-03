@@ -27,6 +27,7 @@
 
 #include "spdlog/spdlog.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <exception>
 #include <fstream>
@@ -458,11 +459,11 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     // std
     using std::exception;
     using std::regex;
-    using std::regex_constants::icase;
     using std::regex_match;
     using std::smatch;
     using std::stoull;
     using std::string;
+    using std::regex_constants::icase;
 
     try {
         static const regex RE(
@@ -579,6 +580,32 @@ inline auto level_from_str(const std::string &level)
         return lv::off;
     } else {
         throw setup_error(format("Invalid level string '{}' provided", level));
+    }
+}
+
+inline auto level_to_str(const spdlog::level::level_enum level) -> std::string {
+    // fmt
+    using fmt::format;
+
+    // spdlog
+    namespace lv = spdlog::level;
+
+    if (level == lv::trace) {
+        return "trace";
+    } else if (level == lv::debug) {
+        return "debug";
+    } else if (level == lv::info) {
+        return "info";
+    } else if (level == lv::warn) {
+        return "warn";
+    } else if (level == lv::err) {
+        return "err";
+    } else if (level == lv::critical) {
+        return "critical";
+    } else if (level == lv::off) {
+        return "off";
+    } else {
+        throw setup_error(format("Invalid level enum '{}' provided", level));
     }
 }
 
@@ -1184,4 +1211,85 @@ inline void from_file_and_override(
     }
 }
 
+inline void save_logger_to_override(
+    const std::shared_ptr<spdlog::logger> &logger,
+    const std::string &override_toml_path,
+    const bool overwrite) {
+
+    using details::level_to_str;
+    using details::names::LEVEL;
+    using details::names::LOGGER_TABLE;
+    using details::names::NAME;
+
+    // fmt
+    using fmt::format;
+
+    // std
+    using std::exception;
+    using std::find_if;
+    using std::ofstream;
+    using std::shared_ptr;
+    using std::string;
+
+    try {
+        const auto config = ([overwrite, &override_toml_path] {
+            if (overwrite) {
+                return cpptoml::make_table();
+            } else {
+                return cpptoml::parse_file(override_toml_path);
+            }
+        })();
+
+        const auto curr_loggers = ([&config] {
+            const auto curr_loggers = config->get_table_array(LOGGER_TABLE);
+
+            if (curr_loggers) {
+                return curr_loggers;
+            } else {
+                const auto new_loggers = cpptoml::make_table_array();
+                config->insert(LOGGER_TABLE, new_loggers);
+                return new_loggers;
+            }
+        })();
+
+        const auto curr_logger_it = find_if(
+            curr_loggers->begin(),
+            curr_loggers->end(),
+            [&logger](const shared_ptr<cpptoml::table> curr_logger) {
+                const auto curr_logger_name_opt =
+                    curr_logger->get_as<string>(NAME);
+
+                return curr_logger_name_opt &&
+                       *curr_logger_name_opt == logger->name();
+            });
+
+        const auto curr_logger = ([&curr_logger_it, &curr_loggers, &logger] {
+            if (curr_logger_it == curr_loggers->end()) {
+                const auto new_curr_logger = cpptoml::make_table();
+                new_curr_logger->insert(NAME, logger->name());
+                curr_loggers->insert(curr_loggers->end(), new_curr_logger);
+                return new_curr_logger;
+            } else {
+                return *curr_logger_it;
+            }
+        }());
+
+        // insert can overwrite the value
+        curr_logger->insert(LEVEL, level_to_str(logger->level()));
+
+        ofstream override_str(override_toml_path);
+
+        if (!override_str) {
+            throw setup_error(
+                format("Unable to open '{}' for writing", override_toml_path));
+        }
+
+        auto writer = cpptoml::toml_writer(override_str);
+        writer.visit(*config);
+    } catch (const setup_error &) {
+        throw;
+    } catch (const exception &e) {
+        throw setup_error(e.what());
+    }
+}
 } // namespace spdlog_setup
