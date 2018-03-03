@@ -305,6 +305,15 @@ inline void create_directories(const std::string &dir_path) {
     create_dirs_impl(dir_path);
 }
 
+inline void merge_toml_config(
+    std::shared_ptr<cpptoml::table> &base,
+    const std::shared_ptr<cpptoml::table> &ovr) {
+
+    for (const auto &ovr_kv : *ovr) {
+        base->insert(ovr_kv.first, ovr_kv.second);
+    }
+}
+
 template <class T, class Fn>
 void if_value_from_table(
     const std::shared_ptr<cpptoml::table> &table,
@@ -1102,4 +1111,26 @@ inline void from_file(const std::string &toml_path) {
         throw setup_error(e.what());
     }
 }
+
+inline void from_file_and_override(
+    const std::string &base_toml_path, const std::string &override_toml_path) {
+
+    // std
+    using std::exception;
+    using std::string;
+
+    try {
+        // mutate base for efficiency
+        // while const shared_ptr is mutable in interior, for clarity reason
+        // non-const is used instead
+        auto merged_config = cpptoml::parse_file(base_toml_path);
+        const auto override_config = cpptoml::parse_file(override_toml_path);
+
+        details::merge_toml_config(merged_config, override_config);
+        return details::setup_impl(merged_config);
+    } catch (const exception &e) {
+        throw setup_error(e.what());
+    }
+}
+
 } // namespace spdlog_setup
