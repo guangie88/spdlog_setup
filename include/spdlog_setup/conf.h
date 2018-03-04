@@ -180,33 +180,42 @@ void from_file_and_override(
 
 /**
  * Serializes the current logger level tagged with its logger name, and saves
- * into the override file. May choose to add the serialized content to the
- * override file, or completely overwrite the file with just this serialized
- * content. Currently only able to save the logger name and level.
+ * into the a file. Currently only able to save the logger name and level.
+ * Useful for creating override file. May choose to add the serialized content
+ * to the file, or completely overwrite the file with just this serialized
+ * content.
  * @param logger Logger to serialize and save.
- * @param override_toml_path Path to save the serialized content into.
+ * @param toml_path Path to save the serialized content into.
  * @param overwrite Default false to add content into override file, true to
  * ignore the existing file if present, and overwrite the file.
  * @throw setup_error
  */
-void save_logger_to_override(
+void save_logger_to_file(
     const std::shared_ptr<spdlog::logger> &logger,
-    const std::string &override_toml_path,
+    const std::string &toml_path,
     const bool overwrite = true);
+
+void load_logger_from_file(
+    const std::shared_ptr<spdlog::logger> &logger,
+    const std::string &toml_path);
+
+void load_logger_from_file_and_override(
+    const std::shared_ptr<spdlog::logger> &logger,
+    const std::string &base_toml_path,
+    const std::string &override_toml_path);
 
 /**
  * Resets the given logger back to its base configuration from file, while
  * removing the entry in the override file. Throws exception if the base file
  * does not contain any configuration for the logger.
- * @param logger Logger to serialize and save.
- * @param base_toml_path Path whose file to load the logger configuration from.
- * @param override_toml_path Path whose file to remove the logger entry.
+ * @param logger_name Logger name whose configuration to remove in file.
+ * @param toml_path Path whose file to delete the logger entry from.
+ * @return True if entry of logger name is found for deletion, else false and
+ * deletion has no effect on the file.
  * @throw setup_error
  */
-void reset_logger_to_base(
-    const std::shared_ptr<spdlog::logger> &logger,
-    const std::string &base_toml_path,
-    const std::string &override_toml_path);
+auto delete_logger_in_file(
+    const std::string &logger_name, const std::string &toml_path) -> bool;
 
 // implementation section
 
@@ -459,11 +468,11 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     // std
     using std::exception;
     using std::regex;
+    using std::regex_constants::icase;
     using std::regex_match;
     using std::smatch;
     using std::stoull;
     using std::string;
-    using std::regex_constants::icase;
 
     try {
         static const regex RE(
@@ -1211,15 +1220,71 @@ inline void from_file_and_override(
     }
 }
 
-inline void save_logger_to_override(
+namespace details {
+inline auto
+find_logger_iter_by_name(cpptoml::table_array &loggers, const std::string &name)
+    -> cpptoml::table_array::iterator {
+
+    using names::NAME;
+
+    // std
+    using std::find_if;
+    using std::shared_ptr;
+    using std::string;
+
+    return find_if(
+        loggers.begin(),
+        loggers.end(),
+        [&name](const shared_ptr<cpptoml::table> logger) {
+            const auto logger_name_opt = logger->get_as<string>(NAME);
+            return logger_name_opt && *logger_name_opt == name;
+        });
+}
+
+inline auto
+find_logger_by_name(cpptoml::table_array &loggers, const std::string &name)
+    -> std::shared_ptr<cpptoml::table> {
+
+    const auto logger_it = find_logger_iter_by_name(loggers, name);
+
+    if (logger_it == loggers.end()) {
+        return nullptr;
+    }
+
+    return *logger_it;
+}
+
+inline void write_to_config_file(
+    const cpptoml::table &config, const std::string &toml_path) {
+
+    // fmt
+    using fmt::format;
+
+    // std
+    using std::ofstream;
+
+    ofstream override_str(toml_path);
+
+    if (!override_str) {
+        throw setup_error(format("Unable to open '{}' for writing", toml_path));
+    }
+
+    auto writer = cpptoml::toml_writer(override_str);
+    writer.visit(config);
+}
+} // namespace details
+
+inline void save_logger_to_file(
     const std::shared_ptr<spdlog::logger> &logger,
-    const std::string &override_toml_path,
+    const std::string &toml_path,
     const bool overwrite) {
 
+    using details::find_logger_by_name;
     using details::level_to_str;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
+    using details::write_to_config_file;
 
     // fmt
     using fmt::format;
@@ -1227,65 +1292,113 @@ inline void save_logger_to_override(
     // std
     using std::exception;
     using std::find_if;
-    using std::ofstream;
     using std::shared_ptr;
     using std::string;
 
     try {
-        const auto config = ([overwrite, &override_toml_path] {
+        const auto config = ([overwrite, &toml_path] {
             if (overwrite) {
                 return cpptoml::make_table();
             } else {
-                return cpptoml::parse_file(override_toml_path);
+                return cpptoml::parse_file(toml_path);
             }
         })();
 
-        const auto curr_loggers = ([&config] {
-            const auto curr_loggers = config->get_table_array(LOGGER_TABLE);
+        if (!config) {
+            throw setup_error(
+                format("Unable to parse file at '{}' for saving", toml_path));
+        }
+
+        auto &config_ref = *config;
+
+        const auto curr_loggers = ([&config_ref] {
+            const auto curr_loggers = config_ref.get_table_array(LOGGER_TABLE);
 
             if (curr_loggers) {
                 return curr_loggers;
             } else {
                 const auto new_loggers = cpptoml::make_table_array();
-                config->insert(LOGGER_TABLE, new_loggers);
+                config_ref.insert(LOGGER_TABLE, new_loggers);
                 return new_loggers;
             }
         })();
 
-        const auto curr_logger_it = find_if(
-            curr_loggers->begin(),
-            curr_loggers->end(),
-            [&logger](const shared_ptr<cpptoml::table> curr_logger) {
-                const auto curr_logger_name_opt =
-                    curr_logger->get_as<string>(NAME);
+        auto &curr_loggers_ref = *curr_loggers;
 
-                return curr_logger_name_opt &&
-                       *curr_logger_name_opt == logger->name();
-            });
+        const auto found_curr_logger =
+            find_logger_by_name(curr_loggers_ref, logger->name());
 
-        const auto curr_logger = ([&curr_logger_it, &curr_loggers, &logger] {
-            if (curr_logger_it == curr_loggers->end()) {
-                const auto new_curr_logger = cpptoml::make_table();
-                new_curr_logger->insert(NAME, logger->name());
-                curr_loggers->insert(curr_loggers->end(), new_curr_logger);
-                return new_curr_logger;
-            } else {
-                return *curr_logger_it;
-            }
-        }());
+        const auto curr_logger =
+            ([&found_curr_logger, &curr_loggers_ref, &logger] {
+                if (found_curr_logger) {
+                    return found_curr_logger;
+                } else {
+                    const auto new_curr_logger = cpptoml::make_table();
+                    new_curr_logger->insert(NAME, logger->name());
+
+                    curr_loggers_ref.insert(
+                        curr_loggers_ref.end(), new_curr_logger);
+
+                    return new_curr_logger;
+                }
+            }());
 
         // insert can overwrite the value
-        curr_logger->insert(LEVEL, level_to_str(logger->level()));
+        auto &curr_logger_ref = *curr_logger;
+        curr_logger_ref.insert(LEVEL, level_to_str(logger->level()));
+        write_to_config_file(*config, toml_path);
+    } catch (const setup_error &) {
+        throw;
+    } catch (const exception &e) {
+        throw setup_error(e.what());
+    }
+}
 
-        ofstream override_str(override_toml_path);
+inline auto delete_logger_in_file(
+    const std::string &logger_name, const std::string &toml_path) -> bool {
 
-        if (!override_str) {
-            throw setup_error(
-                format("Unable to open '{}' for writing", override_toml_path));
+    using details::find_logger_iter_by_name;
+    using details::level_to_str;
+    using details::names::LEVEL;
+    using details::names::LOGGER_TABLE;
+    using details::names::NAME;
+    using details::write_to_config_file;
+
+    // fmt
+    using fmt::format;
+
+    // std
+    using std::exception;
+    using std::find_if;
+    using std::shared_ptr;
+    using std::string;
+
+    try {
+        const auto config = cpptoml::parse_file(toml_path);
+
+        if (!config) {
+            throw setup_error(format(
+                "Unable to parse file at '{}' for deleting logger '{}'",
+                toml_path,
+                logger_name));
         }
 
-        auto writer = cpptoml::toml_writer(override_str);
-        writer.visit(*config);
+        const auto &config_ref = *config;
+        const auto curr_loggers = config_ref.get_table_array(LOGGER_TABLE);
+
+        if (!curr_loggers) {
+            throw setup_error(format(
+                "Unable to find any logger table array for file at '{}'",
+                toml_path));
+        }
+
+        auto &curr_loggers_ref = *curr_loggers;
+
+        const auto found_curr_logger_it =
+            find_logger_iter_by_name(curr_loggers_ref, logger_name);
+
+        curr_loggers_ref.erase(found_curr_logger_it);
+        write_to_config_file(*config, toml_path);
     } catch (const setup_error &) {
         throw;
     } catch (const exception &e) {
