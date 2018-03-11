@@ -144,7 +144,7 @@ void from_file_and_override_with_tag_replacement(
         cpptoml::parser override_parser{override_toml_ss};
         const auto override_config = override_parser.parse();
 
-        details::merge_toml_config(merged_config, override_config);
+        details::merge_config_root(merged_config, override_config);
         return details::setup_impl(merged_config);
     } catch (const setup_error &) {
         throw;
@@ -180,7 +180,7 @@ inline void from_file_and_override(
         auto merged_config = cpptoml::parse_file(base_toml_path);
         const auto override_config = cpptoml::parse_file(override_toml_path);
 
-        details::merge_toml_config(merged_config, override_config);
+        details::merge_config_root(merged_config, override_config);
         return details::setup_impl(merged_config);
     } catch (const exception &e) {
         throw setup_error(e.what());
@@ -192,12 +192,12 @@ inline void save_logger_to_file(
     const std::string &toml_path,
     const bool overwrite) {
 
-    using details::find_logger_by_name;
+    using details::find_item_by_name;
     using details::level_to_str;
+    using details::write_to_config_file;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
-    using details::write_to_config_file;
 
     // fmt
     using fmt::format;
@@ -239,7 +239,7 @@ inline void save_logger_to_file(
         auto &curr_loggers_ref = *curr_loggers;
 
         const auto found_curr_logger =
-            find_logger_by_name(curr_loggers_ref, logger->name());
+            find_item_by_name(curr_loggers_ref, logger->name());
 
         const auto curr_logger =
             ([&found_curr_logger, &curr_loggers_ref, &logger] {
@@ -270,12 +270,12 @@ inline void save_logger_to_file(
 inline auto delete_logger_in_file(
     const std::string &logger_name, const std::string &toml_path) -> bool {
 
-    using details::find_logger_iter_by_name;
+    using details::find_item_iter_by_name;
     using details::level_to_str;
+    using details::write_to_config_file;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
-    using details::write_to_config_file;
 
     // fmt
     using fmt::format;
@@ -308,7 +308,7 @@ inline auto delete_logger_in_file(
         auto &curr_loggers_ref = *curr_loggers;
 
         const auto found_curr_logger_it =
-            find_logger_iter_by_name(curr_loggers_ref, logger_name);
+            find_item_iter_by_name(curr_loggers_ref, logger_name);
 
         curr_loggers_ref.erase(found_curr_logger_it);
         write_to_config_file(*config, toml_path);

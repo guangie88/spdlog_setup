@@ -202,8 +202,9 @@ inline void create_dirs_impl(const std::string &dir_path) {
 inline void create_directories(const std::string &dir_path) {
     create_dirs_impl(dir_path);
 }
+
 inline auto
-find_logger_iter_by_name(cpptoml::table_array &loggers, const std::string &name)
+find_item_iter_by_name(cpptoml::table_array &items, const std::string &name)
     -> cpptoml::table_array::iterator {
 
     using names::NAME;
@@ -214,25 +215,25 @@ find_logger_iter_by_name(cpptoml::table_array &loggers, const std::string &name)
     using std::string;
 
     return find_if(
-        loggers.begin(),
-        loggers.end(),
-        [&name](const shared_ptr<cpptoml::table> logger) {
-            const auto logger_name_opt = logger->get_as<string>(NAME);
-            return logger_name_opt && *logger_name_opt == name;
+        items.begin(),
+        items.end(),
+        [&name](const shared_ptr<cpptoml::table> item) {
+            const auto item_name_opt = item->get_as<string>(NAME);
+            return item_name_opt && *item_name_opt == name;
         });
 }
 
 inline auto
-find_logger_by_name(cpptoml::table_array &loggers, const std::string &name)
+find_item_by_name(cpptoml::table_array &items, const std::string &name)
     -> std::shared_ptr<cpptoml::table> {
 
-    const auto logger_it = find_logger_iter_by_name(loggers, name);
+    const auto item_it = find_item_iter_by_name(items, name);
 
-    if (logger_it == loggers.end()) {
+    if (item_it == items.end()) {
         return nullptr;
     }
 
-    return *logger_it;
+    return *item_it;
 }
 
 inline void write_to_config_file(
@@ -253,6 +254,7 @@ inline void write_to_config_file(
     auto writer = cpptoml::toml_writer(override_str);
     writer.visit(config);
 }
+
 template <class... Ps>
 auto read_template_file_into_stringstream(
     const std::string &file_path, Ps &&... ps) -> std::stringstream {
@@ -291,14 +293,72 @@ auto read_template_file_into_stringstream(
     }
 }
 
-inline void merge_toml_config(
-    std::shared_ptr<cpptoml::table> &base,
-    const std::shared_ptr<cpptoml::table> &ovr) {
+inline void merge_config_items(
+    cpptoml::table &base_ref,
+    const std::shared_ptr<cpptoml::table_array> &base_items,
+    const std::shared_ptr<cpptoml::table_array> &ovr_items) {
 
-    for (const auto &ovr_kv : *ovr) {
-        base->insert(ovr_kv.first, ovr_kv.second);
+    using names::NAME;
+
+    // std
+    using std::string;
+
+    if (base_items && ovr_items) {
+        auto &base_items_ref = *base_items;
+        const auto &ovr_items_ref = *ovr_items;
+
+        for (const auto ovr_item : ovr_items_ref) {
+            const auto &ovr_item_ref = *ovr_item;
+            const auto ovr_name_opt = ovr_item->get_as<string>(NAME);
+
+            if (!ovr_name_opt) {
+                throw setup_error(
+                    "One of the items in override does not have a name");
+            }
+
+            const auto &ovr_name = *ovr_name_opt;
+
+            const auto found_base_item =
+                find_item_by_name(base_items_ref, ovr_name);
+
+            if (found_base_item) {
+                // merge from override to base
+                auto &found_base_item_ref = *found_base_item;
+
+                for (const auto ovr_item_kv : ovr_item_ref) {
+                    found_base_item_ref.insert(
+                        ovr_item_kv.first, ovr_item_kv.second);
+                }
+            } else {
+                // insert new override item entry
+                base_items_ref.push_back(ovr_item);
+            }
+        }
+    } else if (!base_items && ovr_items) {
+        base_ref.insert(names::LOGGER_TABLE, ovr_items);
     }
 }
+
+inline void merge_config_root(
+    const std::shared_ptr<cpptoml::table> &base,
+    const std::shared_ptr<cpptoml::table> &ovr) {
+
+    if (!base) {
+        throw setup_error("Base config cannot be null for merging");
+    }
+
+    if (!ovr) {
+        throw setup_error("Override config cannot be null for merging");
+    }
+
+    auto &base_ref = *base;
+    const auto &ovr_ref = *ovr;
+
+    // directly target items to merge
+    auto base_loggers = base_ref.get_table_array(names::LOGGER_TABLE);
+    const auto ovr_loggers = ovr_ref.get_table_array(names::LOGGER_TABLE);
+    merge_config_items(base_ref, base_loggers, ovr_loggers);
+} // namespace details
 
 template <class T, class Fn>
 void if_value_from_table(
@@ -406,11 +466,11 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     // std
     using std::exception;
     using std::regex;
-    using std::regex_constants::icase;
     using std::regex_match;
     using std::smatch;
     using std::stoull;
     using std::string;
+    using std::regex_constants::icase;
 
     try {
         static const regex RE(
