@@ -1,7 +1,7 @@
 /**
  * Implementation of public facing functions in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.0
+ * @version 0.3.0-alpha.0
  */
 
 #pragma once
@@ -130,18 +130,19 @@ void from_file_and_override_with_tag_replacement(
     // std
     using std::exception;
     using std::forward;
+    using std::move;
 
     try {
         auto base_toml_ss = details::read_template_file_into_stringstream(
             base_pre_toml_path, ps...);
 
-        cpptoml::parser base_parser{base_toml_ss};
-        auto merged_config = base_parser.parse();
+        cpptoml::parser base_parser{move(base_toml_ss)};
+        const auto merged_config = base_parser.parse();
 
         auto override_toml_ss = details::read_template_file_into_stringstream(
             override_pre_toml_path, ps...);
 
-        cpptoml::parser override_parser{override_toml_ss};
+        cpptoml::parser override_parser{move(override_toml_ss)};
         const auto override_config = override_parser.parse();
 
         details::merge_config_root(merged_config, override_config);
@@ -174,12 +175,10 @@ inline void from_file_and_override(
     using std::string;
 
     try {
-        // mutate base for efficiency
-        // while const shared_ptr is mutable in interior, for clarity reason
-        // non-const is used instead
-        auto merged_config = cpptoml::parse_file(base_toml_path);
+        const auto merged_config = cpptoml::parse_file(base_toml_path);
         const auto override_config = cpptoml::parse_file(override_toml_path);
 
+        // merged_config is interior mutated
         details::merge_config_root(merged_config, override_config);
         return details::setup_impl(merged_config);
     } catch (const exception &e) {
