@@ -1,0 +1,7 @@
+[[sink]]
+name = "console_st"
+level = "err"
+
+[[sink]]
+name = "console_mt"
+level = "critical"

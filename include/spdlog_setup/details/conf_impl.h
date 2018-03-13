@@ -343,6 +343,10 @@ inline void merge_config_root(
     const std::shared_ptr<cpptoml::table> &base,
     const std::shared_ptr<cpptoml::table> &ovr) {
 
+    using names::LOGGER_TABLE;
+    using names::PATTERN_TABLE;
+    using names::SINK_TABLE;
+
     if (!base) {
         throw setup_error("Base config cannot be null for merging");
     }
@@ -355,7 +359,19 @@ inline void merge_config_root(
     const auto &ovr_ref = *ovr;
 
     // directly target items to merge
-    auto base_loggers = base_ref.get_table_array(names::LOGGER_TABLE);
+
+    // sinks
+    const auto base_sinks = base_ref.get_table_array(names::SINK_TABLE);
+    const auto ovr_sinks = ovr_ref.get_table_array(names::SINK_TABLE);
+    merge_config_items(base_ref, base_sinks, ovr_sinks);
+
+    // patterns
+    const auto base_patterns = base_ref.get_table_array(names::PATTERN_TABLE);
+    const auto ovr_patterns = ovr_ref.get_table_array(names::PATTERN_TABLE);
+    merge_config_items(base_ref, base_patterns, ovr_patterns);
+
+    // loggers
+    const auto base_loggers = base_ref.get_table_array(names::LOGGER_TABLE);
     const auto ovr_loggers = ovr_ref.get_table_array(names::LOGGER_TABLE);
     merge_config_items(base_ref, base_loggers, ovr_loggers);
 } // namespace details

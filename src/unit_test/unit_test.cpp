@@ -145,6 +145,40 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
     root_logger->critical("Test Message - Critical!");
 }
 
+TEST_CASE(
+    "Parse TOML file with override for set-up", "[from_file_with_override]") {
+    ::spdlog::drop_all();
+
+#ifdef _WIN32
+    try {
+        spdlog_setup::from_file_and_override(
+            "config/log_conf_win.toml", "config/log_conf_override.toml");
+    } catch (const setup_error &) {
+        spdlog_setup::from_file_and_override(
+            "../config/log_conf_win.toml", "../config/log_conf_override.toml");
+    }
+#else
+    try {
+        spdlog_setup::from_file_and_override(
+            "config/log_conf_linux.toml", "config/log_conf_override.toml");
+    } catch (const setup_error &) {
+        spdlog_setup::from_file_and_override(
+            "../config/log_conf_linux.toml",
+            "../config/log_conf_override.toml");
+    }
+#endif
+
+    const auto console_logger = ::spdlog::get("console");
+    REQUIRE(console_logger != nullptr);
+
+    console_logger->trace("Console Message - Trace!");
+    console_logger->debug("Console Message - Debug!");
+    console_logger->info("Console Message - Info!");
+    console_logger->warn("Console Message - Warn!");
+    console_logger->error("Console Message - Error!");
+    console_logger->critical("Console Message - Critical!");
+}
+
 TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {
     REQUIRE_THROWS_AS(
         spdlog_setup::from_file("config/no_such_file"), setup_error);
