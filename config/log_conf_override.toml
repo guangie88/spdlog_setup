@@ -1,0 +1,22 @@
+[[sink]]
+name = "console_st"
+level = "err"
+
+[[sink]]
+name = "console_mt"
+level = "critical"
+
+[[sink]]
+name = "console_another"
+type = "stdout_sink_st"
+level = "trace"
+
+[[pattern]]
+name = "super-succient"
+value = "%L: %v"
+
+[[logger]]
+name = "console"
+sinks = ["console_st", "console_mt", "console_another"]
+pattern = "super-succient"
+level = "trace"

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 # project variables
-project(spdlog_setup VERSION 0.2.0 LANGUAGES CXX)
+project(spdlog_setup VERSION 0.3.0 LANGUAGES CXX)
 
 # general fixed compiler settings
 if(${MSVC})
@@ -15,6 +15,10 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 else()
   set(DEBUG_FLAGS -Wall)
 endif()
+
+# allow thread library to be used for linking
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
@@ -78,7 +82,8 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
 
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
-      spdlog_setup)
+      spdlog_setup
+      Threads::Threads)
 
   if(SPDLOG_SETUP_INCLUDE_TEST_COVERAGE)
     target_compile_options(spdlog_setup_unit_test
