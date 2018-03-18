@@ -26,10 +26,17 @@
 using namespace examples;
 
 // spdlog_setup
-using namespace spdlog::level;
-using namespace spdlog_setup::details::names;
 using fmt::arg;
+using spdlog::level::level_enum;
 using spdlog_setup::setup_error;
+
+namespace names = spdlog_setup::details::names;
+using names::LEVEL;
+using names::LOGGER_TABLE;
+using names::NAME;
+using names::PATTERN;
+using names::PATTERN_TABLE;
+using names::VALUE;
 
 // std
 using std::cerr;
