@@ -16,6 +16,10 @@ else()
   set(DEBUG_FLAGS -Wall)
 endif()
 
+# allow thread library to be used for linking
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
@@ -79,7 +83,7 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
       spdlog_setup
-      pthread)
+      Threads::Threads)
 
   if(SPDLOG_SETUP_INCLUDE_TEST_COVERAGE)
     target_compile_options(spdlog_setup_unit_test
