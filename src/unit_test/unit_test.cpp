@@ -218,7 +218,7 @@ TEST_CASE("Save logger to new file", "[save_logger_to_file_new]") {
 
 TEST_CASE(
     "Save logger to file with existing logger",
-    "[save_logger_to_file_override]") {
+    "[save_logger_to_file_no_overwrite]") {
 
     spdlog::drop_all();
     const auto logger = spdlog::stdout_logger_mt("console");
@@ -302,6 +302,51 @@ TEST_CASE(
         REQUIRE(static_cast<bool>(level));
         REQUIRE(*level == "critical");
     }
+}
+
+TEST_CASE(
+    "Save logger to file overwriting existing file",
+    "[save_logger_to_file_overwrite]") {
+
+    spdlog::drop_all();
+    const auto logger = spdlog::stdout_logger_mt("console");
+    logger->set_level(level_enum::err);
+
+    const auto tmp_file = get_simple_console_logger_conf_tmp_file();
+    const auto &tmp_file_path = tmp_file.get_file_path();
+
+    // true to overwrite the file completely
+    spdlog_setup::save_logger_to_file(logger, tmp_file_path, true);
+
+    const auto config = cpptoml::parse_file(tmp_file_path);
+    REQUIRE(config != nullptr);
+
+    // patterns
+
+    const auto patterns = config->get_table_array(PATTERN_TABLE);
+    REQUIRE(patterns == nullptr);
+
+    // loggers
+
+    const auto loggers = config->get_table_array(LOGGER_TABLE);
+    REQUIRE(loggers != nullptr);
+
+    const auto &loggers_ref = *loggers;
+    REQUIRE(dist(loggers_ref) == 1);
+
+    const auto &console = get_index(loggers_ref, 0);
+    REQUIRE(console != nullptr);
+
+    const auto &console_ref = *console;
+    REQUIRE(dist(console_ref) == 2);
+
+    const auto name = console_ref.get_as<string>(NAME);
+    REQUIRE(static_cast<bool>(name));
+    REQUIRE(*name == "console");
+
+    const auto level = console_ref.get_as<string>(LEVEL);
+    REQUIRE(static_cast<bool>(level));
+    REQUIRE(*level == "err");
 }
 
 TEST_CASE("Delete logger from file simple", "[delete_logger_in_file_simple]") {

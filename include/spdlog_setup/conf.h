@@ -74,15 +74,6 @@ void save_logger_to_file(
     const std::string &toml_path,
     const bool overwrite = false);
 
-void load_logger_from_file(
-    const std::shared_ptr<spdlog::logger> &logger,
-    const std::string &toml_path);
-
-void load_logger_from_file_and_override(
-    const std::shared_ptr<spdlog::logger> &logger,
-    const std::string &base_toml_path,
-    const std::string &override_toml_path);
-
 /**
  * Resets the given logger back to its base configuration from file, while
  * removing the entry in the override file. Throws exception if the base file
