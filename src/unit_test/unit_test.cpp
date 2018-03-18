@@ -1,7 +1,7 @@
 /**
  * Unit tests implementation.
  * @author Chen Weiguang
- * @version 0.3.0
+ * @version 0.3.0-alpha.0
  */
 
 #define CATCH_CONFIG_MAIN
@@ -13,10 +13,17 @@
 #endif
 #endif
 
+#include "examples.h"
+
 #include "spdlog_setup/conf.h"
 
+#include <cstdio>
 #include <iostream>
 #include <string>
+
+using examples::get_full_conf_tmp_file;
+using examples::get_override_conf_tmp_file;
+using examples::get_pre_conf_tmp_file;
 
 // spdlog_setup
 using fmt::arg;
@@ -89,19 +96,8 @@ TEST_CASE("Parse max size error", "[parse_max_size_error]") {
 TEST_CASE("Parse TOML file for set-up", "[from_file]") {
     ::spdlog::drop_all();
 
-#ifdef _WIN32
-    try {
-        spdlog_setup::from_file("config/log_conf_win.toml");
-    } catch (const setup_error &) {
-        spdlog_setup::from_file("../config/log_conf_win.toml");
-    }
-#else
-    try {
-        spdlog_setup::from_file("config/log_conf_linux.toml");
-    } catch (const setup_error &) {
-        spdlog_setup::from_file("../config/log_conf_linux.toml");
-    }
-#endif
+    const auto tmp_file = get_full_conf_tmp_file();
+    spdlog_setup::from_file(tmp_file.get_file_path());
 
     const auto root_logger = ::spdlog::get("root");
     REQUIRE(root_logger != nullptr);
@@ -125,14 +121,10 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
 
     const auto index_arg = arg("index", 123);
     const auto path_arg = arg("path", "spdlog_setup");
+    const auto tmp_file = get_pre_conf_tmp_file();
 
-    try {
-        spdlog_setup::from_file_with_tag_replacement(
-            "config/log_conf.pre.toml", index_arg, path_arg);
-    } catch (const setup_error &) {
-        spdlog_setup::from_file_with_tag_replacement(
-            "../config/log_conf.pre.toml", index_arg, path_arg);
-    }
+    spdlog_setup::from_file_with_tag_replacement(
+        tmp_file.get_file_path(), index_arg, path_arg);
 
     const auto root_logger = ::spdlog::get("root");
     REQUIRE(root_logger != nullptr);
@@ -149,24 +141,12 @@ TEST_CASE(
     "Parse TOML file with override for set-up", "[from_file_with_override]") {
     ::spdlog::drop_all();
 
-#ifdef _WIN32
-    try {
-        spdlog_setup::from_file_and_override(
-            "config/log_conf_win.toml", "config/log_conf_override.toml");
-    } catch (const setup_error &) {
-        spdlog_setup::from_file_and_override(
-            "../config/log_conf_win.toml", "../config/log_conf_override.toml");
-    }
-#else
-    try {
-        spdlog_setup::from_file_and_override(
-            "config/log_conf_linux.toml", "config/log_conf_override.toml");
-    } catch (const setup_error &) {
-        spdlog_setup::from_file_and_override(
-            "../config/log_conf_linux.toml",
-            "../config/log_conf_override.toml");
-    }
-#endif
+    const auto full_conf_tmp_file = get_full_conf_tmp_file();
+    const auto override_conf_tmp_file = get_override_conf_tmp_file();
+
+    spdlog_setup::from_file_and_override(
+        full_conf_tmp_file.get_file_path(),
+        override_conf_tmp_file.get_file_path());
 
     const auto console_logger = ::spdlog::get("console");
     REQUIRE(console_logger != nullptr);
