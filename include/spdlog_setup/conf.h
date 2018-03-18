@@ -309,8 +309,13 @@ inline auto delete_logger_in_file(
         const auto found_curr_logger_it =
             find_item_iter_by_name(curr_loggers_ref, logger_name);
 
+        if (found_curr_logger_it == curr_loggers_ref.end()) {
+            return false;
+        }
+
         curr_loggers_ref.erase(found_curr_logger_it);
         write_to_config_file(*config, toml_path);
+        return true;
     } catch (const setup_error &) {
         throw;
     } catch (const exception &e) {

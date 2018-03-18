@@ -303,3 +303,119 @@ TEST_CASE(
         REQUIRE(*level == "critical");
     }
 }
+
+TEST_CASE("Delete logger from file simple", "[delete_logger_in_file_simple]") {
+    spdlog::drop_all();
+
+    const auto tmp_file = get_simple_console_logger_conf_tmp_file();
+    const auto &tmp_file_path = tmp_file.get_file_path();
+
+    {
+        const auto entry_deleted =
+            spdlog_setup::delete_logger_in_file("not-console", tmp_file_path);
+
+        REQUIRE(entry_deleted);
+
+        const auto config = cpptoml::parse_file(tmp_file_path);
+        REQUIRE(config != nullptr);
+
+        // patterns
+
+        const auto patterns = config->get_table_array(PATTERN_TABLE);
+        REQUIRE(patterns != nullptr);
+
+        const auto &patterns_ref = *patterns;
+        REQUIRE(dist(patterns_ref) == 1);
+
+        const auto &pattern = get_index(patterns_ref, 0);
+        REQUIRE(pattern != nullptr);
+
+        const auto &pattern_ref = *pattern;
+
+        {
+            const auto name = pattern_ref.get_as<string>(NAME);
+            REQUIRE(static_cast<bool>(name));
+            REQUIRE(*name == "easy");
+
+            const auto value = pattern_ref.get_as<string>(VALUE);
+            REQUIRE(static_cast<bool>(value));
+            REQUIRE(*value == "%L: %v");
+        }
+
+        // loggers
+
+        const auto loggers = config->get_table_array(LOGGER_TABLE);
+        REQUIRE(loggers != nullptr);
+
+        const auto &loggers_ref = *loggers;
+        REQUIRE(dist(loggers_ref) == 1);
+
+        const auto &console = get_index(loggers_ref, 0);
+        REQUIRE(console != nullptr);
+
+        const auto &console_ref = *console;
+        REQUIRE(dist(console_ref) == 3);
+
+        {
+            const auto name = console_ref.get_as<string>(NAME);
+            REQUIRE(static_cast<bool>(name));
+            REQUIRE(*name == "console");
+
+            const auto pattern = console_ref.get_as<string>(PATTERN);
+            REQUIRE(static_cast<bool>(pattern));
+            REQUIRE(*pattern == "easy");
+
+            const auto level = console_ref.get_as<string>(LEVEL);
+            REQUIRE(static_cast<bool>(level));
+            REQUIRE(*level == "trace");
+        }
+    }
+
+    {
+        const auto entry_deleted =
+            spdlog_setup::delete_logger_in_file("no-such-thing", tmp_file_path);
+
+        REQUIRE(!entry_deleted);
+
+        const auto config = cpptoml::parse_file(tmp_file_path);
+        REQUIRE(config != nullptr);
+
+        const auto loggers = config->get_table_array(LOGGER_TABLE);
+        REQUIRE(loggers != nullptr);
+
+        const auto &loggers_ref = *loggers;
+        REQUIRE(dist(loggers_ref) == 1);
+    }
+
+    {
+        const auto entry_deleted =
+            spdlog_setup::delete_logger_in_file("console", tmp_file_path);
+
+        REQUIRE(entry_deleted);
+
+        const auto config = cpptoml::parse_file(tmp_file_path);
+        REQUIRE(config != nullptr);
+
+        const auto loggers = config->get_table_array(LOGGER_TABLE);
+        REQUIRE(loggers == nullptr);
+    }
+
+    // opening the file without any loggers will throw an exception
+
+    REQUIRE_THROWS_AS(
+        spdlog_setup::delete_logger_in_file("console", tmp_file_path),
+        setup_error);
+}
+
+TEST_CASE("Delete logger from empty file", "[delete_logger_in_file_empty]") {
+    spdlog::drop_all();
+
+    const auto tmp_file = examples::tmp_file();
+    const auto &tmp_file_path = tmp_file.get_file_path();
+
+    // opening the file without any loggers will throw an exception
+
+    REQUIRE_THROWS_AS(
+        spdlog_setup::delete_logger_in_file("any-log", tmp_file_path),
+        setup_error);
+}
