@@ -149,9 +149,35 @@ TEST_CASE(
     const auto full_conf_tmp_file = get_full_conf_tmp_file();
     const auto override_conf_tmp_file = get_override_conf_tmp_file();
 
-    spdlog_setup::from_file_and_override(
+    const auto use_override = spdlog_setup::from_file_and_override(
         full_conf_tmp_file.get_file_path(),
         override_conf_tmp_file.get_file_path());
+
+    REQUIRE(use_override);
+
+    const auto console_logger = spdlog::get("console");
+    REQUIRE(console_logger != nullptr);
+
+    console_logger->trace("Console Message - Trace!");
+    console_logger->debug("Console Message - Debug!");
+    console_logger->info("Console Message - Info!");
+    console_logger->warn("Console Message - Warn!");
+    console_logger->error("Console Message - Error!");
+    console_logger->critical("Console Message - Critical!");
+}
+
+TEST_CASE(
+    "Parse TOML file with empty override for set-up",
+    "[from_file_with_override_empty]") {
+
+    spdlog::drop_all();
+
+    const auto full_conf_tmp_file = get_full_conf_tmp_file();
+
+    const auto use_override = spdlog_setup::from_file_and_override(
+        full_conf_tmp_file.get_file_path(), "no_such_file");
+
+    REQUIRE(!use_override);
 
     const auto console_logger = spdlog::get("console");
     REQUIRE(console_logger != nullptr);

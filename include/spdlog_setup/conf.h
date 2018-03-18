@@ -53,9 +53,11 @@ void from_file(const std::string &toml_path);
  * @param base_toml_path Path to the base TOML configuration file path.
  * @param override_toml_path Path to the override TOML configuration file path.
  * @throw setup_error
+ * @return true if override file is used, otherwise false.
  */
-void from_file_and_override(
-    const std::string &base_toml_path, const std::string &override_toml_path);
+auto from_file_and_override(
+    const std::string &base_toml_path, const std::string &override_toml_path)
+    -> bool;
 
 /**
  * Serializes the current logger level tagged with its logger name, and saves
@@ -104,7 +106,7 @@ void from_file_with_tag_replacement(
         cpptoml::parser parser{toml_ss};
         const auto config = parser.parse();
 
-        return details::setup_impl(config);
+        details::setup_impl(config);
     } catch (const setup_error &) {
         throw;
     } catch (const exception &e) {
@@ -137,7 +139,7 @@ void from_file_and_override_with_tag_replacement(
         const auto override_config = override_parser.parse();
 
         details::merge_config_root(merged_config, override_config);
-        return details::setup_impl(merged_config);
+        details::setup_impl(merged_config);
     } catch (const setup_error &) {
         throw;
     } catch (const exception &e) {
@@ -152,26 +154,39 @@ inline void from_file(const std::string &toml_path) {
 
     try {
         const auto config = cpptoml::parse_file(toml_path);
-        return details::setup_impl(config);
+        details::setup_impl(config);
     } catch (const exception &e) {
         throw setup_error(e.what());
     }
 }
 
-inline void from_file_and_override(
-    const std::string &base_toml_path, const std::string &override_toml_path) {
+inline auto from_file_and_override(
+    const std::string &base_toml_path, const std::string &override_toml_path)
+    -> bool {
 
     // std
     using std::exception;
+    using std::ifstream;
     using std::string;
 
     try {
         const auto merged_config = cpptoml::parse_file(base_toml_path);
-        const auto override_config = cpptoml::parse_file(override_toml_path);
 
-        // merged_config is interior mutated
-        details::merge_config_root(merged_config, override_config);
-        return details::setup_impl(merged_config);
+        const auto has_override = [&override_toml_path] {
+            ifstream istr(override_toml_path);
+            return static_cast<bool>(istr);
+        }();
+
+        if (has_override) {
+            const auto override_config =
+                cpptoml::parse_file(override_toml_path);
+
+            // merged_config is interior mutated
+            details::merge_config_root(merged_config, override_config);
+        }
+
+        details::setup_impl(merged_config);
+        return has_override;
     } catch (const exception &e) {
         throw setup_error(e.what());
     }
