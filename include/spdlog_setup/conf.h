@@ -99,12 +99,15 @@ void from_file_with_tag_replacement(
     // std
     using std::exception;
     using std::forward;
+    using std::stringstream;
 
     try {
-        auto toml_ss = details::read_template_file_into_stringstream(
-            pre_toml_path, forward<Ps>(ps)...);
+        stringstream toml_ss;
 
-        cpptoml::parser parser{toml_ss};
+        details::read_template_file_into_stringstream(
+            toml_ss, pre_toml_path, forward<Ps>(ps)...);
+
+        cpptoml::parser parser(toml_ss);
         const auto config = parser.parse();
 
         details::setup_impl(config);
@@ -126,10 +129,13 @@ auto from_file_and_override_with_tag_replacement(
     using std::forward;
     using std::ifstream;
     using std::move;
+    using std::stringstream;
 
     try {
-        auto base_toml_ss = details::read_template_file_into_stringstream(
-            base_pre_toml_path, ps...);
+        stringstream base_toml_ss;
+
+        details::read_template_file_into_stringstream(
+            base_toml_ss, base_pre_toml_path, ps...);
 
         cpptoml::parser base_parser(base_toml_ss);
         const auto merged_config = base_parser.parse();
@@ -140,9 +146,10 @@ auto from_file_and_override_with_tag_replacement(
         }();
 
         if (has_override) {
-            auto override_toml_ss =
-                details::read_template_file_into_stringstream(
-                    override_pre_toml_path, ps...);
+            stringstream override_toml_ss;
+
+            details::read_template_file_into_stringstream(
+                override_toml_ss, override_pre_toml_path, ps...);
 
             cpptoml::parser override_parser(override_toml_ss);
             const auto override_config = override_parser.parse();

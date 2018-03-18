@@ -256,8 +256,8 @@ inline void write_to_config_file(
 }
 
 template <class... Ps>
-auto read_template_file_into_stringstream(
-    const std::string &file_path, Ps &&... ps) -> std::stringstream {
+void read_template_file_into_stringstream(
+    std::stringstream &toml_ss, const std::string &file_path, Ps &&... ps) {
 
     // fmt
     using fmt::format;
@@ -285,9 +285,7 @@ auto read_template_file_into_stringstream(
         const auto toml_content =
             format(pre_toml_content, std::forward<Ps>(ps)...);
 
-        stringstream toml_ss;
         toml_ss << toml_content;
-        return move(toml_ss);
     } catch (const exception &e) {
         throw setup_error(e.what());
     }
