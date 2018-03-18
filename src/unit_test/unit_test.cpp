@@ -224,6 +224,36 @@ TEST_CASE(
     root_logger->critical("Test Message - Critical!");
 }
 
+TEST_CASE(
+    "Parse pre-TOML file with missing override for set-up",
+    "[from_file_with_missing_override_with_tag_replacement]") {
+    spdlog::drop_all();
+
+    const auto index_arg = arg("index", 123);
+    const auto path_arg = arg("path", "spdlog_setup");
+
+    const auto pre_conf_tmp_file = get_pre_conf_tmp_file();
+
+    const auto use_override =
+        spdlog_setup::from_file_and_override_with_tag_replacement(
+            pre_conf_tmp_file.get_file_path(),
+            "no_such_file",
+            index_arg,
+            path_arg);
+
+    REQUIRE(!use_override);
+
+    const auto root_logger = spdlog::get("root");
+    REQUIRE(root_logger != nullptr);
+
+    root_logger->trace("Test Message - Trace!");
+    root_logger->debug("Test Message - Debug!");
+    root_logger->info("Test Message - Info!");
+    root_logger->warn("Test Message - Warn!");
+    root_logger->error("Test Message - Error!");
+    root_logger->critical("Test Message - Critical!");
+}
+
 TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {
     spdlog::drop_all();
 
