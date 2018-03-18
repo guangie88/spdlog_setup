@@ -30,13 +30,14 @@ void from_file_with_tag_replacement(
  * @param base_pre_toml_path Path to the base pre-TOML configuration file path.
  * @param override_pre_toml_path Path to the override pre-TOML configuration
  * file path.
+ * @return true if override file is used, otherwise false.
  * @throw setup_error
  */
 template <class... Ps>
-void from_file_and_override_with_tag_replacement(
+auto from_file_and_override_with_tag_replacement(
     const std::string &base_pre_toml_path,
     const std::string &override_pre_toml_path,
-    const Ps &... ps);
+    const Ps &... ps) -> bool;
 
 /**
  * Performs spdlog configuration setup from file.
@@ -52,8 +53,8 @@ void from_file(const std::string &toml_path);
  * configuration values to form the overall configuration values.
  * @param base_toml_path Path to the base TOML configuration file path.
  * @param override_toml_path Path to the override TOML configuration file path.
- * @throw setup_error
  * @return true if override file is used, otherwise false.
+ * @throw setup_error
  */
 auto from_file_and_override(
     const std::string &base_toml_path, const std::string &override_toml_path)
@@ -82,7 +83,7 @@ void save_logger_to_file(
  * does not contain any configuration for the logger.
  * @param logger_name Logger name whose configuration to remove in file.
  * @param toml_path Path whose file to delete the logger entry from.
- * @return True if entry of logger name is found for deletion, else false and
+ * @return true if entry of logger name is found for deletion, else false and
  * deletion has no effect on the file.
  * @throw setup_error
  */
@@ -115,31 +116,43 @@ void from_file_with_tag_replacement(
 }
 
 template <class... Ps>
-void from_file_and_override_with_tag_replacement(
+auto from_file_and_override_with_tag_replacement(
     const std::string &base_pre_toml_path,
     const std::string &override_pre_toml_path,
-    const Ps &... ps) {
+    const Ps &... ps) -> bool {
 
     // std
     using std::exception;
     using std::forward;
+    using std::ifstream;
     using std::move;
 
     try {
         auto base_toml_ss = details::read_template_file_into_stringstream(
             base_pre_toml_path, ps...);
 
-        cpptoml::parser base_parser{move(base_toml_ss)};
+        cpptoml::parser base_parser(base_toml_ss);
         const auto merged_config = base_parser.parse();
 
-        auto override_toml_ss = details::read_template_file_into_stringstream(
-            override_pre_toml_path, ps...);
+        const auto has_override = [&override_pre_toml_path] {
+            ifstream istr(override_pre_toml_path);
+            return static_cast<bool>(istr);
+        }();
 
-        cpptoml::parser override_parser{move(override_toml_ss)};
-        const auto override_config = override_parser.parse();
+        if (has_override) {
+            auto override_toml_ss =
+                details::read_template_file_into_stringstream(
+                    override_pre_toml_path, ps...);
 
-        details::merge_config_root(merged_config, override_config);
+            cpptoml::parser override_parser(override_toml_ss);
+            const auto override_config = override_parser.parse();
+
+            // merged_config is interior mutated
+            details::merge_config_root(merged_config, override_config);
+        }
+
         details::setup_impl(merged_config);
+        return has_override;
     } catch (const setup_error &) {
         throw;
     } catch (const exception &e) {

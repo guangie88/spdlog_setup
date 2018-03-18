@@ -121,7 +121,8 @@ TEST_CASE("Parse TOML file for set-up", "[from_file]") {
     console_logger->error("Console Message - Error!");
 }
 
-TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
+TEST_CASE(
+    "Parse pre-TOML file for set-up", "[from_file_with_tag_replacement]") {
     spdlog::drop_all();
 
     const auto index_arg = arg("index", 123);
@@ -188,6 +189,39 @@ TEST_CASE(
     console_logger->warn("Console Message - Warn!");
     console_logger->error("Console Message - Error!");
     console_logger->critical("Console Message - Critical!");
+}
+
+TEST_CASE(
+    "Parse pre-TOML file with override for set-up",
+    "[from_file_with_override_with_tag_replacement]") {
+    spdlog::drop_all();
+
+    const auto index_arg = arg("index", 123);
+    const auto path_arg = arg("path", "spdlog_setup");
+    const auto hash_arg = arg("hash", "qwerty");
+
+    const auto pre_conf_tmp_file = get_pre_conf_tmp_file();
+    const auto override_pre_conf_tmp_file = get_override_pre_conf_tmp_file();
+
+    const auto use_override =
+        spdlog_setup::from_file_and_override_with_tag_replacement(
+            pre_conf_tmp_file.get_file_path(),
+            override_pre_conf_tmp_file.get_file_path(),
+            index_arg,
+            path_arg,
+            hash_arg);
+
+    REQUIRE(use_override);
+
+    const auto root_logger = spdlog::get("root");
+    REQUIRE(root_logger != nullptr);
+
+    root_logger->trace("Test Message - Trace!");
+    root_logger->debug("Test Message - Debug!");
+    root_logger->info("Test Message - Info!");
+    root_logger->warn("Test Message - Warn!");
+    root_logger->error("Test Message - Error!");
+    root_logger->critical("Test Message - Critical!");
 }
 
 TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {

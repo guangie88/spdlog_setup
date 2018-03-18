@@ -256,6 +256,22 @@ static constexpr auto OVERRIDE_CONF = R"x(
     level = "trace"
 )x";
 
+static constexpr auto OVERRIDE_PRE_CONF = R"x(
+    [[sink]]
+    name = "rotate_out"
+    base_filename = "log/{index}-info/simple-{path}-{hash}.log"
+    max_size = "1K"
+    max_files = 3
+    level = "trace"
+    create_parent_dir = true
+
+    [[sink]]
+    name = "simple_err"
+    filename = "log/{index}-err/simple-{path}-{hash}.log"
+    level = "warn"
+    create_parent_dir = true
+)x";
+
 static constexpr auto SIMPLE_CONSOLE_LOGGER_CONF = R"x(
     [[pattern]]
     name = "easy"
@@ -295,6 +311,10 @@ inline auto get_pre_conf_tmp_file() -> tmp_file { return tmp_file(PRE_CONF); }
 
 inline auto get_override_conf_tmp_file() -> tmp_file {
     return tmp_file(OVERRIDE_CONF);
+}
+
+inline auto get_override_pre_conf_tmp_file() -> tmp_file {
+    return tmp_file(OVERRIDE_PRE_CONF);
 }
 
 inline auto get_simple_console_logger_conf_tmp_file() -> tmp_file {
