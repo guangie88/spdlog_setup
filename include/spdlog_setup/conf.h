@@ -72,7 +72,7 @@ void from_file_and_override(
 void save_logger_to_file(
     const std::shared_ptr<spdlog::logger> &logger,
     const std::string &toml_path,
-    const bool overwrite = true);
+    const bool overwrite = false);
 
 void load_logger_from_file(
     const std::shared_ptr<spdlog::logger> &logger,

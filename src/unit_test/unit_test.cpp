@@ -16,21 +16,26 @@
 #include "examples.h"
 
 #include "spdlog_setup/conf.h"
+#include "spdlog_setup/details/third_party/cpptoml.h"
 
-#include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 
-using examples::get_full_conf_tmp_file;
-using examples::get_override_conf_tmp_file;
-using examples::get_pre_conf_tmp_file;
+using namespace examples;
 
 // spdlog_setup
+using namespace spdlog::level;
+using namespace spdlog_setup::details::names;
 using fmt::arg;
 using spdlog_setup::setup_error;
 
 // std
 using std::cerr;
+using std::distance;
+using std::getline;
+using std::ifstream;
 using std::string;
 
 TEST_CASE("Parse max size no suffix", "[parse_max_size_no_suffix]") {
@@ -94,12 +99,12 @@ TEST_CASE("Parse max size error", "[parse_max_size_error]") {
 }
 
 TEST_CASE("Parse TOML file for set-up", "[from_file]") {
-    ::spdlog::drop_all();
+    spdlog::drop_all();
 
     const auto tmp_file = get_full_conf_tmp_file();
     spdlog_setup::from_file(tmp_file.get_file_path());
 
-    const auto root_logger = ::spdlog::get("root");
+    const auto root_logger = spdlog::get("root");
     REQUIRE(root_logger != nullptr);
 
     root_logger->trace("Test Message - Trace!");
@@ -109,7 +114,7 @@ TEST_CASE("Parse TOML file for set-up", "[from_file]") {
     root_logger->error("Test Message - Error!");
     root_logger->critical("Test Message - Critical!");
 
-    const auto console_logger = ::spdlog::get("console");
+    const auto console_logger = spdlog::get("console");
     REQUIRE(console_logger != nullptr);
 
     console_logger->info("Console Message - Info!");
@@ -117,7 +122,7 @@ TEST_CASE("Parse TOML file for set-up", "[from_file]") {
 }
 
 TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
-    ::spdlog::drop_all();
+    spdlog::drop_all();
 
     const auto index_arg = arg("index", 123);
     const auto path_arg = arg("path", "spdlog_setup");
@@ -126,7 +131,7 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
     spdlog_setup::from_file_with_tag_replacement(
         tmp_file.get_file_path(), index_arg, path_arg);
 
-    const auto root_logger = ::spdlog::get("root");
+    const auto root_logger = spdlog::get("root");
     REQUIRE(root_logger != nullptr);
 
     root_logger->trace("Test Message - Trace!");
@@ -139,7 +144,7 @@ TEST_CASE("Parse pre-TOML file for set-up", "[from_file_with_tag_replacment]") {
 
 TEST_CASE(
     "Parse TOML file with override for set-up", "[from_file_with_override]") {
-    ::spdlog::drop_all();
+    spdlog::drop_all();
 
     const auto full_conf_tmp_file = get_full_conf_tmp_file();
     const auto override_conf_tmp_file = get_override_conf_tmp_file();
@@ -148,7 +153,7 @@ TEST_CASE(
         full_conf_tmp_file.get_file_path(),
         override_conf_tmp_file.get_file_path());
 
-    const auto console_logger = ::spdlog::get("console");
+    const auto console_logger = spdlog::get("console");
     REQUIRE(console_logger != nullptr);
 
     console_logger->trace("Console Message - Trace!");
@@ -160,6 +165,8 @@ TEST_CASE(
 }
 
 TEST_CASE("Parse TOML file that does not exist", "[from_file_no_such_file]") {
+    spdlog::drop_all();
+
     REQUIRE_THROWS_AS(
         spdlog_setup::from_file("config/no_such_file"), setup_error);
 }
@@ -168,7 +175,131 @@ TEST_CASE(
     "Parse pre-TOML file that does not exist",
     "[from_file_with_tag_replacement_no_such_file]") {
 
+    spdlog::drop_all();
+
     REQUIRE_THROWS_AS(
         spdlog_setup::from_file_with_tag_replacement("config/no_such_file"),
         setup_error);
+}
+
+TEST_CASE("Save logger to new file", "[save_logger_to_file_new]") {
+    spdlog::drop_all();
+    const auto logger = spdlog::stdout_logger_mt("console");
+    logger->set_level(level_enum::warn);
+
+    const auto tmp_file = examples::tmp_file();
+    const auto &tmp_file_path = tmp_file.get_file_path();
+
+    spdlog_setup::save_logger_to_file(logger, tmp_file_path);
+
+    const auto config = cpptoml::parse_file(tmp_file_path);
+    REQUIRE(config != nullptr);
+
+    const auto loggers = config->get_table_array(LOGGER_TABLE);
+    REQUIRE(loggers != nullptr);
+
+    const auto &loggers_ref = *loggers;
+    REQUIRE(dist(loggers_ref) == 1);
+
+    const auto &console = get_index(loggers_ref, 0);
+    REQUIRE(console != nullptr);
+
+    const auto &console_ref = *console;
+    REQUIRE(dist(console_ref) == 2);
+
+    const auto name = console_ref.get_as<string>(NAME);
+    REQUIRE(static_cast<bool>(name));
+    REQUIRE(*name == "console");
+
+    const auto level = console_ref.get_as<string>(LEVEL);
+    REQUIRE(static_cast<bool>(level));
+    REQUIRE(*level == "warn");
+}
+
+TEST_CASE(
+    "Save logger to file with existing logger",
+    "[save_logger_to_file_override]") {
+
+    spdlog::drop_all();
+    const auto logger = spdlog::stdout_logger_mt("console");
+    logger->set_level(level_enum::critical);
+
+    const auto tmp_file = get_simple_console_logger_conf_tmp_file();
+    const auto &tmp_file_path = tmp_file.get_file_path();
+
+    spdlog_setup::save_logger_to_file(logger, tmp_file_path);
+
+    const auto config = cpptoml::parse_file(tmp_file_path);
+    REQUIRE(config != nullptr);
+
+    // patterns
+
+    const auto patterns = config->get_table_array(PATTERN_TABLE);
+    REQUIRE(patterns != nullptr);
+
+    const auto &patterns_ref = *patterns;
+    REQUIRE(dist(patterns_ref) == 1);
+
+    const auto &pattern = get_index(patterns_ref, 0);
+    REQUIRE(pattern != nullptr);
+
+    const auto &pattern_ref = *pattern;
+
+    {
+        const auto name = pattern_ref.get_as<string>(NAME);
+        REQUIRE(static_cast<bool>(name));
+        REQUIRE(*name == "easy");
+
+        const auto value = pattern_ref.get_as<string>(VALUE);
+        REQUIRE(static_cast<bool>(value));
+        REQUIRE(*value == "%L: %v");
+    }
+
+    // loggers
+
+    const auto loggers = config->get_table_array(LOGGER_TABLE);
+    REQUIRE(loggers != nullptr);
+
+    const auto &loggers_ref = *loggers;
+    REQUIRE(dist(loggers_ref) == 2);
+
+    const auto &not_console = get_index(loggers_ref, 0);
+    REQUIRE(not_console != nullptr);
+
+    const auto &not_console_ref = *not_console;
+    REQUIRE(dist(not_console_ref) == 3);
+
+    {
+        const auto name = not_console_ref.get_as<string>(NAME);
+        REQUIRE(static_cast<bool>(name));
+        REQUIRE(*name == "not-console");
+
+        const auto pattern = not_console_ref.get_as<string>(PATTERN);
+        REQUIRE(static_cast<bool>(pattern));
+        REQUIRE(*pattern == "easy");
+
+        const auto level = not_console_ref.get_as<string>(LEVEL);
+        REQUIRE(static_cast<bool>(level));
+        REQUIRE(*level == "info");
+    }
+
+    const auto &console = get_index(loggers_ref, 1);
+    REQUIRE(console != nullptr);
+
+    const auto &console_ref = *console;
+    REQUIRE(dist(console_ref) == 3);
+
+    {
+        const auto name = console_ref.get_as<string>(NAME);
+        REQUIRE(static_cast<bool>(name));
+        REQUIRE(*name == "console");
+
+        const auto pattern = console_ref.get_as<string>(PATTERN);
+        REQUIRE(static_cast<bool>(pattern));
+        REQUIRE(*pattern == "easy");
+
+        const auto level = console_ref.get_as<string>(LEVEL);
+        REQUIRE(static_cast<bool>(level));
+        REQUIRE(*level == "critical");
+    }
 }

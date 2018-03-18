@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdio>
 #include <fstream>
+#include <iterator>
+#include <sstream>
 #include <string>
 
 namespace examples {
@@ -253,12 +256,30 @@ static constexpr auto OVERRIDE_CONF = R"x(
     level = "trace"
 )x";
 
+static constexpr auto SIMPLE_CONSOLE_LOGGER_CONF = R"x(
+    [[pattern]]
+    name = "easy"
+    value = "%L: %v"
+
+    [[logger]]
+    name = "not-console"
+    pattern = "easy"
+    level = "info"
+
+    [[logger]]
+    name = "console"
+    pattern = "easy"
+    level = "trace"
+)x";
+
 class tmp_file {
   public:
     tmp_file(const std::string &content) : file_path(std::tmpnam(nullptr)) {
         std::ofstream ostr(file_path);
         ostr << content;
     }
+
+    tmp_file() : tmp_file("") {}
 
     ~tmp_file() { std::remove(file_path.c_str()); }
 
@@ -268,11 +289,26 @@ class tmp_file {
     std::string file_path;
 };
 
-auto get_full_conf_tmp_file() -> tmp_file { return tmp_file(FULL_CONF); }
+inline auto get_full_conf_tmp_file() -> tmp_file { return tmp_file(FULL_CONF); }
 
-auto get_pre_conf_tmp_file() -> tmp_file { return tmp_file(PRE_CONF); }
+inline auto get_pre_conf_tmp_file() -> tmp_file { return tmp_file(PRE_CONF); }
 
-auto get_override_conf_tmp_file() -> tmp_file {
+inline auto get_override_conf_tmp_file() -> tmp_file {
     return tmp_file(OVERRIDE_CONF);
+}
+
+inline auto get_simple_console_logger_conf_tmp_file() -> tmp_file {
+    return tmp_file(SIMPLE_CONSOLE_LOGGER_CONF);
+}
+
+template <class Iterable> auto dist(const Iterable &iterable) -> ptrdiff_t {
+    return std::distance(std::begin(iterable), std::end(iterable));
+}
+
+template <class Iterable>
+auto get_index(const Iterable &iterable, const size_t index) ->
+    typename Iterable::const_iterator::reference {
+
+    return *std::next(std::begin(iterable), index);
 }
 } // namespace examples

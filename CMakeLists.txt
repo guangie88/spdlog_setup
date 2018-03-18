@@ -78,7 +78,8 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
 
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
-      spdlog_setup)
+      spdlog_setup
+      pthread)
 
   if(SPDLOG_SETUP_INCLUDE_TEST_COVERAGE)
     target_compile_options(spdlog_setup_unit_test
