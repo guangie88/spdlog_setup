@@ -34,7 +34,6 @@ namespace names = spdlog_setup::details::names;
 using names::LEVEL;
 using names::LOGGER_TABLE;
 using names::NAME;
-using names::PATTERN;
 using names::PATTERN_TABLE;
 using names::VALUE;
 
@@ -371,7 +370,7 @@ TEST_CASE(
         REQUIRE(static_cast<bool>(name));
         REQUIRE(*name == "not-console");
 
-        const auto pattern = not_console_ref.get_as<string>(PATTERN);
+        const auto pattern = not_console_ref.get_as<string>(names::PATTERN);
         REQUIRE(static_cast<bool>(pattern));
         REQUIRE(*pattern == "easy");
 
@@ -391,7 +390,7 @@ TEST_CASE(
         REQUIRE(static_cast<bool>(name));
         REQUIRE(*name == "console");
 
-        const auto pattern = console_ref.get_as<string>(PATTERN);
+        const auto pattern = console_ref.get_as<string>(names::PATTERN);
         REQUIRE(static_cast<bool>(pattern));
         REQUIRE(*pattern == "easy");
 
@@ -503,7 +502,7 @@ TEST_CASE("Delete logger from file simple", "[delete_logger_in_file_simple]") {
             REQUIRE(static_cast<bool>(name));
             REQUIRE(*name == "console");
 
-            const auto pattern = console_ref.get_as<string>(PATTERN);
+            const auto pattern = console_ref.get_as<string>(names::PATTERN);
             REQUIRE(static_cast<bool>(pattern));
             REQUIRE(*pattern == "easy");
 
