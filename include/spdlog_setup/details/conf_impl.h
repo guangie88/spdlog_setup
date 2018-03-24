@@ -1,7 +1,7 @@
 /**
  * Implementation of non-public facing functions in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.0-alpha.0
+ * @version 0.3.0-alpha.1
  */
 
 #pragma once
@@ -480,11 +480,11 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     // std
     using std::exception;
     using std::regex;
+    using std::regex_constants::icase;
     using std::regex_match;
     using std::smatch;
     using std::stoull;
     using std::string;
-    using std::regex_constants::icase;
 
     try {
         static const regex RE(

@@ -1,7 +1,7 @@
 /**
  * Implementation of setup_error in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.0-alpha.0
+ * @version 0.3.0-alpha.1
  */
 
 #pragma once
@@ -44,10 +44,12 @@ class setup_error : public std::exception {
 
 // implementation section
 
-setup_error::setup_error(const char *const msg) : msg(msg) {}
+inline setup_error::setup_error(const char *const msg) : msg(msg) {}
 
-setup_error::setup_error(std::string msg) : msg(std::move(msg)) {}
+inline setup_error::setup_error(std::string msg) : msg(std::move(msg)) {}
 
-auto setup_error::what() const noexcept -> const char * { return msg.c_str(); }
+inline auto setup_error::what() const noexcept -> const char * {
+    return msg.c_str();
+}
 } // namespace details
 } // namespace spdlog_setup
