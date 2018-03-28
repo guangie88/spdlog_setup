@@ -18,6 +18,7 @@ endif()
 
 # allow thread library to be used for linking
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(THREADS_PTHREAD_ARG "0" CACHE STRING "Result from TRY_RUN" FORCE)
 find_package(Threads REQUIRED)
 
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
