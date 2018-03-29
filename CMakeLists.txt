@@ -25,13 +25,12 @@ find_package(Threads REQUIRED)
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-# allow usage of installed dependency
-find_package(spdlog ${SPDLOG_MIN_VERSION})
-
-if(spdlog_FOUND)
-  add_library(spdlog INTERFACE IMPORTED)
-else()
+if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
   add_subdirectory(deps/spdlog)
+else()
+  # allow usage of installed dependency
+  find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
+  add_library(spdlog INTERFACE IMPORTED)
 endif()
 
 # spdlog_setup
