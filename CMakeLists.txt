@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.3)
 # project variables
 project(spdlog_setup VERSION 0.3.0 LANGUAGES CXX)
 set(SPDLOG_MIN_VERSION "0.14.0")
+set(CATCH2_MIN_VERSION "2.0.0")
 
 # general fixed compiler settings
 if(${MSVC})
@@ -83,14 +84,18 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   enable_testing()
   add_test(spdlog_setup_unit_test spdlog_setup_unit_test -s)
 
-  # Catch2 do not have modular CMake mechanism
-  target_include_directories(spdlog_setup_unit_test
-    PRIVATE
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
+  if (EXISTS ${CMAKE_SOURCE_DIR}/deps/Catch2/CMakeLists.txt)
+    add_subdirectory(deps/Catch2)
+  else()
+    # allow usage of installed dependency
+    find_package(Catch2 ${CATCH2_MIN_VERSION} REQUIRED)
+    add_library(Catch INTERFACE IMPORTED)
+  endif()
 
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
       spdlog_setup
+      Catch
       Threads::Threads)
 
   if(SPDLOG_SETUP_INCLUDE_TEST_COVERAGE)
