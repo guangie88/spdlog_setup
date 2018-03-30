@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.3)
 
 # project variables
 project(spdlog_setup VERSION 0.3.0 LANGUAGES CXX)
+set(SPDLOG_MIN_VERSION "0.14.0")
 
 # general fixed compiler settings
 if(${MSVC})
@@ -24,7 +25,13 @@ find_package(Threads REQUIRED)
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-add_subdirectory(deps/spdlog)
+if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
+  add_subdirectory(deps/spdlog)
+else()
+  # allow usage of installed dependency
+  find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
+  add_library(spdlog INTERFACE IMPORTED)
+endif()
 
 # spdlog_setup
 add_library(spdlog_setup INTERFACE)
@@ -96,4 +103,3 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
         --coverage)
   endif()
 endif()
-
