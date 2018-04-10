@@ -1110,7 +1110,7 @@ inline void setup_loggers_impl(
 
         const auto selected_pattern_opt = pattern_value_opt
                                               ? move(pattern_value_opt)
-                                              : move(global_pattern_opt);
+                                              : global_pattern_opt;
 
         try {
             if (selected_pattern_opt) {
