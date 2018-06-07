@@ -4,7 +4,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/spdlog_setup-targets.cmake")
 
 get_target_property(
   SPDLOG_SETUP_INCLUDE_DIRS
-  spdlog_setup INTERFACE_INCLUDE_DIRECTORIES)
+  spdlog_setup::spdlog_setup INTERFACE_INCLUDE_DIRECTORIES)
 
 set_and_check(SPDLOG_SETUP_INCLUDE_DIRS "${SPDLOG_SETUP_INCLUDE_DIRS}")
-set(SPDLOG_SETUP_LIBRARIES spdlog_setup)
+set(SPDLOG_SETUP_LIBRARIES spdlog_setup::spdlog_setup)
