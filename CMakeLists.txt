@@ -18,23 +18,40 @@ else()
 endif()
 
 # allow thread library to be used for linking
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(THREADS_PTHREAD_ARG "0" CACHE STRING "Result from TRY_RUN" FORCE)
-find_package(Threads REQUIRED)
+# set(THREADS_PREFER_PTHREAD_FLAG ON)
+# set(THREADS_PTHREAD_ARG "0" CACHE STRING "Result from TRY_RUN" FORCE)
+# find_package(Threads REQUIRED)
 
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
-  add_subdirectory(deps/spdlog)
-else()
-  # allow usage of installed dependency
-  find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
-  add_library(spdlog INTERFACE IMPORTED)
+# conan setup
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+  message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+  file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+                "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
+
+include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+conan_cmake_run(CONANFILE conanfile.txt
+                BASIC_SETUP CMAKE_TARGETS
+                BUILD missing)
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
+# if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
+#   add_subdirectory(deps/spdlog)
+# else()
+#   # allow usage of installed dependency
+#   find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
+#   add_library(spdlog INTERFACE IMPORTED)
+# endif()
 
 # spdlog_setup
 add_library(spdlog_setup INTERFACE)
+target_link_libraries(spdlog_setup INTERFACE ${CONAN_LIBS})
 
 target_include_directories(spdlog_setup
   INTERFACE
@@ -42,9 +59,9 @@ target_include_directories(spdlog_setup
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(spdlog_setup
-  INTERFACE
-    spdlog)
+# target_link_libraries(spdlog_setup
+#   INTERFACE
+#     spdlog)
 
 install(TARGETS spdlog_setup EXPORT spdlog_setup)
 install(DIRECTORY include/spdlog_setup DESTINATION include)
@@ -83,15 +100,20 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   enable_testing()
   add_test(spdlog_setup_unit_test spdlog_setup_unit_test -s)
 
-  # Catch2 do not have modular CMake mechanism
-  target_include_directories(spdlog_setup_unit_test
-    PRIVATE
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
-
+  # build dependencies
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
       spdlog_setup
-      Threads::Threads)
+      ${CONAN_LIBS})
+  
+  # target_include_directories(spdlog_setup_unit_test
+  #   PRIVATE
+  #     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
+
+  # target_link_libraries(spdlog_setup_unit_test
+  #   PRIVATE
+  #     spdlog_setup
+  #     Threads::Threads)
 
   if(SPDLOG_SETUP_INCLUDE_TEST_COVERAGE)
     target_compile_options(spdlog_setup_unit_test
