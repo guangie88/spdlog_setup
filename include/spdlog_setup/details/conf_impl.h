@@ -15,16 +15,26 @@
 #include "third_party/cpptoml.h"
 #include "third_party/fmt/format.h"
 
-#include "spdlog/sinks/file_sinks.h"
 #include "spdlog/sinks/null_sink.h"
+
+#if !defined(SPDLOG_VERSION)
+// version.h and SPDLOG_VERSION were added with commit 74c10df1 on 7/24/2018. 
+#include "spdlog/sinks/file_sinks.h"
+#define SPDLOG_HAS_SIMPLE_FILE_SINK 1
+#else
+#include "spdlog/sinks/daily_file_sink.h"
+#include <spdlog/sinks/rotating_file_sink.h>
+#define SPDLOG_HAS_SIMPLE_FILE_SINK 0
+#endif
+
 #include "spdlog/sinks/sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
-#include "spdlog/sinks/syslog_sink.h"
 
 #ifdef _WIN32
 #include "spdlog/sinks/wincolor_sink.h"
 #else
 #include "spdlog/sinks/ansicolor_sink.h"
+#include "spdlog/sinks/syslog_sink.h"
 #endif
 
 #include "spdlog/spdlog.h"
@@ -823,8 +833,10 @@ inline auto sink_from_sink_type(
     using spdlog::sinks::null_sink_st;
     using spdlog::sinks::rotating_file_sink_mt;
     using spdlog::sinks::rotating_file_sink_st;
+#if SPDLOG_HAS_SIMPLE_FILE_SINK
     using spdlog::sinks::simple_file_sink_mt;
     using spdlog::sinks::simple_file_sink_st;
+#endif
     using spdlog::sinks::sink;
     using spdlog::sinks::stdout_sink_mt;
     using spdlog::sinks::stdout_sink_st;
@@ -853,11 +865,13 @@ inline auto sink_from_sink_type(
     case sink_type::ColorStdoutSinkMt:
         return make_shared<color_stdout_sink_mt>();
 
+#if SPDLOG_HAS_SIMPLE_FILE_SINK
     case sink_type::SimpleFileSinkSt:
         return simple_file_sink_from_table<simple_file_sink_st>(sink_table);
 
     case sink_type::SimpleFileSinkMt:
         return simple_file_sink_from_table<simple_file_sink_mt>(sink_table);
+#endif
 
     case sink_type::RotatingFileSinkSt:
         return rotating_file_sink_from_table<rotating_file_sink_st>(sink_table);
