@@ -31,7 +31,7 @@ type = "color_stdout_sink_mt"
 
 [[sink]]
 name = "file_out"
-type = "simple_file_sink_st"
+type = "basic_file_sink_st"
 filename = "log/spdlog_setup.log"
 # truncate field is optional
 # truncate = false (default)
@@ -41,7 +41,7 @@ create_parent_dir = true
 
 [[sink]]
 name = "file_err"
-type = "simple_file_sink_mt"
+type = "basic_file_sink_mt"
 filename = "log/spdlog_setup_err.log"
 truncate = true
 level = "err"

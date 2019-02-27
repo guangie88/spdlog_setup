@@ -148,8 +148,8 @@ The header files should be installed in `build/install/include`.
 - `stdout_sink_mt`
 - `color_stdout_sink_st`
 - `color_stdout_sink_mt`
-- `simple_file_sink_st`
-- `simple_file_sink_mt`
+- `basic_file_sink_st`
+- `basic_file_sink_mt`
 - `rotating_file_sink_st`
 - `rotating_file_sink_mt`
 - `daily_file_sink_st`
@@ -204,7 +204,7 @@ type = "color_stdout_sink_mt"
 
 [[sink]]
 name = "file_out"
-type = "simple_file_sink_st"
+type = "basic_file_sink_st"
 filename = "log/spdlog_setup.log"
 # truncate field is optional
 # truncate = false (default)
@@ -214,7 +214,7 @@ create_parent_dir = true
 
 [[sink]]
 name = "file_err"
-type = "simple_file_sink_mt"
+type = "basic_file_sink_mt"
 filename = "log/spdlog_setup_err.log"
 truncate = true
 level = "err"
@@ -320,7 +320,7 @@ create_parent_dir = true
 
 [[sink]]
 name = "simple_err"
-type = "simple_file_sink_mt"
+type = "basic_file_sink_mt"
 filename = "log/{index}-err/simple-{path}.log"
 truncate = false
 level = "err"

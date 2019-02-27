@@ -30,14 +30,14 @@ static constexpr auto FULL_CONF = R"x(
 
     [[sink]]
     name = "file_out"
-    type = "simple_file_sink_st"
+    type = "basic_file_sink_st"
     filename = "log/spdlog_setup.log"
     level = "info"
     create_parent_dir = true
 
     [[sink]]
     name = "file_err"
-    type = "simple_file_sink_mt"
+    type = "basic_file_sink_mt"
     filename = "log/spdlog_setup_err.log"
     truncate = true
     level = "err"
@@ -124,14 +124,14 @@ static constexpr auto FULL_CONF = R"x(
 
     [[sink]]
     name = "file_out"
-    type = "simple_file_sink_st"
+    type = "basic_file_sink_st"
     filename = "log/spdlog_setup.log"
     level = "info"
     create_parent_dir = true
 
     [[sink]]
     name = "file_err"
-    type = "simple_file_sink_mt"
+    type = "basic_file_sink_mt"
     filename = "log/spdlog_setup_err.log"
     truncate = true
     level = "err"
@@ -219,7 +219,7 @@ static constexpr auto PRE_CONF = R"x(
 
     [[sink]]
     name = "simple_err"
-    type = "simple_file_sink_mt"
+    type = "basic_file_sink_mt"
     filename = "log/{index}-err/simple-{path}.log"
     truncate = false
     level = "err"
