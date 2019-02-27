@@ -87,15 +87,6 @@ type = "null_sink_st"
 name = "null_sink_mt"
 type = "null_sink_mt"
 
-# only works for Linux
-# [[sink]]
-# name = "syslog"
-# type = "syslog_sink"
-# generally no need to fill up the optional fields below
-# ident = "" (default)
-# syslog_option = 0 (default)
-# syslog_facility = LOG_USER (default macro value)
-
 [[pattern]]
 name = "succient"
 value = "%c-%L: %v"

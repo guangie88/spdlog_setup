@@ -177,8 +177,12 @@ static constexpr auto FULL_CONF = R"x(
     type = "null_sink_mt"
 
     [[sink]]
-    name = "syslog"
-    type = "syslog_sink"
+    name = "syslog_st"
+    type = "syslog_sink_st"
+
+    [[sink]]
+    name = "syslog_mt"
+    type = "syslog_sink_mt"
 
     [[pattern]]
     name = "succient"
@@ -193,7 +197,7 @@ static constexpr auto FULL_CONF = R"x(
         "file_out", "file_err",
         "rotate_out", "rotate_err",
         "null_sink_st", "null_sink_mt",
-        "syslog"]
+        "syslog_st", "syslog_mt"]
     level = "trace"
 
     [[logger]]
