@@ -14,6 +14,9 @@
 
 #include "third_party/cpptoml.h"
 
+// Just so that it works for v1.3.0
+#include "spdlog/spdlog.h"
+
 #include "spdlog/fmt/fmt.h"
 
 #include "spdlog/sinks/basic_file_sink.h"
@@ -29,8 +32,6 @@
 #else
 #include "spdlog/sinks/ansicolor_sink.h"
 #endif
-
-#include "spdlog/spdlog.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -633,7 +634,8 @@ inline auto level_to_str(const spdlog::level::level_enum level) -> std::string {
     } else if (level == lv::off) {
         return "off";
     } else {
-        throw setup_error(format("Invalid level enum '{}' provided", level));
+        throw setup_error(format(
+            "Invalid level enum '{}' provided", static_cast<int>(level)));
     }
 }
 
