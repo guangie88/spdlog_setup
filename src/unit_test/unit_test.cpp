@@ -1,7 +1,7 @@
 /**
  * Unit tests implementation.
  * @author Chen Weiguang
- * @version 0.3.0-alpha.1
+ * @version 0.3.0-alpha.2
  */
 
 #define CATCH_CONFIG_MAIN

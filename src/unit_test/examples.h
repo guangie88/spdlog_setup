@@ -30,14 +30,14 @@ static constexpr auto FULL_CONF = R"x(
 
     [[sink]]
     name = "file_out"
-    type = "simple_file_sink_st"
+    type = "basic_file_sink_st"
     filename = "log/spdlog_setup.log"
     level = "info"
     create_parent_dir = true
 
     [[sink]]
     name = "file_err"
-    type = "simple_file_sink_mt"
+    type = "basic_file_sink_mt"
     filename = "log/spdlog_setup_err.log"
     truncate = true
     level = "err"
@@ -124,14 +124,14 @@ static constexpr auto FULL_CONF = R"x(
 
     [[sink]]
     name = "file_out"
-    type = "simple_file_sink_st"
+    type = "basic_file_sink_st"
     filename = "log/spdlog_setup.log"
     level = "info"
     create_parent_dir = true
 
     [[sink]]
     name = "file_err"
-    type = "simple_file_sink_mt"
+    type = "basic_file_sink_mt"
     filename = "log/spdlog_setup_err.log"
     truncate = true
     level = "err"
@@ -177,8 +177,12 @@ static constexpr auto FULL_CONF = R"x(
     type = "null_sink_mt"
 
     [[sink]]
-    name = "syslog"
-    type = "syslog_sink"
+    name = "syslog_st"
+    type = "syslog_sink_st"
+
+    [[sink]]
+    name = "syslog_mt"
+    type = "syslog_sink_mt"
 
     [[pattern]]
     name = "succient"
@@ -193,7 +197,7 @@ static constexpr auto FULL_CONF = R"x(
         "file_out", "file_err",
         "rotate_out", "rotate_err",
         "null_sink_st", "null_sink_mt",
-        "syslog"]
+        "syslog_st", "syslog_mt"]
     level = "trace"
 
     [[logger]]
@@ -219,7 +223,7 @@ static constexpr auto PRE_CONF = R"x(
 
     [[sink]]
     name = "simple_err"
-    type = "simple_file_sink_mt"
+    type = "basic_file_sink_mt"
     filename = "log/{index}-err/simple-{path}.log"
     truncate = false
     level = "err"
