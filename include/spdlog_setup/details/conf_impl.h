@@ -25,12 +25,12 @@
 #include "spdlog/sinks/null_sink.h"
 #include "spdlog/sinks/sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
-#include "spdlog/sinks/syslog_sink.h"
 
 #ifdef _WIN32
 #include "spdlog/sinks/wincolor_sink.h"
 #else
 #include "spdlog/sinks/ansicolor_sink.h"
+#include "spdlog/sinks/syslog_sink.h"
 #endif
 
 #include <algorithm>
