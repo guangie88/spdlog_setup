@@ -2,17 +2,23 @@
 
 ## Unreleased
 
+- Change support to `spdlog` `v1.y.z` tag release, currently tested all `v1.0.0`
+  to `v1.3.1` to be working. This fixes
+  ([#26](https://github.com/guangie88/spdlog_setup/issues/26)).
+  - `simple_file_sink_st` becomes `basic_file_sink_st`
+  - `simple_file_sink_mt` becomes `basic_file_sink_mt`
+  - `syslog_sink` splits into `syslog_sink_st` and `syslog_sink_mt`
+- Fix CMake package finding failure when installed using submodule `spdlog`
+  ([#23](https://github.com/guangie88/spdlog_setup/issues/23)).
+- Fix global pattern not used by subsequent loggers other than the first
+  ([#19](https://github.com/guangie88/spdlog_setup/issues/19)).
 - Add functions that allow configuration overrides:
   - `from_file_and_override`
   - `from_file_and_override_with_tag_replacement`
   - `save_logger_to_file`
   - `delete_logger_in_file`
-- Fix CMake package finding failure when installed using submodule `spdlog`
-  ([#23](https://github.com/guangie88/spdlog_setup/issues/23))
-- Fix global pattern not used by subsequent loggers other than the first
-  ([#19](https://github.com/guangie88/spdlog_setup/issues/19)).
 
-## v0.2
+## v0.2 (Tested to support `v0.16.z` to `v0.17.0`)
 
 - Use `spdlog_setup/conf.h` instead of `spdlog_setup.h`. Reason for change is
   to allow inlining of `cpptoml` and `fmt` libraries.
