@@ -834,8 +834,6 @@ inline auto sink_from_sink_type(
     using spdlog::sinks::sink;
     using spdlog::sinks::stdout_sink_mt;
     using spdlog::sinks::stdout_sink_st;
-    using spdlog::sinks::syslog_sink_mt;
-    using spdlog::sinks::syslog_sink_st;
 
     // std
     using std::make_shared;
@@ -846,6 +844,9 @@ inline auto sink_from_sink_type(
 #else
     using color_stdout_sink_st = spdlog::sinks::ansicolor_stdout_sink_st;
     using color_stdout_sink_mt = spdlog::sinks::ansicolor_stdout_sink_mt;
+
+    using spdlog::sinks::syslog_sink_mt;
+    using spdlog::sinks::syslog_sink_st;
 #endif
 
     switch (sink_val) {
