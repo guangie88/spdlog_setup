@@ -7,6 +7,7 @@
 #pragma once
 
 #include "details/conf_impl.h"
+#include "details/template_impl.h"
 
 namespace spdlog_setup {
 // declaration section
