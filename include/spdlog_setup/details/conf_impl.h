@@ -21,8 +21,8 @@
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
-#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/null_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
@@ -487,11 +487,11 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     // std
     using std::exception;
     using std::regex;
-    using std::regex_constants::icase;
     using std::regex_match;
     using std::smatch;
     using std::stoull;
     using std::string;
+    using std::regex_constants::icase;
 
     try {
         static const regex RE(
@@ -823,14 +823,14 @@ inline auto sink_from_sink_type(
     using fmt::format;
 
     // spdlog
+    using spdlog::sinks::basic_file_sink_mt;
+    using spdlog::sinks::basic_file_sink_st;
     using spdlog::sinks::daily_file_sink_mt;
     using spdlog::sinks::daily_file_sink_st;
     using spdlog::sinks::null_sink_mt;
     using spdlog::sinks::null_sink_st;
     using spdlog::sinks::rotating_file_sink_mt;
     using spdlog::sinks::rotating_file_sink_st;
-    using spdlog::sinks::basic_file_sink_mt;
-    using spdlog::sinks::basic_file_sink_st;
     using spdlog::sinks::sink;
     using spdlog::sinks::stdout_sink_mt;
     using spdlog::sinks::stdout_sink_st;
@@ -1120,9 +1120,8 @@ inline void setup_loggers_impl(
 
             : pattern_option_t();
 
-        const auto selected_pattern_opt = pattern_value_opt
-                                              ? move(pattern_value_opt)
-                                              : global_pattern_opt;
+        const auto selected_pattern_opt =
+            pattern_value_opt ? move(pattern_value_opt) : global_pattern_opt;
 
         try {
             if (selected_pattern_opt) {

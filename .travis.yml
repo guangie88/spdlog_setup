@@ -16,6 +16,7 @@ matrix:
           packages:
             - g++-4.9
             - doxygen
+            - clang-format-3.9
           sources:
             - ubuntu-toolchain-r-test
 
@@ -29,6 +30,7 @@ matrix:
           packages:
             - g++-5
             - doxygen
+            - clang-format-3.9
           sources:
             - ubuntu-toolchain-r-test
 
@@ -42,6 +44,7 @@ matrix:
           packages:
             - g++-6
             - doxygen
+            - clang-format-3.9
           sources:
             - ubuntu-toolchain-r-test
 
@@ -55,6 +58,7 @@ matrix:
           packages:
             - g++-7
             - doxygen
+            - clang-format-3.9
           sources:
             - ubuntu-toolchain-r-test
 
@@ -69,6 +73,7 @@ matrix:
             - clang-3.4
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.4 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -84,6 +89,7 @@ matrix:
             - clang-3.5
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.5 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -99,6 +105,7 @@ matrix:
             - clang-3.6
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.6 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -114,6 +121,7 @@ matrix:
             - clang-3.7
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -129,6 +137,7 @@ matrix:
             - clang-3.8
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.8 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -144,6 +153,7 @@ matrix:
             - clang-3.9
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -159,6 +169,7 @@ matrix:
             - clang-4.0
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -174,6 +185,7 @@ matrix:
             - clang-5.0
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -189,6 +201,7 @@ matrix:
             - clang-6.0
             - libc++-dev
             - doxygen
+            - clang-format-3.9
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main
@@ -196,7 +209,7 @@ matrix:
 
 install:
   # set the correct `CC` and `CXX` environment variables.
-  - |
+  - |-
     if [ -n "${VER}" ]; then
       export CC="${CC}-${VER}"
       export CXX="${CXX}-${VER}"
@@ -206,7 +219,7 @@ install:
   - DEPS="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS}
   # install newer cmake.
-  - |
+  - |-
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       brew update
       brew upgrade cmake
@@ -218,10 +231,13 @@ install:
 
 script:
   - git rev-parse HEAD
+  - |-
+    find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
+      xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
   - BUILDS=(Debug Release)
   - mkdir build
   - pushd build
-  - |
+  - |-
     for BUILD in "${BUILDS[@]}"; do
       (
         set -x

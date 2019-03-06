@@ -29,8 +29,8 @@ using namespace examples;
 // spdlog_setup
 using fmt::arg;
 using spdlog::level::level_enum;
-using spdlog_setup::details::render;
 using spdlog_setup::setup_error;
+using spdlog_setup::details::render;
 
 namespace names = spdlog_setup::details::names;
 using names::LEVEL;
@@ -567,20 +567,28 @@ TEST_CASE("Delete logger from empty file", "[delete_logger_in_file_empty]") {
 TEST_CASE("Check templating", "[check_templating]") {
     REQUIRE(render("", {{}}) == "");
     REQUIRE(render("abc", {{}}) == "abc");
-    REQUIRE(render("{{ a }}", {{ "a", "Alpha" }}) == "Alpha");
+    REQUIRE(render("{{ a }}", {{"a", "Alpha"}}) == "Alpha");
 
-    REQUIRE(render("{{ a }}{{bb}}{{ ccc}}{{dddd }}", {
-        { "a", "Alpha" },
-        { "bb", "Beta" },
-        { "ccc", "Ceta" },
-        { "dddd", "Delta" },
-    }) == "AlphaBetaCetaDelta");
+    REQUIRE(
+        render(
+            "{{ a }}{{bb}}{{ ccc}}{{dddd }}",
+            {
+                {"a", "Alpha"},
+                {"bb", "Beta"},
+                {"ccc", "Ceta"},
+                {"dddd", "Delta"},
+            }) == "AlphaBetaCetaDelta");
 
-    REQUIRE(render("{{\"Hello\"}} {{ \"{{\" }} {{\"}}\" }}", {{}}) == "Hello {{ }}");
+    REQUIRE(
+        render("{{\"Hello\"}} {{ \"{{\" }} {{\"}}\" }}", {{}}) ==
+        "Hello {{ }}");
 
-    REQUIRE(render("a{{b}}cd{{e}}f{{\"g\"}}hij{{ k}}{{l }}) ({{ b }}{{e}}", {
-        { "b", "BBB" },
-        { "k", "KKK" },
-        { "l", "LLL" },
-    }) == "aBBBcdfghijKKKLLL) (BBB");
+    REQUIRE(
+        render(
+            "a{{b}}cd{{e}}f{{\"g\"}}hij{{ k}}{{l }}) ({{ b }}{{e}}",
+            {
+                {"b", "BBB"},
+                {"k", "KKK"},
+                {"l", "LLL"},
+            }) == "aBBBcdfghijKKKLLL) (BBB");
 }

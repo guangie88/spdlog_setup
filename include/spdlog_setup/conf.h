@@ -220,10 +220,10 @@ inline void save_logger_to_file(
 
     using details::find_item_by_name;
     using details::level_to_str;
+    using details::write_to_config_file;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
-    using details::write_to_config_file;
 
     // fmt
     using fmt::format;
@@ -298,10 +298,10 @@ inline auto delete_logger_in_file(
 
     using details::find_item_iter_by_name;
     using details::level_to_str;
+    using details::write_to_config_file;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
-    using details::write_to_config_file;
 
     // fmt
     using fmt::format;
