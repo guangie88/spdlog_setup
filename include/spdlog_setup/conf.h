@@ -7,12 +7,11 @@
 #pragma once
 
 #include "details/conf_impl.h"
+#include "details/setup_error.h"
 #include "details/template_impl.h"
 
 namespace spdlog_setup {
 // declaration section
-
-using details::setup_error;
 
 /**
  * Performs spdlog configuration setup from file, with tag values to be
