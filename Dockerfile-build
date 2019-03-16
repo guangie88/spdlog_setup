@@ -1,0 +1,9 @@
+ARG GCC_VERSION=
+FROM gcc:${GCC_VERSION}
+
+SHELL ["bash", "-c"]
+
+RUN set -euo pipefail && \
+    apt-get update && apt-get install -y --no-install-recommends cmake; \
+    rm -rf /var/cache/apt; \
+    :
