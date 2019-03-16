@@ -309,6 +309,7 @@ jobs:
       addons:
         apt:
           packages:
+            - libstdc++6
             - clang-format-7
           sources:
             - ubuntu-toolchain-r-test
