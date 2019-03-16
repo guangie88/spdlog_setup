@@ -311,6 +311,7 @@ jobs:
           packages:
             - clang-format-7
           sources:
+            - ubuntu-toolchain-r-test
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
       script: 
