@@ -9,8 +9,9 @@ steps:
   main_clone:
     image: codefresh/cfstep-gitsubmodules
     environment:
-      - CF_SUBMODULE_SYNC=true
-      - CF_SUBMODULE_UPDATE_RECURSIVE=true
+    - GITHUB_TOKEN=""
+    - CF_SUBMODULE_SYNC=true
+    - CF_SUBMODULE_UPDATE_RECURSIVE=true
 
   lint-prep:
     type: build
