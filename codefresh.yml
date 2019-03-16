@@ -22,19 +22,6 @@ steps:
         on:
         - success
 
-  build_test:
-    type: build
-    stage: test
-    title: Build test image
-    dockerfile: Dockerfile-test
-    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}
-    tag: test
-    when:
-      steps:
-      - name: main_clone
-        on:
-        - success
-
   gcc-7-prep: &prep
     type: build
     stage: prep
