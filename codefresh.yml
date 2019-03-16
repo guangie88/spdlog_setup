@@ -58,10 +58,12 @@ steps:
     title: Run test gcc-8
     stage: test
     image: gcc:8
+    environment:
+    - BUILD_DIR=build-gcc-8
     working_directory: ${{main_clone}}
     commands:
-    - mkdir -p build
-    - pushd build
+    - mkdir -p ${BUILD_DIR}
+    - cd ${BUILD_DIR}
     - |-
       for BUILD in Debug Release; do
         (
@@ -77,7 +79,6 @@ steps:
 
         (exit $ec)
       done
-    - popd
     when:
       steps:
       - name: gcc-8-prep
@@ -88,6 +89,8 @@ steps:
     <<: *test
     title: Run test gcc-7
     image: gcc:7
+    environment:
+    - BUILD_DIR=build-gcc-7
     when:
       steps:
       - name: gcc-7-prep
