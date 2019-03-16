@@ -1,52 +1,69 @@
 version: '1.0'
 mode: parallel
 stages:
-- lint
 - prep
+- lint
 - test
 
 steps:
+  lint-prep:
+    type: build
+    stage: prep
+    title: Prep lint image
+    dockerfile: Dockerfile-lint
+    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-lint
+    when:
+      steps:
+      - name: main_clone
+        on:
+        - success
+
+  gcc-8-prep: &prep
+    type: build
+    stage: prep
+    title: Prep test image gcc-8
+    build_arguments:
+    - GCC_VERSION=8
+
+  gcc-7-prep:
+    <<: *prep
+    title: Prep test image gcc-7
+    dockerfile: Dockerfile-build
+    build_arguments:
+    - GCC_VERSION=7
+    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
+    when:
+      steps:
+      - name: main_clone
+        on:
+        - success
+
   lint:
     title: Run format linting
     stage: lint
-    image: unibeautify/clang-format:latest
+    image: ${{lint-prep}}
     working_directory: ${{main_clone}}
     entrypoint: bash
     commands:
     - -|
       find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
-        xargs -0 -I {} bash -c 'if [[ $(clang-format-7 {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
+        xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
     when:
       steps:
-      - name: main_clone
+      - name: lint-prep
         on:
         - success
 
-  gcc-7-prep: &prep
-    type: build
-    stage: prep
-    title: Prep test image
-    dockerfile: Dockerfile-build
-    build_arguments:
-    - GCC_VERSION=7
-    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}
-    when:
-      steps:
-      - name: main_clone
-        on:
-        - success
-
-  gcc-7: &test
-    title: Run test
+  gcc-8: &test
+    title: Run test gcc-8
     stage: test
-    image: gcc:7
+    image: gcc:8
     working_directory: ${{main_clone}}
     commands:
-    - BUILDS=(Debug Release)
     - mkdir build
     - pushd build
     - |-
-      for BUILD in "${BUILDS[@]}"; do
+      for BUILD in "Debug Release"; do
         (
           set -x
           cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
@@ -61,6 +78,16 @@ steps:
         (exit $ec)
       done
     - popd
+    when:
+      steps:
+      - name: gcc-8-prep
+        on:
+        - success
+
+  gcc-7:
+    <<: *test
+    title: Run test gcc-7
+    image: gcc:7
     when:
       steps:
       - name: gcc-7-prep

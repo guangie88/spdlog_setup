@@ -1,0 +1,18 @@
+FROM debian:stretch-slim
+ARG CLANG_VERSION=7
+
+SHELL ["bash", "-c"]
+
+RUN set -euo pipefail && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gnupg2 \
+        software-properties-common \
+        wget \
+        ; \
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
+    apt-add-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main"; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends clang-format-${CLANG_VERSION}; \
+    clang-format-${CLANG_VERSION} --version; \
+    :
