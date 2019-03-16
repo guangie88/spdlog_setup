@@ -57,7 +57,7 @@ steps:
   gcc-8: &test
     title: Run test gcc-8
     stage: test
-    image: gcc:8
+    image: ${{gcc-8-prep}}
     environment:
     - BUILD_DIR=build-gcc-8
     working_directory: ${{main_clone}}
@@ -88,7 +88,7 @@ steps:
   gcc-7:
     <<: *test
     title: Run test gcc-7
-    image: gcc:7
+    image: ${{gcc-7-prep}}
     environment:
     - BUILD_DIR=build-gcc-7
     when:
