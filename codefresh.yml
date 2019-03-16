@@ -23,33 +23,13 @@ steps:
     type: build
     stage: prep
     title: Prep lint image
-    dockerfile: Dockerfile-lint
+    dockerfile: Dockerfile-clang
     image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-lint
     when:
       steps:
       - name: clone-submodules
         on:
         - success
-
-  gcc-8-prep: &prep
-    type: build
-    stage: prep
-    title: Prep test image gcc-8
-    dockerfile: Dockerfile-build
-    build_arguments:
-    - GCC_VERSION=8
-    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
-    when:
-      steps:
-      - name: clone-submodules
-        on:
-        - success
-
-  gcc-7-prep:
-    <<: *prep
-    title: Prep test image gcc-7
-    build_arguments:
-    - GCC_VERSION=7
 
   lint:
     title: Run format linting
@@ -64,6 +44,20 @@ steps:
     when:
       steps:
       - name: lint-prep
+        on:
+        - success
+
+  gcc-8-prep: &prep
+    type: build
+    stage: prep
+    title: Prep test image gcc-8
+    dockerfile: Dockerfile-gcc
+    build_arguments:
+    - GCC_VERSION=8
+    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
+    when:
+      steps:
+      - name: clone-submodules
         on:
         - success
 
@@ -98,6 +92,12 @@ steps:
         on:
         - success
 
+  gcc-7-prep:
+    <<: *prep
+    title: Prep test image gcc-7
+    build_arguments:
+    - GCC_VERSION=7
+
   gcc-7:
     <<: *test
     title: Run test gcc-7
@@ -107,5 +107,59 @@ steps:
     when:
       steps:
       - name: gcc-7-prep
+        on:
+        - success
+
+  gcc-6-prep:
+    <<: *prep
+    title: Prep test image gcc-6
+    build_arguments:
+    - GCC_VERSION=6
+
+  gcc-6:
+    <<: *test
+    title: Run test gcc-6
+    image: ${{gcc-6-prep}}
+    environment:
+    - BUILD_DIR=build-gcc-6
+    when:
+      steps:
+      - name: gcc-6-prep
+        on:
+        - success
+
+  gcc-5-prep:
+    <<: *prep
+    title: Prep test image gcc-5
+    build_arguments:
+    - GCC_VERSION=5
+
+  gcc-5:
+    <<: *test
+    title: Run test gcc-5
+    image: ${{gcc-5-prep}}
+    environment:
+    - BUILD_DIR=build-gcc-5
+    when:
+      steps:
+      - name: gcc-5-prep
+        on:
+        - success
+
+  gcc-4.9-prep:
+    <<: *prep
+    title: Prep test image gcc-4.9
+    build_arguments:
+    - GCC_VERSION=4.9
+
+  gcc-4.9:
+    <<: *test
+    title: Run test gcc-4.9
+    image: ${{gcc-4.9-prep}}
+    environment:
+    - BUILD_DIR=build-gcc-4.9
+    when:
+      steps:
+      - name: gcc-4.9-prep
         on:
         - success

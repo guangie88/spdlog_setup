@@ -13,7 +13,10 @@ RUN set -euo pipefail && \
     wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
     apt-add-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main"; \
     apt-get update; \
-    apt-get install -y --no-install-recommends clang-format-${CLANG_VERSION}; \
+    apt-get install -y --no-install-recommends \
+        clang-${CLANG_VERSION} \
+        clang-format-${CLANG_VERSION} \
+        ; \
     clang-format-${CLANG_VERSION} --version; \
     ln -s $(which clang-format-7) /usr/local/bin/clang-format; \
     :
