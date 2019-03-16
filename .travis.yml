@@ -16,11 +16,8 @@ matrix:
           packages:
             - g++-4.9
             - doxygen
-            - clang-format-7
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, gcc-5
     - env: ["VER=5", "COV=YES"]
@@ -32,11 +29,8 @@ matrix:
           packages:
             - g++-5
             - doxygen
-            - clang-format-7
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, gcc-6
     - env: ["VER=6"]
@@ -48,11 +42,8 @@ matrix:
           packages:
             - g++-6
             - doxygen
-            - clang-format-7
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, gcc-7
     - env: ["VER=7"]
@@ -64,11 +55,8 @@ matrix:
           packages:
             - g++-7
             - doxygen
-            - clang-format-7
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, gcc-8
     - env: ["VER=8"]
@@ -80,11 +68,8 @@ matrix:
           packages:
             - g++-8
             - doxygen
-            - clang-format-7
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.4
     - env: ["VER=3.4"]
@@ -97,11 +82,8 @@ matrix:
             - clang-3.4
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.4 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.5
@@ -115,11 +97,8 @@ matrix:
             - clang-3.5
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.5 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.6
@@ -133,11 +112,8 @@ matrix:
             - clang-3.6
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.6 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.7
@@ -151,11 +127,8 @@ matrix:
             - clang-3.7
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.7 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.8
@@ -169,11 +142,8 @@ matrix:
             - clang-3.8
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.8 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-3.9
@@ -187,11 +157,8 @@ matrix:
             - clang-3.9
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-4.0
@@ -205,11 +172,8 @@ matrix:
             - clang-4.0
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-5.0
@@ -223,11 +187,8 @@ matrix:
             - clang-5.0
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-6.0
@@ -241,11 +202,8 @@ matrix:
             - clang-6.0
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main
-              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
-            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
 
     # ubuntu 14.04, clang-7.0
@@ -259,7 +217,6 @@ matrix:
             - clang-7.0
             - libc++-dev
             - doxygen
-            - clang-format-7
           sources:
             - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
               key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
@@ -289,9 +246,6 @@ install:
 
 script:
   - git rev-parse HEAD
-  - |-
-    find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
-      xargs -0 -I {} bash -c 'if [[ $(clang-format-7 {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
   - BUILDS=(Debug Release)
   - mkdir build
   - pushd build
@@ -329,6 +283,30 @@ script:
 # after_success:
   # generate document
   # - doxygen Doxyfile
+
+jobs:
+  include:
+    # ubuntu 14.04, clang-format-7 as linter
+    - stage: lint
+      env: ["LINT=true"]
+      os: linux
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - clang-format-7
+          sources:
+            - sourceline: deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main
+              key_url: http://apt.llvm.org/llvm-snapshot.gpg.key
+      script: 
+        - git rev-parse HEAD
+        - |-
+          find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
+            xargs -0 -I {} bash -c 'if [[ $(clang-format-7 {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
+
+stages:
+  - lint
+  - test
 
 branches:
   only:
