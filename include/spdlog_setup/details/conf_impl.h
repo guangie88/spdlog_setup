@@ -494,8 +494,7 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     using std::regex_constants::icase;
 
     try {
-        static const regex RE(
-            R"_(^\s*(\d+)\s*(T|G|M|K|)(:?B|)\s*$)_", icase);
+        static const regex RE(R"_(^\s*(\d+)\s*(T|G|M|K|)(:?B|)\s*$)_", icase);
 
         smatch matches;
         const auto has_match = regex_match(max_size_str, matches, RE);
