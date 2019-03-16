@@ -15,4 +15,5 @@ RUN set -euo pipefail && \
     apt-get update; \
     apt-get install -y --no-install-recommends clang-format-${CLANG_VERSION}; \
     clang-format-${CLANG_VERSION} --version; \
+    ln -s /usr/local/bin/clang-format $(which clang-format-7); \
     :
