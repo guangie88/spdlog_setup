@@ -4,7 +4,7 @@ language: cpp
 git:
   submodules: true
 
-install: &install
+install_template: &install
   # set the correct `CC` and `CXX` environment variables.
   - |-
     if [ -n "${VER}" ]; then
@@ -26,7 +26,7 @@ install: &install
       export PATH="${DEPS}/bin:${PATH}"
     fi
 
-script: &script
+script_template: &script
   - git rev-parse HEAD
   - BUILDS=(Debug Release)
   - mkdir build
@@ -62,7 +62,7 @@ script: &script
     done
   - popd
 
-# after_success: &after_success
+# after_success_template: &after_success
   # generate document
   # - doxygen Doxyfile
 
@@ -88,22 +88,22 @@ jobs:
             xargs -0 -I {} bash -c 'if [[ $(clang-format-7 {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
 
     # ubuntu 14.04, gcc-4.9
-    # - stage: test
-    #   env: ["VER=4.9"]
-    #   compiler: gcc
-    #   os: linux
-    #   dist: trusty
-    #   addons:
-    #     apt:
-    #       packages:
-    #         - g++-4.9
-    #         - doxygen
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #   install:
-    #   <<: *install
-    #   script:
-    #   <<: *script
+    - stage: test
+      env: ["VER=4.9"]
+      compiler: gcc
+      os: linux
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - g++-4.9
+            - doxygen
+          sources:
+            - ubuntu-toolchain-r-test
+      install:
+      <<: *install
+      script:
+      <<: *script
 
     # # ubuntu 14.04, gcc-5
     # - stage: test
