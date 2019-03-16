@@ -63,7 +63,7 @@ steps:
     - mkdir -p build
     - pushd build
     - |-
-      for BUILD in "Debug Release"; do
+      for BUILD in Debug Release; do
         (
           set -x
           cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
