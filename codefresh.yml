@@ -6,6 +6,12 @@ stages:
 - test
 
 steps:
+  main_clone:
+    image: codefresh/cfstep-gitsubmodules
+    environment:
+      - CF_SUBMODULE_SYNC=true
+      - CF_SUBMODULE_UPDATE_RECURSIVE=true
+
   lint-prep:
     type: build
     stage: prep
