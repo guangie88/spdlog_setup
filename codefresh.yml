@@ -45,7 +45,7 @@ steps:
     working_directory: ${{main_clone}}
     entrypoint: bash
     commands:
-    - -|
+    - |-
       find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
         xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
     when:
@@ -60,7 +60,7 @@ steps:
     image: gcc:8
     working_directory: ${{main_clone}}
     commands:
-    - mkdir build
+    - mkdir -p build
     - pushd build
     - |-
       for BUILD in "Debug Release"; do
