@@ -48,6 +48,8 @@ steps:
         on:
         - success
 
+  # GCC test section
+
   gcc_8_prep: &gcc_prep
     type: build
     stage: prep
@@ -113,62 +115,64 @@ steps:
         on:
         - success
 
-  # gcc_6_prep:
-  #   <<: *gcc_prep
-  #   title: Prep test image gcc_6
-  #   build_arguments:
-  #   - GCC_VERSION=6
-  #   tag: gcc_6
+  gcc_6_prep:
+    <<: *gcc_prep
+    title: Prep test image gcc_6
+    build_arguments:
+    - GCC_VERSION=6
+    tag: gcc_6
 
-  # gcc_6:
-  #   <<: *gcc_test
-  #   title: Run test gcc_6
-  #   image: ${{gcc_6_prep}}
-  #   environment:
-  #   - BUILD_DIR=build-gcc_6
-  #   when:
-  #     steps:
-  #     - name: gcc_6_prep
-  #       on:
-  #       - success
+  gcc_6:
+    <<: *gcc_test
+    title: Run test gcc_6
+    image: ${{gcc_6_prep}}
+    environment:
+    - BUILD_DIR=build-gcc_6
+    when:
+      steps:
+      - name: gcc_6_prep
+        on:
+        - success
 
-  # gcc_5_prep:
-  #   <<: *gcc_prep
-  #   title: Prep test image gcc_5
-  #   build_arguments:
-  #   - GCC_VERSION=5
-  #   tag: gcc_5
+  gcc_5_prep:
+    <<: *gcc_prep
+    title: Prep test image gcc_5
+    build_arguments:
+    - GCC_VERSION=5
+    tag: gcc_5
 
-  # gcc_5:
-  #   <<: *gcc_test
-  #   title: Run test gcc_5
-  #   image: ${{gcc_5_prep}}
-  #   environment:
-  #   - BUILD_DIR=build-gcc_5
-  #   when:
-  #     steps:
-  #     - name: gcc_5_prep
-  #       on:
-  #       - success
+  gcc_5:
+    <<: *gcc_test
+    title: Run test gcc_5
+    image: ${{gcc_5_prep}}
+    environment:
+    - BUILD_DIR=build-gcc_5
+    when:
+      steps:
+      - name: gcc_5_prep
+        on:
+        - success
 
-  # gcc_4_9_prep:
-  #   <<: *gcc_prep
-  #   title: Prep test image gcc_4_9
-  #   build_arguments:
-  #   - GCC_VERSION=4.9
-  #   tag: gcc_4_9
+  gcc_4_9_prep:
+    <<: *gcc_prep
+    title: Prep test image gcc_4_9
+    build_arguments:
+    - GCC_VERSION=4.9
+    tag: gcc_4_9
 
-  # gcc_4_9:
-  #   <<: *gcc_test
-  #   title: Run test gcc_4_9
-  #   image: ${{gcc_4_9_prep}}
-  #   environment:
-  #   - BUILD_DIR=build-gcc_4_9
-  #   when:
-  #     steps:
-  #     - name: gcc_4_9_prep
-  #       on:
-  #       - success
+  gcc_4_9:
+    <<: *gcc_test
+    title: Run test gcc_4_9
+    image: ${{gcc_4_9_prep}}
+    environment:
+    - BUILD_DIR=build-gcc_4_9
+    when:
+      steps:
+      - name: gcc_4_9_prep
+        on:
+        - success
+
+  # Clang test section
 
   clang_7_prep: &clang_prep
     type: build
@@ -213,5 +217,43 @@ steps:
     when:
       steps:
       - name: clang_6_0_prep
+        on:
+        - success
+
+  clang_5_0_prep:
+    <<: *clang_prep
+    title: Prep test image clang_5_0
+    build_arguments:
+    - CLANG_VERSION=5.0
+    tag: clang_5_0
+
+  clang_5_0:
+    <<: *clang_test
+    title: Run test clang_5_0
+    image: ${{clang_5_0_prep}}
+    environment:
+    - BUILD_DIR=build-clang_5_0
+    when:
+      steps:
+      - name: clang_5_0_prep
+        on:
+        - success
+
+  clang_4_0_prep:
+    <<: *clang_prep
+    title: Prep test image clang_4_0
+    build_arguments:
+    - CLANG_VERSION=4.0
+    tag: clang_4_0
+
+  clang_4_0:
+    <<: *clang_test
+    title: Run test clang_4_0
+    image: ${{clang_4_0_prep}}
+    environment:
+    - BUILD_DIR=build-clang_4_0
+    when:
+      steps:
+      - name: clang_4_0_prep
         on:
         - success
