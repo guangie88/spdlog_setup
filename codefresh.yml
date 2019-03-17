@@ -197,21 +197,21 @@ steps:
         on:
         - success
 
-  clang_6_prep:
+  clang_6_0_prep:
     <<: *clang_prep
-    title: Prep test image clang_6
+    title: Prep test image clang_6_0
     build_arguments:
-    - CLANG_VERSION=6
-    tag: clang_6
+    - CLANG_VERSION=6.0
+    tag: clang_6_0
 
-  clang_6:
+  clang_6_0:
     <<: *clang_test
-    title: Run test clang_6
-    image: ${{clang_6_prep}}
+    title: Run test clang_6_0
+    image: ${{clang_6_0_prep}}
     environment:
-    - BUILD_DIR=build-clang_6
+    - BUILD_DIR=build-clang_6_0
     when:
       steps:
-      - name: clang_6_prep
+      - name: clang_6_0_prep
         on:
         - success
