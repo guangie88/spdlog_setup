@@ -8,6 +8,8 @@ RUN set -euo pipefail && \
     # Install deps
     apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
+        libc++ \
+        libc++-dev \
         make \
         gnupg2 \
         software-properties-common \
