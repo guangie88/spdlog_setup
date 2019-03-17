@@ -16,14 +16,27 @@ RUN set -euo pipefail && \
     # Install clang from special repo first
     wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
     apt-add-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main"; \
+    :
+
+RUN set -euo pipefail && \
     CLANG_MAJOR_VERSION=$(echo ${CLANG_VERSION} | grep -oE "^[[:digit:]]+"); \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         clang-${CLANG_VERSION} \
         clang-format-${CLANG_VERSION} \
-        libc++-${CLANG_MAJOR_VERSION}-dev \
-        libc++abi-${CLANG_MAJOR_VERSION}-dev \
         ; \
+    if [[ ${CLANG_MAJOR_VERSION} -lt 7 ]]; then \
+        apt-get install -y --no-install-recommends \
+            libc++-dev \
+            libc++abi-dev \
+            ; \
+    else \
+        apt-get install -y --no-install-recommends \
+            libc++-${CLANG_MAJOR_VERSION}-dev \
+            libc++abi-${CLANG_MAJOR_VERSION}-dev \
+            ; \
+    fi; \
+    clang-${CLANG_VERSION} --version; \
     clang-format-${CLANG_VERSION} --version; \
     ln -s $(which clang-${CLANG_VERSION}) /usr/local/bin/clang; \
     ln -s $(which clang++-${CLANG_VERSION}) /usr/local/bin/clang++; \
