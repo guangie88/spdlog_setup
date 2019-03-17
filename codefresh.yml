@@ -47,7 +47,7 @@ steps:
         on:
         - success
 
-  gcc_8_prep: &prep
+  gcc_8_prep: &gcc_prep
     type: build
     stage: prep
     title: Prep test image gcc_8
@@ -62,7 +62,7 @@ steps:
         on:
         - success
 
-  gcc_8: &test
+  gcc_8: &gcc_test
     title: Run test gcc_8
     stage: test
     image: ${{gcc_8_prep}}
@@ -93,34 +93,34 @@ steps:
         on:
         - success
 
-  # gcc_7_prep:
-  #   <<: *prep
-  #   title: Prep test image gcc_7
-  #   build_arguments:
-  #   - GCC_VERSION=7
-  #   tag: gcc_7
+  gcc_7_prep:
+    <<: *gcc_prep
+    title: Prep test image gcc_7
+    build_arguments:
+    - GCC_VERSION=7
+    tag: gcc_7
 
-  # gcc_7:
-  #   <<: *test
-  #   title: Run test gcc_7
-  #   image: ${{gcc_7_prep}}
-  #   environment:
-  #   - BUILD_DIR=build-gcc_7
-  #   when:
-  #     steps:
-  #     - name: gcc_7_prep
-  #       on:
-  #       - success
+  gcc_7:
+    <<: *gcc_test
+    title: Run test gcc_7
+    image: ${{gcc_7_prep}}
+    environment:
+    - BUILD_DIR=build-gcc_7
+    when:
+      steps:
+      - name: gcc_7_prep
+        on:
+        - success
 
   # gcc_6_prep:
-  #   <<: *prep
+  #   <<: *gcc_prep
   #   title: Prep test image gcc_6
   #   build_arguments:
   #   - GCC_VERSION=6
   #   tag: gcc_6
 
   # gcc_6:
-  #   <<: *test
+  #   <<: *gcc_test
   #   title: Run test gcc_6
   #   image: ${{gcc_6_prep}}
   #   environment:
@@ -132,14 +132,14 @@ steps:
   #       - success
 
   # gcc_5_prep:
-  #   <<: *prep
+  #   <<: *gcc_prep
   #   title: Prep test image gcc_5
   #   build_arguments:
   #   - GCC_VERSION=5
   #   tag: gcc_5
 
   # gcc_5:
-  #   <<: *test
+  #   <<: *gcc_test
   #   title: Run test gcc_5
   #   image: ${{gcc_5_prep}}
   #   environment:
@@ -151,14 +151,14 @@ steps:
   #       - success
 
   # gcc_4_9_prep:
-  #   <<: *prep
+  #   <<: *gcc_prep
   #   title: Prep test image gcc_4_9
   #   build_arguments:
   #   - GCC_VERSION=4.9
   #   tag: gcc_4_9
 
   # gcc_4_9:
-  #   <<: *test
+  #   <<: *gcc_test
   #   title: Run test gcc_4_9
   #   image: ${{gcc_4_9_prep}}
   #   environment:
@@ -169,7 +169,7 @@ steps:
   #       on:
   #       - success
 
-  clang_7_prep: &prep
+  clang_7_prep: &clang_prep
     type: build
     stage: prep
     title: Prep test image clang_7
@@ -184,27 +184,27 @@ steps:
         on:
         - success
 
-  clang_7:
-    <<: *test
+  clang_7: &clang_test
+    <<: *gcc_test
     title: Run test clang_7
-    image: ${{gcc_7_prep}}
+    image: ${{clang_7_prep}}
     environment:
     - BUILD_DIR=build-clang_7
     when:
       steps:
-      - name: gcc_7_prep
+      - name: clang_7_prep
         on:
         - success
 
   clang_6_prep:
-    <<: *prep
+    <<: *clang_prep
     title: Prep test image clang_6
     build_arguments:
     - CLANG_VERSION=6
     tag: clang_6
 
   clang_6:
-    <<: *test
+    <<: *clang_test
     title: Run test clang_6
     image: ${{clang_6_prep}}
     environment:
