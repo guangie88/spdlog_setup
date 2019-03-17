@@ -20,8 +20,8 @@ RUN set -euo pipefail && \
     apt-get install -y --no-install-recommends \
         clang-${CLANG_VERSION} \
         clang-format-${CLANG_VERSION} \
-        libc++ \
-        libc++-dev \
+        libc++-${CLANG_VERSION}-dev \
+        libc++abi-${CLANG_VERSION}-dev \
         ; \
     clang-format-${CLANG_VERSION} --version; \
     ln -s $(which clang-${CLANG_VERSION}) /usr/local/bin/clang; \
