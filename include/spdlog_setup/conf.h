@@ -7,11 +7,11 @@
 #pragma once
 
 #include "details/conf_impl.h"
+#include "details/setup_error.h"
+#include "details/template_impl.h"
 
 namespace spdlog_setup {
 // declaration section
-
-using details::setup_error;
 
 /**
  * Performs spdlog configuration setup from file, with tag values to be
@@ -219,10 +219,10 @@ inline void save_logger_to_file(
 
     using details::find_item_by_name;
     using details::level_to_str;
+    using details::write_to_config_file;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
-    using details::write_to_config_file;
 
     // fmt
     using fmt::format;
@@ -297,10 +297,10 @@ inline auto delete_logger_in_file(
 
     using details::find_item_iter_by_name;
     using details::level_to_str;
+    using details::write_to_config_file;
     using details::names::LEVEL;
     using details::names::LOGGER_TABLE;
     using details::names::NAME;
-    using details::write_to_config_file;
 
     // fmt
     using fmt::format;

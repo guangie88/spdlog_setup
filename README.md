@@ -27,8 +27,7 @@ Tested against:
 - `g++-5`
 - `g++-6`
 - `g++-7`
-- `clang-3.4`
-- `clang-3.5`
+- `g++-8`
 - `clang-3.6`
 - `clang-3.7`
 - `clang-3.8`
@@ -36,6 +35,7 @@ Tested against:
 - `clang-4.0`
 - `clang-5.0`
 - `clang-6.0`
+- `clang-7`
 - `cl` (v140 / MSVC2015)
 - `cl` (v141 / MSVC2017)
 

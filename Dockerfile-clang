@@ -1,0 +1,55 @@
+FROM debian:jessie-slim
+
+ARG CLANG_VERSION=7
+ARG CMAKE_VERSION=3.14.0
+SHELL ["bash", "-c"]
+
+RUN set -euo pipefail && \
+    # Install deps
+    apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        make \
+        gnupg2 \
+        software-properties-common \
+        wget \
+        ; \
+    # Install clang from special repo first
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
+    apt-add-repository "deb http://apt.llvm.org/jessie/ llvm-toolchain-jessie-${CLANG_VERSION} main"; \
+    CLANG_MAJOR_VERSION=$(echo ${CLANG_VERSION} | grep -oE "^[[:digit:]]+"); \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        clang-${CLANG_VERSION} \
+        clang-format-${CLANG_VERSION} \
+        libpthread-stubs0-dev \
+        ; \
+    if [[ ${CLANG_MAJOR_VERSION} -lt 7 ]]; then \
+        apt-get install -y --no-install-recommends \
+            libc++-dev \
+            libc++abi-dev \
+            ; \
+    else \
+        apt-get install -y --no-install-recommends \
+            libc++-${CLANG_MAJOR_VERSION}-dev \
+            libc++abi-${CLANG_MAJOR_VERSION}-dev \
+            ; \
+    fi; \
+    clang-${CLANG_VERSION} --version; \
+    clang-format-${CLANG_VERSION} --version; \
+    ln -s $(which clang-${CLANG_VERSION}) /usr/local/bin/clang; \
+    ln -s $(which clang++-${CLANG_VERSION}) /usr/local/bin/clang++; \
+    ln -s $(which clang-format-${CLANG_VERSION}) /usr/local/bin/clang-format; \
+    # Install cmake
+    # The sh file is too big to do direct pipe, so save to file and run from there instead
+    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh; \
+    bash cmake-${CMAKE_VERSION}-Linux-x86_64.sh --skip-license --prefix=/usr/local; \
+    cmake --version; \
+    rm cmake-${CMAKE_VERSION}-Linux-x86_64.sh; \
+    # Clean up deps
+    apt-get remove -y gnupg2 software-properties-common wget; \
+    apt-get autoremove -y; \
+    rm -rf /var/cache/apt; \
+    :
+
+ENV CC=clang
+ENV CXX=clang++

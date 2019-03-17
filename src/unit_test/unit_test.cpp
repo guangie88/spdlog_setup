@@ -22,6 +22,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <unordered_map>
 
 using namespace examples;
 
@@ -29,6 +30,7 @@ using namespace examples;
 using fmt::arg;
 using spdlog::level::level_enum;
 using spdlog_setup::setup_error;
+using spdlog_setup::details::render;
 
 namespace names = spdlog_setup::details::names;
 using names::LEVEL;
@@ -43,6 +45,7 @@ using std::distance;
 using std::getline;
 using std::ifstream;
 using std::string;
+using std::unordered_map;
 
 TEST_CASE("Parse max size no suffix", "[parse_max_size_no_suffix]") {
     REQUIRE(123 == spdlog_setup::details::parse_max_size("123"));
@@ -559,4 +562,33 @@ TEST_CASE("Delete logger from empty file", "[delete_logger_in_file_empty]") {
     REQUIRE_THROWS_AS(
         spdlog_setup::delete_logger_in_file("any-log", tmp_file_path),
         setup_error);
+}
+
+TEST_CASE("Check templating", "[check_templating]") {
+    REQUIRE(render("", {{}}) == "");
+    REQUIRE(render("abc", {{}}) == "abc");
+    REQUIRE(render("{{ a }}", {{"a", "Alpha"}}) == "Alpha");
+
+    REQUIRE(
+        render(
+            "{{ a }}{{bb}}{{ ccc}}{{dddd }}",
+            {
+                {"a", "Alpha"},
+                {"bb", "Beta"},
+                {"ccc", "Ceta"},
+                {"dddd", "Delta"},
+            }) == "AlphaBetaCetaDelta");
+
+    REQUIRE(
+        render("{{\"Hello\"}} {{ \"{{\" }} {{\"}}\" }}", {{}}) ==
+        "Hello {{ }}");
+
+    REQUIRE(
+        render(
+            "a{{b}}cd{{e}}f{{\"g\"}}hij{{ k}}{{l }}) ({{ b }}{{e}}",
+            {
+                {"b", "BBB"},
+                {"k", "KKK"},
+                {"l", "LLL"},
+            }) == "aBBBcdfghijKKKLLL) (BBB");
 }

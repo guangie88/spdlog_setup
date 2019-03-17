@@ -10,7 +10,6 @@
 #include <string>
 
 namespace spdlog_setup {
-namespace details {
 // declaration section
 
 /**
@@ -51,5 +50,4 @@ inline setup_error::setup_error(std::string msg) : msg(std::move(msg)) {}
 inline auto setup_error::what() const noexcept -> const char * {
     return msg.c_str();
 }
-} // namespace details
 } // namespace spdlog_setup
