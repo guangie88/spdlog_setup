@@ -55,6 +55,7 @@ steps:
     build_arguments:
     - GCC_VERSION=8
     image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
+    tag: gcc_8
     when:
       steps:
       - name: clone_submodules
@@ -92,74 +93,124 @@ steps:
         on:
         - success
 
-  gcc_7_prep:
-    <<: *prep
-    title: Prep test image gcc_7
-    build_arguments:
-    - GCC_VERSION=7
+  # gcc_7_prep:
+  #   <<: *prep
+  #   title: Prep test image gcc_7
+  #   build_arguments:
+  #   - GCC_VERSION=7
+  #   tag: gcc_7
 
-  gcc_7:
+  # gcc_7:
+  #   <<: *test
+  #   title: Run test gcc_7
+  #   image: ${{gcc_7_prep}}
+  #   environment:
+  #   - BUILD_DIR=build-gcc_7
+  #   when:
+  #     steps:
+  #     - name: gcc_7_prep
+  #       on:
+  #       - success
+
+  # gcc_6_prep:
+  #   <<: *prep
+  #   title: Prep test image gcc_6
+  #   build_arguments:
+  #   - GCC_VERSION=6
+  #   tag: gcc_6
+
+  # gcc_6:
+  #   <<: *test
+  #   title: Run test gcc_6
+  #   image: ${{gcc_6_prep}}
+  #   environment:
+  #   - BUILD_DIR=build-gcc_6
+  #   when:
+  #     steps:
+  #     - name: gcc_6_prep
+  #       on:
+  #       - success
+
+  # gcc_5_prep:
+  #   <<: *prep
+  #   title: Prep test image gcc_5
+  #   build_arguments:
+  #   - GCC_VERSION=5
+  #   tag: gcc_5
+
+  # gcc_5:
+  #   <<: *test
+  #   title: Run test gcc_5
+  #   image: ${{gcc_5_prep}}
+  #   environment:
+  #   - BUILD_DIR=build-gcc_5
+  #   when:
+  #     steps:
+  #     - name: gcc_5_prep
+  #       on:
+  #       - success
+
+  # gcc_4_9_prep:
+  #   <<: *prep
+  #   title: Prep test image gcc_4_9
+  #   build_arguments:
+  #   - GCC_VERSION=4.9
+  #   tag: gcc_4_9
+
+  # gcc_4_9:
+  #   <<: *test
+  #   title: Run test gcc_4_9
+  #   image: ${{gcc_4_9_prep}}
+  #   environment:
+  #   - BUILD_DIR=build-gcc_4_9
+  #   when:
+  #     steps:
+  #     - name: gcc_4_9_prep
+  #       on:
+  #       - success
+
+  clang_7_prep: &prep
+    type: build
+    stage: prep
+    title: Prep test image clang_7
+    dockerfile: Dockerfile-clang
+    build_arguments:
+    - CLANG_VERSION=7
+    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
+    tag: clang_7
+    when:
+      steps:
+      - name: clone_submodules
+        on:
+        - success
+
+  clang_7:
     <<: *test
-    title: Run test gcc_7
+    title: Run test clang_7
     image: ${{gcc_7_prep}}
     environment:
-    - BUILD_DIR=build-gcc_7
+    - BUILD_DIR=build-clang_7
     when:
       steps:
       - name: gcc_7_prep
         on:
         - success
 
-  gcc_6_prep:
+  clang_6_prep:
     <<: *prep
-    title: Prep test image gcc_6
+    title: Prep test image clang_6
     build_arguments:
-    - GCC_VERSION=6
+    - CLANG_VERSION=6
+    tag: clang_6
 
-  gcc_6:
+  clang_6:
     <<: *test
-    title: Run test gcc_6
-    image: ${{gcc_6_prep}}
+    title: Run test clang_6
+    image: ${{clang_6_prep}}
     environment:
-    - BUILD_DIR=build-gcc_6
+    - BUILD_DIR=build-clang_6
     when:
       steps:
-      - name: gcc_6_prep
-        on:
-        - success
-
-  gcc_5_prep:
-    <<: *prep
-    title: Prep test image gcc_5
-    build_arguments:
-    - GCC_VERSION=5
-
-  gcc_5:
-    <<: *test
-    title: Run test gcc_5
-    image: ${{gcc_5_prep}}
-    environment:
-    - BUILD_DIR=build-gcc_5
-    when:
-      steps:
-      - name: gcc_5_prep
-        on:
-        - success
-
-  gcc_4_9_prep:
-    <<: *prep
-    title: Prep test image gcc_4_9
-    build_arguments:
-    - GCC_VERSION=4.9
-
-  gcc_4_9:
-    <<: *test
-    title: Run test gcc_4_9
-    image: ${{gcc_4_9_prep}}
-    environment:
-    - BUILD_DIR=build-gcc_4_9
-    when:
-      steps:
-      - name: gcc_4_9_prep
+      - name: clang_6_prep
         on:
         - success
