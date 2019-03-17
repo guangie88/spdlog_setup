@@ -8,8 +8,6 @@ RUN set -euo pipefail && \
     # Install deps
     apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
-        libc++ \
-        libc++-dev \
         make \
         gnupg2 \
         software-properties-common \
@@ -22,6 +20,8 @@ RUN set -euo pipefail && \
     apt-get install -y --no-install-recommends \
         clang-${CLANG_VERSION} \
         clang-format-${CLANG_VERSION} \
+        libc++ \
+        libc++-dev \
         ; \
     clang-format-${CLANG_VERSION} --version; \
     ln -s $(which clang-${CLANG_VERSION}) /usr/local/bin/clang; \
