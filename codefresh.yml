@@ -146,20 +146,20 @@ steps:
         on:
         - success
 
-  # gcc-4.9-prep:
-  #   <<: *prep
-  #   title: Prep test image gcc-4.9
-  #   build_arguments:
-  #   - GCC_VERSION=4.9
+  gcc-4_9-prep:
+    <<: *prep
+    title: Prep test image gcc-4_9
+    build_arguments:
+    - GCC_VERSION=4.9
 
-  # gcc-4.9:
-  #   <<: *test
-  #   title: Run test gcc-4.9
-  #   image: ${{gcc-4.9-prep}}
-  #   environment:
-  #   - BUILD_DIR=build-gcc-4.9
-  #   when:
-  #     steps:
-  #     - name: gcc-4.9-prep
-  #       on:
-  #       - success
+  gcc-4_9:
+    <<: *test
+    title: Run test gcc-4_9
+    image: ${{gcc-4_9-prep}}
+    environment:
+    - BUILD_DIR=build-gcc-4_9
+    when:
+      steps:
+      - name: gcc-4_9-prep
+        on:
+        - success
