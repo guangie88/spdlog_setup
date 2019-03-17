@@ -257,3 +257,79 @@ steps:
       - name: clang_4_0_prep
         on:
         - success
+
+  clang_3_9_prep:
+    <<: *clang_prep
+    title: Prep test image clang_3_9
+    build_arguments:
+    - CLANG_VERSION=3.9
+    tag: clang_3_9
+
+  clang_3_9:
+    <<: *clang_test
+    title: Run test clang_3_9
+    image: ${{clang_3_9_prep}}
+    environment:
+    - BUILD_DIR=build-clang_3_9
+    when:
+      steps:
+      - name: clang_3_9_prep
+        on:
+        - success
+
+  clang_3_8_prep:
+    <<: *clang_prep
+    title: Prep test image clang_3_8
+    build_arguments:
+    - CLANG_VERSION=3.8
+    tag: clang_3_8
+
+  clang_3_8:
+    <<: *clang_test
+    title: Run test clang_3_8
+    image: ${{clang_3_8_prep}}
+    environment:
+    - BUILD_DIR=build-clang_3_8
+    when:
+      steps:
+      - name: clang_3_8_prep
+        on:
+        - success
+
+  clang_3_7_prep:
+    <<: *clang_prep
+    title: Prep test image clang_3_7
+    build_arguments:
+    - CLANG_VERSION=3.7
+    tag: clang_3_7
+
+  clang_3_7:
+    <<: *clang_test
+    title: Run test clang_3_7
+    image: ${{clang_3_7_prep}}
+    environment:
+    - BUILD_DIR=build-clang_3_7
+    when:
+      steps:
+      - name: clang_3_7_prep
+        on:
+        - success
+
+  clang_3_6_prep:
+    <<: *clang_prep
+    title: Prep test image clang_3_6
+    build_arguments:
+    - CLANG_VERSION=3.6
+    tag: clang_3_6
+
+  clang_3_6:
+    <<: *clang_test
+    title: Run test clang_3_6
+    image: ${{clang_3_6_prep}}
+    environment:
+    - BUILD_DIR=build-clang_3_6
+    when:
+      steps:
+      - name: clang_3_6_prep
+        on:
+        - success

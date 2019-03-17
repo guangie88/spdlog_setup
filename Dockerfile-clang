@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM debian:jessie-slim
 
 ARG CLANG_VERSION=7
 ARG CMAKE_VERSION=3.14.0
@@ -15,7 +15,7 @@ RUN set -euo pipefail && \
         ; \
     # Install clang from special repo first
     wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
-    apt-add-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main"; \
+    apt-add-repository "deb http://apt.llvm.org/jessie/ llvm-toolchain-jessie-${CLANG_VERSION} main"; \
     CLANG_MAJOR_VERSION=$(echo ${CLANG_VERSION} | grep -oE "^[[:digit:]]+"); \
     apt-get update; \
     apt-get install -y --no-install-recommends \
