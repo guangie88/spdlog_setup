@@ -1,7 +1,6 @@
 version: '1.0'
 mode: parallel
 stages:
-- prep
 - lint
 - test
 
@@ -19,23 +18,10 @@ steps:
         on:
         - success
 
-  lint_prep:
-    type: build
-    stage: prep
-    title: Prep lint image
-    dockerfile: Dockerfile-clang
-    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-lint
-    tag: latest
-    when:
-      steps:
-      - name: clone_submodules
-        on:
-        - success
-
   lint:
     title: Run format linting
     stage: lint
-    image: ${{lint_prep}}
+    image: guangie88/clang-cmake:7
     working_directory: ${{main_clone}}
     entrypoint: bash
     commands:
@@ -44,31 +30,16 @@ steps:
         xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
     when:
       steps:
-      - name: lint_prep
+      - name: main_clone
         on:
         - success
 
   # GCC test section
 
-  gcc_8_prep: &gcc_prep
-    type: build
-    stage: prep
-    title: Prep test image gcc_8
-    dockerfile: Dockerfile-gcc
-    build_arguments:
-    - GCC_VERSION=8
-    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
-    tag: gcc_8
-    when:
-      steps:
-      - name: clone_submodules
-        on:
-        - success
-
   gcc_8: &gcc_test
     title: Run test gcc_8
     stage: test
-    image: ${{gcc_8_prep}}
+    image: guangie88/gcc-cmake:8_cmake-3.14
     environment:
     - BUILD_DIR=build-gcc_8
     working_directory: ${{main_clone}}
@@ -92,244 +63,92 @@ steps:
       done
     when:
       steps:
-      - name: gcc_8_prep
+      - name: main_clone
         on:
         - success
-
-  gcc_7_prep:
-    <<: *gcc_prep
-    title: Prep test image gcc_7
-    build_arguments:
-    - GCC_VERSION=7
-    tag: gcc_7
 
   gcc_7:
     <<: *gcc_test
     title: Run test gcc_7
-    image: ${{gcc_7_prep}}
+    image: guangie88/gcc-cmake:7_cmake-3.14
     environment:
     - BUILD_DIR=build-gcc_7
-    when:
-      steps:
-      - name: gcc_7_prep
-        on:
-        - success
-
-  gcc_6_prep:
-    <<: *gcc_prep
-    title: Prep test image gcc_6
-    build_arguments:
-    - GCC_VERSION=6
-    tag: gcc_6
 
   gcc_6:
     <<: *gcc_test
     title: Run test gcc_6
-    image: ${{gcc_6_prep}}
+    image: guangie88/gcc-cmake:6_cmake-3.14
     environment:
     - BUILD_DIR=build-gcc_6
-    when:
-      steps:
-      - name: gcc_6_prep
-        on:
-        - success
-
-  gcc_5_prep:
-    <<: *gcc_prep
-    title: Prep test image gcc_5
-    build_arguments:
-    - GCC_VERSION=5
-    tag: gcc_5
 
   gcc_5:
     <<: *gcc_test
     title: Run test gcc_5
-    image: ${{gcc_5_prep}}
+    image: guangie88/gcc-cmake:5_cmake-3.14
     environment:
     - BUILD_DIR=build-gcc_5
-    when:
-      steps:
-      - name: gcc_5_prep
-        on:
-        - success
-
-  gcc_4_9_prep:
-    <<: *gcc_prep
-    title: Prep test image gcc_4_9
-    build_arguments:
-    - GCC_VERSION=4.9
-    tag: gcc_4_9
 
   gcc_4_9:
     <<: *gcc_test
     title: Run test gcc_4_9
-    image: ${{gcc_4_9_prep}}
+    image: guangie88/gcc-cmake:4.9_cmake-3.14
     environment:
     - BUILD_DIR=build-gcc_4_9
-    when:
-      steps:
-      - name: gcc_4_9_prep
-        on:
-        - success
 
   # Clang test section
-
-  clang_7_prep: &clang_prep
-    type: build
-    stage: prep
-    title: Prep test image clang_7
-    dockerfile: Dockerfile-clang
-    build_arguments:
-    - CLANG_VERSION=7
-    image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
-    tag: clang_7
-    when:
-      steps:
-      - name: clone_submodules
-        on:
-        - success
 
   clang_7: &clang_test
     <<: *gcc_test
     title: Run test clang_7
-    image: ${{clang_7_prep}}
+    image: guangie88/clang-cmake:7_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_7
-    when:
-      steps:
-      - name: clang_7_prep
-        on:
-        - success
-
-  clang_6_0_prep:
-    <<: *clang_prep
-    title: Prep test image clang_6_0
-    build_arguments:
-    - CLANG_VERSION=6.0
-    tag: clang_6_0
 
   clang_6_0:
     <<: *clang_test
     title: Run test clang_6_0
-    image: ${{clang_6_0_prep}}
+    image: guangie88/clang-cmake:6_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_6_0
-    when:
-      steps:
-      - name: clang_6_0_prep
-        on:
-        - success
-
-  clang_5_0_prep:
-    <<: *clang_prep
-    title: Prep test image clang_5_0
-    build_arguments:
-    - CLANG_VERSION=5.0
-    tag: clang_5_0
 
   clang_5_0:
     <<: *clang_test
     title: Run test clang_5_0
-    image: ${{clang_5_0_prep}}
+    image: guangie88/clang-cmake:5_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_5_0
-    when:
-      steps:
-      - name: clang_5_0_prep
-        on:
-        - success
-
-  clang_4_0_prep:
-    <<: *clang_prep
-    title: Prep test image clang_4_0
-    build_arguments:
-    - CLANG_VERSION=4.0
-    tag: clang_4_0
 
   clang_4_0:
     <<: *clang_test
     title: Run test clang_4_0
-    image: ${{clang_4_0_prep}}
+    image: guangie88/clang-cmake:4_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_4_0
-    when:
-      steps:
-      - name: clang_4_0_prep
-        on:
-        - success
-
-  clang_3_9_prep:
-    <<: *clang_prep
-    title: Prep test image clang_3_9
-    build_arguments:
-    - CLANG_VERSION=3.9
-    tag: clang_3_9
 
   clang_3_9:
     <<: *clang_test
     title: Run test clang_3_9
-    image: ${{clang_3_9_prep}}
+    image: guangie88/clang-cmake:3.9_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_3_9
-    when:
-      steps:
-      - name: clang_3_9_prep
-        on:
-        - success
-
-  clang_3_8_prep:
-    <<: *clang_prep
-    title: Prep test image clang_3_8
-    build_arguments:
-    - CLANG_VERSION=3.8
-    tag: clang_3_8
 
   clang_3_8:
     <<: *clang_test
     title: Run test clang_3_8
-    image: ${{clang_3_8_prep}}
+    image: guangie88/clang-cmake:3.8_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_3_8
-    when:
-      steps:
-      - name: clang_3_8_prep
-        on:
-        - success
-
-  clang_3_7_prep:
-    <<: *clang_prep
-    title: Prep test image clang_3_7
-    build_arguments:
-    - CLANG_VERSION=3.7
-    tag: clang_3_7
 
   clang_3_7:
     <<: *clang_test
     title: Run test clang_3_7
-    image: ${{clang_3_7_prep}}
+    image: guangie88/clang-cmake:3.7_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_3_7
-    when:
-      steps:
-      - name: clang_3_7_prep
-        on:
-        - success
-
-  clang_3_6_prep:
-    <<: *clang_prep
-    title: Prep test image clang_3_6
-    build_arguments:
-    - CLANG_VERSION=3.6
-    tag: clang_3_6
 
   clang_3_6:
     <<: *clang_test
     title: Run test clang_3_6
-    image: ${{clang_3_6_prep}}
+    image: guangie88/clang-cmake:3.6_cmake-3.14
     environment:
     - BUILD_DIR=build-clang_3_6
-    when:
-      steps:
-      - name: clang_3_6_prep
-        on:
-        - success
