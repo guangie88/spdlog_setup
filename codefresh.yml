@@ -1,5 +1,4 @@
 version: '1.0'
-mode: parallel
 stages:
 - lint
 - test
@@ -12,11 +11,6 @@ steps:
     - GITHUB_TOKEN=""
     - CF_SUBMODULE_SYNC=true
     - CF_SUBMODULE_UPDATE_RECURSIVE=true
-    when:
-      steps:
-      - name: main_clone
-        on:
-        - success
 
   lint:
     title: Run format linting
@@ -28,11 +22,6 @@ steps:
     - |-
       find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
         xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
-    when:
-      steps:
-      - name: main_clone
-        on:
-        - success
 
   # GCC test section
 
@@ -61,11 +50,6 @@ steps:
 
         (exit $ec)
       done
-    when:
-      steps:
-      - name: main_clone
-        on:
-        - success
 
   gcc_7:
     <<: *gcc_test
