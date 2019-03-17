@@ -1,15 +1,18 @@
 FROM debian:stretch-slim
-ARG CLANG_VERSION=7
 
+ARG CLANG_VERSION=7
+ARG CMAKE_VERSION=3.14.0
 SHELL ["bash", "-c"]
 
 RUN set -euo pipefail && \
+    # Install deps
     apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         gnupg2 \
         software-properties-common \
         wget \
         ; \
+    # Install clang from special repo first
     wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
     apt-add-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main"; \
     apt-get update; \
@@ -19,4 +22,13 @@ RUN set -euo pipefail && \
         ; \
     clang-format-${CLANG_VERSION} --version; \
     ln -s $(which clang-format-7) /usr/local/bin/clang-format; \
+    # Install cmake
+    # The sh file is too big to do direct pipe, so save to file and run from there instead
+    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh; \
+    bash cmake-${CMAKE_VERSION}-Linux-x86_64.sh --skip-license --prefix=/usr/local; \
+    cmake --version; \
+    rm cmake-${CMAKE_VERSION}-Linux-x86_64.sh; \
+    # Clean up deps
+    apt-get remove -y gnupg2 software-properties-common wget; \
+    rm -rf /var/cache/apt; \
     :
