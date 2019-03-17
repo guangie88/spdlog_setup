@@ -921,7 +921,7 @@ inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
     // set optional parts and return back the same sink
     set_sink_level_if_present(sink_table, sink);
 
-    return move(sink);
+    return sink;
 }
 
 inline void set_logger_level_if_present(
@@ -978,7 +978,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
         sinks_map.emplace(move(name), move(sink));
     }
 
-    return move(sinks_map);
+    return sinks_map;
 }
 
 inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
@@ -1017,7 +1017,7 @@ inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
         }
     }
 
-    return move(patterns_map);
+    return patterns_map;
 }
 
 inline void setup_loggers_impl(
