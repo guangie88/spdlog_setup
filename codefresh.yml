@@ -6,7 +6,7 @@ stages:
 - test
 
 steps:
-  clone-submodules:
+  clone_submodules:
     title: Clone submodules
     image: codefresh/cfstep-gitsubmodules
     environment:
@@ -19,7 +19,7 @@ steps:
         on:
         - success
 
-  lint-prep:
+  lint_prep:
     type: build
     stage: prep
     title: Prep lint image
@@ -27,14 +27,14 @@ steps:
     image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-lint
     when:
       steps:
-      - name: clone-submodules
+      - name: clone_submodules
         on:
         - success
 
   lint:
     title: Run format linting
     stage: lint
-    image: ${{lint-prep}}
+    image: ${{lint_prep}}
     working_directory: ${{main_clone}}
     entrypoint: bash
     commands:
@@ -43,30 +43,30 @@ steps:
         xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
     when:
       steps:
-      - name: lint-prep
+      - name: lint_prep
         on:
         - success
 
-  gcc-8-prep: &prep
+  gcc_8_prep: &prep
     type: build
     stage: prep
-    title: Prep test image gcc-8
+    title: Prep test image gcc_8
     dockerfile: Dockerfile-gcc
     build_arguments:
     - GCC_VERSION=8
     image_name: ${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}-test
     when:
       steps:
-      - name: clone-submodules
+      - name: clone_submodules
         on:
         - success
 
-  gcc-8: &test
-    title: Run test gcc-8
+  gcc_8: &test
+    title: Run test gcc_8
     stage: test
-    image: ${{gcc-8-prep}}
+    image: ${{gcc_8_prep}}
     environment:
-    - BUILD_DIR=build-gcc-8
+    - BUILD_DIR=build-gcc_8
     working_directory: ${{main_clone}}
     commands:
     - mkdir -p ${BUILD_DIR}
@@ -88,78 +88,78 @@ steps:
       done
     when:
       steps:
-      - name: gcc-8-prep
+      - name: gcc_8_prep
         on:
         - success
 
-  gcc-7-prep:
+  gcc_7_prep:
     <<: *prep
-    title: Prep test image gcc-7
+    title: Prep test image gcc_7
     build_arguments:
     - GCC_VERSION=7
 
-  gcc-7:
+  gcc_7:
     <<: *test
-    title: Run test gcc-7
-    image: ${{gcc-7-prep}}
+    title: Run test gcc_7
+    image: ${{gcc_7_prep}}
     environment:
-    - BUILD_DIR=build-gcc-7
+    - BUILD_DIR=build-gcc_7
     when:
       steps:
-      - name: gcc-7-prep
+      - name: gcc_7_prep
         on:
         - success
 
-  gcc-6-prep:
+  gcc_6_prep:
     <<: *prep
-    title: Prep test image gcc-6
+    title: Prep test image gcc_6
     build_arguments:
     - GCC_VERSION=6
 
-  gcc-6:
+  gcc_6:
     <<: *test
-    title: Run test gcc-6
-    image: ${{gcc-6-prep}}
+    title: Run test gcc_6
+    image: ${{gcc_6_prep}}
     environment:
-    - BUILD_DIR=build-gcc-6
+    - BUILD_DIR=build-gcc_6
     when:
       steps:
-      - name: gcc-6-prep
+      - name: gcc_6_prep
         on:
         - success
 
-  gcc-5-prep:
+  gcc_5_prep:
     <<: *prep
-    title: Prep test image gcc-5
+    title: Prep test image gcc_5
     build_arguments:
     - GCC_VERSION=5
 
-  gcc-5:
+  gcc_5:
     <<: *test
-    title: Run test gcc-5
-    image: ${{gcc-5-prep}}
+    title: Run test gcc_5
+    image: ${{gcc_5_prep}}
     environment:
-    - BUILD_DIR=build-gcc-5
+    - BUILD_DIR=build-gcc_5
     when:
       steps:
-      - name: gcc-5-prep
+      - name: gcc_5_prep
         on:
         - success
 
-  gcc-4_9-prep:
+  gcc_4_9_prep:
     <<: *prep
-    title: Prep test image gcc-4_9
+    title: Prep test image gcc_4_9
     build_arguments:
     - GCC_VERSION=4.9
 
-  gcc-4_9:
+  gcc_4_9:
     <<: *test
-    title: Run test gcc-4_9
-    image: ${{gcc-4_9-prep}}
+    title: Run test gcc_4_9
+    image: ${{gcc_4_9_prep}}
     environment:
-    - BUILD_DIR=build-gcc-4_9
+    - BUILD_DIR=build-gcc_4_9
     when:
       steps:
-      - name: gcc-4_9-prep
+      - name: gcc_4_9_prep
         on:
         - success
