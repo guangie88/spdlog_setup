@@ -128,23 +128,23 @@ steps:
         on:
         - success
 
-  # gcc-5-prep:
-  #   <<: *prep
-  #   title: Prep test image gcc-5
-  #   build_arguments:
-  #   - GCC_VERSION=5
+  gcc-5-prep:
+    <<: *prep
+    title: Prep test image gcc-5
+    build_arguments:
+    - GCC_VERSION=5
 
-  # gcc-5:
-  #   <<: *test
-  #   title: Run test gcc-5
-  #   image: ${{gcc-5-prep}}
-  #   environment:
-  #   - BUILD_DIR=build-gcc-5
-  #   when:
-  #     steps:
-  #     - name: gcc-5-prep
-  #       on:
-  #       - success
+  gcc-5:
+    <<: *test
+    title: Run test gcc-5
+    image: ${{gcc-5-prep}}
+    environment:
+    - BUILD_DIR=build-gcc-5
+    when:
+      steps:
+      - name: gcc-5-prep
+        on:
+        - success
 
   # gcc-4.9-prep:
   #   <<: *prep
