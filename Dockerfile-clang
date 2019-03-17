@@ -22,6 +22,8 @@ RUN set -euo pipefail && \
         clang-format-${CLANG_VERSION} \
         ; \
     clang-format-${CLANG_VERSION} --version; \
+    ln -s $(which clang-${CLANG_VERSION}) /usr/local/bin/clang; \
+    ln -s $(which clang++-${CLANG_VERSION}) /usr/local/bin/clang++; \
     ln -s $(which clang-format-${CLANG_VERSION}) /usr/local/bin/clang-format; \
     # Install cmake
     # The sh file is too big to do direct pipe, so save to file and run from there instead
@@ -31,6 +33,7 @@ RUN set -euo pipefail && \
     rm cmake-${CMAKE_VERSION}-Linux-x86_64.sh; \
     # Clean up deps
     apt-get remove -y gnupg2 software-properties-common wget; \
+    apt-get autoremove -y; \
     rm -rf /var/cache/apt; \
     :
 

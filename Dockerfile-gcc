@@ -14,5 +14,6 @@ RUN set -euo pipefail && \
     rm cmake-${CMAKE_VERSION}-Linux-x86_64.sh; \
     # Clean up deps
     apt-get remove -y wget; \
+    apt-get autoremove -y; \
     rm -rf /var/cache/apt; \
     :
