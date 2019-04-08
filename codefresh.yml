@@ -1,0 +1,141 @@
+version: '1.0'
+stages:
+- lint
+- test
+
+steps:
+  clone_submodules:
+    title: Clone submodules
+    image: codefresh/cfstep-gitsubmodules
+    environment:
+    - GITHUB_TOKEN=""
+    - CF_SUBMODULE_SYNC=true
+    - CF_SUBMODULE_UPDATE_RECURSIVE=true
+
+  lint:
+    title: Run format linting
+    stage: lint
+    image: guangie88/clang-cmake:7
+    working_directory: ${{main_clone}}
+    entrypoint: bash
+    commands:
+    - |-
+      find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
+        xargs -0 -I {} bash -c 'if [[ $(clang-format {} | diff - {}) ]]; then (echo {}; exit 1); else (exit 0); fi'
+
+  # GCC test section
+
+  gcc_8: &gcc_test
+    title: Run test gcc-8
+    stage: test
+    image: guangie88/gcc-cmake:8_cmake-3.14
+    environment:
+    - BUILD_DIR=build-gcc-8
+    working_directory: ${{main_clone}}
+    commands:
+    - |-
+      for BUILD in Debug Release; do
+        BUILD_DIR_FULL=${BUILD_DIR}-${BUILD}
+        mkdir -p ${BUILD_DIR_FULL}
+        cd ${BUILD_DIR_FULL}
+
+        (
+          set -x
+          cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
+                -DCMAKE_INSTALL_PREFIX:PATH=install        \
+                -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON ..
+        )
+
+        cmake --build . --target install
+        ctest -R spdlog_setup_unit_test -V
+        ec=$?
+        cd -
+
+        (exit $ec)
+      done
+
+  gcc_7:
+    <<: *gcc_test
+    title: Run test gcc-7
+    image: guangie88/gcc-cmake:7_cmake-3.14
+    environment:
+    - BUILD_DIR=build-gcc-7
+
+  gcc_6:
+    <<: *gcc_test
+    title: Run test gcc-6
+    image: guangie88/gcc-cmake:6_cmake-3.14
+    environment:
+    - BUILD_DIR=build-gcc-6
+
+  gcc_5:
+    <<: *gcc_test
+    title: Run test gcc-5
+    image: guangie88/gcc-cmake:5_cmake-3.14
+    environment:
+    - BUILD_DIR=build-gcc-5
+
+  gcc_4_9:
+    <<: *gcc_test
+    title: Run test gcc-4.9
+    image: guangie88/gcc-cmake:4.9_cmake-3.14
+    environment:
+    - BUILD_DIR=build-gcc-4.9
+
+  # Clang test section
+
+  clang_7: &clang_test
+    <<: *gcc_test
+    title: Run test clang-7
+    image: guangie88/clang-cmake:7_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-7
+
+  clang_6_0:
+    <<: *clang_test
+    title: Run test clang-6
+    image: guangie88/clang-cmake:6_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-6
+
+  clang_5_0:
+    <<: *clang_test
+    title: Run test clang-5
+    image: guangie88/clang-cmake:5_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-5
+
+  clang_4_0:
+    <<: *clang_test
+    title: Run test clang-4
+    image: guangie88/clang-cmake:4_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-4
+
+  clang_3_9:
+    <<: *clang_test
+    title: Run test clang-3.9
+    image: guangie88/clang-cmake:3.9_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-3.9
+
+  clang_3_8:
+    <<: *clang_test
+    title: Run test clang-3.8
+    image: guangie88/clang-cmake:3.8_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-3.8
+
+  clang_3_7:
+    <<: *clang_test
+    title: Run test clang-3.7
+    image: guangie88/clang-cmake:3.7_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-3.7
+
+  clang_3_6:
+    <<: *clang_test
+    title: Run test clang-3.6
+    image: guangie88/clang-cmake:3.6_cmake-3.14
+    environment:
+    - BUILD_DIR=build-clang-3.6

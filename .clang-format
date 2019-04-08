@@ -4,5 +4,6 @@ Language: Cpp
 AlignAfterOpenBracket: AlwaysBreak
 BinPackArguments: false
 BinPackParameters: false
+ColumnLimit: 80
 IndentWidth: 4
 ReflowComments: true

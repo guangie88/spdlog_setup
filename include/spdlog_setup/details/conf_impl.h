@@ -1,7 +1,7 @@
 /**
  * Implementation of non-public facing functions in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.0-alpha.1
+ * @version 0.3.0-alpha.2
  */
 
 #pragma once
@@ -13,21 +13,25 @@
 #include "setup_error.h"
 
 #include "third_party/cpptoml.h"
-#include "third_party/fmt/format.h"
 
-#include "spdlog/sinks/file_sinks.h"
+// Just so that it works for v1.3.0
+#include "spdlog/spdlog.h"
+
+#include "spdlog/fmt/fmt.h"
+
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/daily_file_sink.h"
 #include "spdlog/sinks/null_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
-#include "spdlog/sinks/syslog_sink.h"
 
 #ifdef _WIN32
 #include "spdlog/sinks/wincolor_sink.h"
 #else
 #include "spdlog/sinks/ansicolor_sink.h"
+#include "spdlog/sinks/syslog_sink.h"
 #endif
-
-#include "spdlog/spdlog.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -80,11 +84,11 @@ enum class sink_type {
      */
     ColorStdoutSinkMt,
 
-    /** Represents simple_file_sink_st */
-    SimpleFileSinkSt,
+    /** Represents basic_file_sink_st */
+    BasicFileSinkSt,
 
-    /** Represents simple_file_sink_mt */
-    SimpleFileSinkMt,
+    /** Represents basic_file_sink_mt */
+    BasicFileSinkMt,
 
     /** Represents rotating_file_sink_st */
     RotatingFileSinkSt,
@@ -104,8 +108,11 @@ enum class sink_type {
     /** Represents null_sink_mt */
     NullSinkMt,
 
-    /** Represents syslog_sink */
-    SyslogSink,
+    /** Represents syslog_sink_st */
+    SyslogSinkSt,
+
+    /** Represents syslog_sink_st */
+    SyslogSinkMt,
 };
 
 namespace names {
@@ -480,15 +487,14 @@ inline auto parse_max_size(const std::string &max_size_str) -> uint64_t {
     // std
     using std::exception;
     using std::regex;
-    using std::regex_constants::icase;
     using std::regex_match;
     using std::smatch;
     using std::stoull;
     using std::string;
+    using std::regex_constants::icase;
 
     try {
-        static const regex RE(
-            R"_(^\s*(\d+)\s*(T|G|M|K|)(:?B|)\s*$)_", icase);
+        static const regex RE(R"_(^\s*(\d+)\s*(T|G|M|K|)(:?B|)\s*$)_", icase);
 
         smatch matches;
         const auto has_match = regex_match(max_size_str, matches, RE);
@@ -541,8 +547,8 @@ inline auto sink_type_from_str(const std::string &type) -> sink_type {
         {"stdout_sink_mt", sink_type::StdoutSinkMt},
         {"color_stdout_sink_st", sink_type::ColorStdoutSinkSt},
         {"color_stdout_sink_mt", sink_type::ColorStdoutSinkMt},
-        {"simple_file_sink_st", sink_type::SimpleFileSinkSt},
-        {"simple_file_sink_mt", sink_type::SimpleFileSinkMt},
+        {"basic_file_sink_st", sink_type::BasicFileSinkSt},
+        {"basic_file_sink_mt", sink_type::BasicFileSinkMt},
         {"rotating_file_sink_st", sink_type::RotatingFileSinkSt},
         {"rotating_file_sink_mt", sink_type::RotatingFileSinkMt},
         {"daily_file_sink_st", sink_type::DailyFileSinkSt},
@@ -551,7 +557,8 @@ inline auto sink_type_from_str(const std::string &type) -> sink_type {
         {"null_sink_mt", sink_type::NullSinkMt},
 
 #ifdef SPDLOG_ENABLE_SYSLOG
-        {"syslog_sink", sink_type::SyslogSink},
+        {"syslog_sink_st", sink_type::SyslogSinkSt},
+        {"syslog_sink_mt", sink_type::SyslogSinkMt},
 #endif
     };
 
@@ -626,7 +633,8 @@ inline auto level_to_str(const spdlog::level::level_enum level) -> std::string {
     } else if (level == lv::off) {
         return "off";
     } else {
-        throw setup_error(format("Invalid level enum '{}' provided", level));
+        throw setup_error(format(
+            "Invalid level enum '{}' provided", static_cast<int>(level)));
     }
 }
 
@@ -646,8 +654,8 @@ inline void set_sink_level_if_present(
         });
 }
 
-template <class SimpleFileSink>
-auto simple_file_sink_from_table(
+template <class BasicFileSink>
+auto basic_file_sink_from_table(
     const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
@@ -668,7 +676,7 @@ auto simple_file_sink_from_table(
         sink_table,
         FILENAME,
         format(
-            "Missing '{}' field of string value for simple_file_sink",
+            "Missing '{}' field of string value for basic_file_sink",
             FILENAME));
 
     // must create the directory before creating the sink
@@ -677,7 +685,7 @@ auto simple_file_sink_from_table(
     const auto truncate =
         value_from_table_or<bool>(sink_table, TRUNCATE, DEFAULT_TRUNCATE);
 
-    return make_shared<SimpleFileSink>(filename, truncate);
+    return make_shared<BasicFileSink>(filename, truncate);
 }
 
 template <class RotatingFileSink>
@@ -772,16 +780,13 @@ auto daily_file_sink_from_table(
 
 #ifdef SPDLOG_ENABLE_SYSLOG
 
-inline auto
-syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
+template <class SyslogSink>
+auto syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::IDENT;
     using names::SYSLOG_FACILITY;
     using names::SYSLOG_OPTION;
-
-    // spdlog
-    using spdlog::sinks::syslog_sink;
 
     // fmt
     using fmt::format;
@@ -804,7 +809,7 @@ syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
     const auto syslog_facility = value_from_table_or<int32_t>(
         sink_table, SYSLOG_FACILITY, DEFAULT_SYSLOG_FACILITY);
 
-    return make_shared<syslog_sink>(ident, syslog_option, syslog_facility);
+    return make_shared<SyslogSink>(ident, syslog_option, syslog_facility);
 }
 
 #endif
@@ -817,14 +822,14 @@ inline auto sink_from_sink_type(
     using fmt::format;
 
     // spdlog
+    using spdlog::sinks::basic_file_sink_mt;
+    using spdlog::sinks::basic_file_sink_st;
     using spdlog::sinks::daily_file_sink_mt;
     using spdlog::sinks::daily_file_sink_st;
     using spdlog::sinks::null_sink_mt;
     using spdlog::sinks::null_sink_st;
     using spdlog::sinks::rotating_file_sink_mt;
     using spdlog::sinks::rotating_file_sink_st;
-    using spdlog::sinks::simple_file_sink_mt;
-    using spdlog::sinks::simple_file_sink_st;
     using spdlog::sinks::sink;
     using spdlog::sinks::stdout_sink_mt;
     using spdlog::sinks::stdout_sink_st;
@@ -838,6 +843,9 @@ inline auto sink_from_sink_type(
 #else
     using color_stdout_sink_st = spdlog::sinks::ansicolor_stdout_sink_st;
     using color_stdout_sink_mt = spdlog::sinks::ansicolor_stdout_sink_mt;
+
+    using spdlog::sinks::syslog_sink_mt;
+    using spdlog::sinks::syslog_sink_st;
 #endif
 
     switch (sink_val) {
@@ -853,11 +861,11 @@ inline auto sink_from_sink_type(
     case sink_type::ColorStdoutSinkMt:
         return make_shared<color_stdout_sink_mt>();
 
-    case sink_type::SimpleFileSinkSt:
-        return simple_file_sink_from_table<simple_file_sink_st>(sink_table);
+    case sink_type::BasicFileSinkSt:
+        return basic_file_sink_from_table<basic_file_sink_st>(sink_table);
 
-    case sink_type::SimpleFileSinkMt:
-        return simple_file_sink_from_table<simple_file_sink_mt>(sink_table);
+    case sink_type::BasicFileSinkMt:
+        return basic_file_sink_from_table<basic_file_sink_mt>(sink_table);
 
     case sink_type::RotatingFileSinkSt:
         return rotating_file_sink_from_table<rotating_file_sink_st>(sink_table);
@@ -878,8 +886,11 @@ inline auto sink_from_sink_type(
         return make_shared<null_sink_mt>();
 
 #ifdef SPDLOG_ENABLE_SYSLOG
-    case sink_type::SyslogSink:
-        return syslog_sink_from_table(sink_table);
+    case sink_type::SyslogSinkSt:
+        return syslog_sink_from_table<syslog_sink_st>(sink_table);
+
+    case sink_type::SyslogSinkMt:
+        return syslog_sink_from_table<syslog_sink_mt>(sink_table);
 #endif
 
     default:
@@ -910,7 +921,7 @@ inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
     // set optional parts and return back the same sink
     set_sink_level_if_present(sink_table, sink);
 
-    return move(sink);
+    return sink;
 }
 
 inline void set_logger_level_if_present(
@@ -967,7 +978,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
         sinks_map.emplace(move(name), move(sink));
     }
 
-    return move(sinks_map);
+    return sinks_map;
 }
 
 inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
@@ -1006,7 +1017,7 @@ inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
         }
     }
 
-    return move(patterns_map);
+    return patterns_map;
 }
 
 inline void setup_loggers_impl(
@@ -1108,9 +1119,8 @@ inline void setup_loggers_impl(
 
             : pattern_option_t();
 
-        const auto selected_pattern_opt = pattern_value_opt
-                                              ? move(pattern_value_opt)
-                                              : global_pattern_opt;
+        const auto selected_pattern_opt =
+            pattern_value_opt ? move(pattern_value_opt) : global_pattern_opt;
 
         try {
             if (selected_pattern_opt) {
@@ -1137,3 +1147,4 @@ inline void setup_impl(const std::shared_ptr<cpptoml::table> &config) {
 }
 } // namespace details
 } // namespace spdlog_setup
+
