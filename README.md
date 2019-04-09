@@ -424,7 +424,7 @@ int main(const int argc, const char * argv[]) {
 
 ## Contributions
 
-Contributions are welcome!
+Pull requests are welcome!
 
 To make the code formatting more objective, `clang-format` is used to format
 all the source code files.
