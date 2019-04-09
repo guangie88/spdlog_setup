@@ -421,3 +421,34 @@ int main(const int argc, const char * argv[]) {
 - For the current set of unit tests, the working directory must be at the git
   root directory or in `build` directory so that the TOML configuration files in
   `config` directory can be found.
+
+## Contributions
+
+Pull requests are welcome!
+
+To make the code formatting more objective, `clang-format` is used to format
+all the source code files.
+
+Please try to run
+
+```bash
+./run-clang-format.sh
+```
+
+which will pull the appropriate Docker image to run the formatting command over
+the entire repository directory.
+
+If your `docker` command requires `sudo`, then you will need to run it as
+
+```bash
+sudo sh ./run-clang-format.sh
+```
+
+Alternatively, you could also try to set up your own `clang-format` (currently
+this repository uses version 7), and run
+
+```bash
+clang-format -i path_to_h_cpp_file
+```
+
+over the changed files.
