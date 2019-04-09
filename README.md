@@ -429,10 +429,22 @@ Contributions are welcome!
 To make the code formatting more objective, `clang-format` is used to format
 all the source code files.
 
-Please try to run `run-clang-format.sh`, which will pull the appropriate Docker
-image to run the formatting command over the entire repository directory.
+Please try to run
 
-Alternative, you could also try to set up your own `clang-format` (currently
+```bash
+./run-clang-format.sh
+```
+
+which will pull the appropriate Docker image to run the formatting command over
+the entire repository directory.
+
+If your `docker` command requires `sudo`, then you will need to run it as
+
+```bash
+sudo sh ./run-clang-format.sh
+```
+
+Alternatively, you could also try to set up your own `clang-format` (currently
 this repository uses version 7), and run
 
 ```bash
