@@ -28,12 +28,12 @@ enum class render_state {
     verbatim_double,
 };
 
-auto is_valid_var_char(const char c) -> bool {
+inline auto is_valid_var_char(const char c) -> bool {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
            (c >= '0' && c <= '9') || c == '_';
 }
 
-auto render(
+inline auto render(
     const std::string &tmpl,
     const std::unordered_map<std::string, std::string> &m) -> std::string {
     // fmt
