@@ -1147,4 +1147,3 @@ inline void setup_impl(const std::shared_ptr<cpptoml::table> &config) {
 }
 } // namespace details
 } // namespace spdlog_setup
-
