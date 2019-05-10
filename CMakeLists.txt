@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.3)
 
 # project variables
 project(spdlog_setup VERSION 0.3.0 LANGUAGES CXX)
-set(SPDLOG_MIN_VERSION "0.14.0")
+set(SPDLOG_MIN_VERSION "1.0.0")
 
 # general fixed compiler settings
 if(${MSVC})
