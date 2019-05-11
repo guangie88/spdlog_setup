@@ -12,7 +12,7 @@
 
 #include "setup_error.h"
 
-#include "third_party/cpptoml.h"
+#include "cpptoml.h"
 
 // Just so that it works for v1.3.0
 #include "spdlog/spdlog.h"

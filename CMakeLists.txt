@@ -97,6 +97,10 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
 
+  target_include_directories(spdlog_setup_unit_test
+    PRIVATE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/cpptoml/include>)
+
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
       spdlog_setup
