@@ -132,6 +132,7 @@ static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
 static constexpr auto PATTERN = "pattern";
+static constexpr auto ROTATE_ON_OPEN = "rotate_on_open";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
 static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
@@ -696,6 +697,7 @@ auto rotating_file_sink_from_table(
     using names::BASE_FILENAME;
     using names::MAX_FILES;
     using names::MAX_SIZE;
+    using names::ROTATE_ON_OPEN;
 
     // fmt
     using fmt::format;
@@ -730,8 +732,13 @@ auto rotating_file_sink_from_table(
             "Missing '{}' field of u64 value for rotating_file_sink",
             MAX_FILES));
 
+    const auto rotate_on_open = value_from_table_or<bool>(
+        sink_table,
+        ROTATE_ON_OPEN,
+        false);
+
     return make_shared<RotatingFileSink>(
-        base_filename, max_filesize, max_files);
+        base_filename, max_filesize, max_files, rotate_on_open);
 }
 
 template <class DailyFileSink>
@@ -1052,6 +1059,11 @@ inline void setup_loggers_impl(
     // set up possibly the global pattern if present
     auto global_pattern_opt =
         value_from_table_opt<string>(config, GLOBAL_PATTERN);
+
+    if (global_pattern_opt)
+    {
+        spdlog::set_pattern(*global_pattern_opt);
+    }
 
     for (const auto &logger_table : *loggers) {
         const auto name = value_from_table<string>(
