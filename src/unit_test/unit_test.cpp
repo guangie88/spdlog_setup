@@ -16,7 +16,7 @@
 #include "examples.h"
 
 #include "spdlog_setup/conf.h"
-#include "spdlog_setup/details/third_party/cpptoml.h"
+#include "cpptoml.h"
 
 #include <fstream>
 #include <iostream>
