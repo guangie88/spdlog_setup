@@ -20,7 +20,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, gcc-5
-    - env: ["VER=5", "COV=YES", "EXT=YES"]
+    - env: ["VER=5", "COV=YES"]
       compiler: gcc
       os: linux
       dist: trusty
@@ -33,7 +33,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, gcc-6
-    - env: ["VER=6"]
+    - env: ["VER=6", "EXT=YES"]
       compiler: gcc
       os: linux
       dist: trusty
