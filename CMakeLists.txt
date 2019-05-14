@@ -18,6 +18,13 @@ else()
   set(DEBUG_FLAGS -Wall)
 endif()
 
+option(SPDLOG_SETUP_CPPTOML_EXTERNAL "Use external CPPTOML library instead of bundled" OFF)
+if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+	#configure_file(cpptoml_config.h.in "${CMAKE_INSTALL_PREFIX}/include/spdlog_setup/details/third_party/cpptoml.h" COPYONLY)
+	configure_file(cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" COPYONLY)
+	message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h")
+endif()
+
 # allow thread library to be used for linking
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(THREADS_PTHREAD_ARG "0" CACHE STRING "Result from TRY_RUN" FORCE)
@@ -34,12 +41,14 @@ else()
   add_library(${PROJECT_NAME}_spdlog INTERFACE IMPORTED)
 endif()
 
+if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
 if (EXISTS ${CMAKE_SOURCE_DIR}/deps/cpptoml/CMakeLists.txt)
   add_subdirectory(deps/cpptoml)
 else()
   # allow usage of installed dependency
   find_package(cpptoml ${CPPTOML_MIN_VERSION} REQUIRED)
   add_library(${PROJECT_NAME}_cpptoml INTERFACE IMPORTED)
+endif()
 endif()
 
 # spdlog_setup
@@ -82,6 +91,11 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
   DESTINATION lib/cmake/spdlog_setup)
 
+install(
+  FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h"
+  DESTINATION include/spdlog_setup/details/third_party)
+  
 # spdlog_setup_unit_test
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   add_executable(spdlog_setup_unit_test
@@ -97,9 +111,11 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
 
-  target_include_directories(spdlog_setup_unit_test
-    PRIVATE
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/cpptoml/include>)
+  if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+    target_include_directories(spdlog_setup_unit_test
+      PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/cpptoml/include>)
+  endif()
 
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE
