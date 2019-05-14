@@ -236,7 +236,7 @@ script:
                 -DCMAKE_INSTALL_PREFIX:PATH=install        \
                 -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \
                 -DSPDLOG_SETUP_CPPTOML_EXTERNAL=ON ..
-		else
+        else
           cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
                 -DCMAKE_INSTALL_PREFIX:PATH=install        \
                 -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON ..
