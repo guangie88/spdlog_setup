@@ -16,7 +16,7 @@
 #include "examples.h"
 
 #include "spdlog_setup/conf.h"
-#ifndef(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+#if !defined(SPDLOG_SETUP_CPPTOML_EXTERNAL)
 #include "spdlog_setup/details/third_party/cpptoml.h"
 #else
 #include "cpptoml.h"
