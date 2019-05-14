@@ -20,7 +20,7 @@ endif()
 
 option(SPDLOG_SETUP_CPPTOML_EXTERNAL "Use external CPPTOML library instead of bundled" OFF)
 if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
-	configure_file(cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" COPYONLY)
+	configure_file(cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" @ONLY)
 endif()
 
 # allow thread library to be used for linking
