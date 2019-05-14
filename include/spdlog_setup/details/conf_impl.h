@@ -10,9 +10,8 @@
 #define FMT_HEADER_ONLY
 #endif
 
-#if !defined(SPDLOG_SETUP_CPPTOML_EXTERNAL)
 #include "third_party/cpptoml.h"
-#else
+#if defined(SPDLOG_SETUP_CPPTOML_EXTERNAL)
 #include "cpptoml.h"
 #endif
 #include "setup_error.h"
