@@ -20,9 +20,7 @@ endif()
 
 option(SPDLOG_SETUP_CPPTOML_EXTERNAL "Use external CPPTOML library instead of bundled" OFF)
 if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
-	#configure_file(cpptoml_config.h.in "${CMAKE_INSTALL_PREFIX}/include/spdlog_setup/details/third_party/cpptoml.h" COPYONLY)
 	configure_file(cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" COPYONLY)
-	message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h")
 endif()
 
 # allow thread library to be used for linking
@@ -91,10 +89,12 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
   DESTINATION lib/cmake/spdlog_setup)
 
+if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
 install(
   FILES
   "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h"
   DESTINATION include/spdlog_setup/details/third_party)
+endif()
   
 # spdlog_setup_unit_test
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
