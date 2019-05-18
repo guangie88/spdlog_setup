@@ -18,9 +18,11 @@ else()
   set(DEBUG_FLAGS -Wall)
 endif()
 
+option(SPDLOG_SETUP_INCLUDE_UNIT_TESTS "Build with unittests" OFF)
+
 option(SPDLOG_SETUP_CPPTOML_EXTERNAL "Use external CPPTOML library instead of bundled" OFF)
 if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
-  configure_file(cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" @ONLY)
+  configure_file(cmake/cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" @ONLY)
 endif()
 
 # allow thread library to be used for linking
