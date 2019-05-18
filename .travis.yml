@@ -226,7 +226,7 @@ script:
       (
         set -x
 
-        elif [ "${EXT}" = "YES" ] && [ "${COV}" = "YES" ] && [ "${BUILD}" = "Debug" ]; then
+        if [ "${EXT}" = "YES" ] && [ "${COV}" = "YES" ] && [ "${BUILD}" = "Debug" ]; then
           cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
                 -DCMAKE_INSTALL_PREFIX:PATH=install        \
                 -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \

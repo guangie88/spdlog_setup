@@ -1,0 +1,4 @@
+#pragma once
+
+// define to 1 if you use external cpptoml library
+#cmakedefine SPDLOG_SETUP_CPPTOML_EXTERNAL 1
