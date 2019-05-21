@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.3)
 # project variables
 project(spdlog_setup VERSION 0.3.0 LANGUAGES CXX)
 set(SPDLOG_MIN_VERSION "1.0.0")
+set(CPPTOML_MIN_VERSION "0.1.0")
 
 # general fixed compiler settings
 if(${MSVC})
@@ -15,6 +16,13 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
 else()
   set(DEBUG_FLAGS -Wall)
+endif()
+
+option(SPDLOG_SETUP_INCLUDE_UNIT_TESTS "Build with unittests" OFF)
+
+option(SPDLOG_SETUP_CPPTOML_EXTERNAL "Use external CPPTOML library instead of bundled" OFF)
+if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+  configure_file(cmake/cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" @ONLY)
 endif()
 
 # allow thread library to be used for linking
@@ -30,7 +38,17 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
 else()
   # allow usage of installed dependency
   find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
-  add_library(spdlog INTERFACE IMPORTED)
+  add_library(${PROJECT_NAME}_spdlog INTERFACE IMPORTED)
+endif()
+
+if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+if (EXISTS ${CMAKE_SOURCE_DIR}/deps/cpptoml/CMakeLists.txt)
+  add_subdirectory(deps/cpptoml)
+else()
+  # allow usage of installed dependency
+  find_package(cpptoml ${CPPTOML_MIN_VERSION} REQUIRED)
+  add_library(${PROJECT_NAME}_cpptoml INTERFACE IMPORTED)
+endif()
 endif()
 
 # spdlog_setup
@@ -73,6 +91,13 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
   DESTINATION lib/cmake/spdlog_setup)
 
+if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+install(
+  FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h"
+  DESTINATION include/spdlog_setup/details/third_party)
+endif()
+  
 # spdlog_setup_unit_test
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   add_executable(spdlog_setup_unit_test
@@ -87,6 +112,12 @@ if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   target_include_directories(spdlog_setup_unit_test
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/Catch2/single_include>)
+
+  if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+    target_include_directories(spdlog_setup_unit_test
+      PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/cpptoml/include>)
+  endif()
 
   target_link_libraries(spdlog_setup_unit_test
     PRIVATE

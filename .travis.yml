@@ -33,7 +33,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     # ubuntu 14.04, gcc-6
-    - env: ["VER=6"]
+    - env: ["VER=6", "EXT=YES"]
       compiler: gcc
       os: linux
       dist: trusty
@@ -231,6 +231,11 @@ script:
                 -DCMAKE_INSTALL_PREFIX:PATH=install        \
                 -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \
                 -DSPDLOG_SETUP_INCLUDE_TEST_COVERAGE=ON ..
+        elif [ "${EXT}" = "YES" ] && [ "${BUILD}" = "Debug" ]; then
+          cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
+                -DCMAKE_INSTALL_PREFIX:PATH=install        \
+                -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON       \
+                -DSPDLOG_SETUP_CPPTOML_EXTERNAL=ON ..
         else
           cmake -DCMAKE_BUILD_TYPE="${BUILD}"              \
                 -DCMAKE_INSTALL_PREFIX:PATH=install        \

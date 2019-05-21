@@ -38,3 +38,6 @@ build_script:
   - cmake .. -G "%CMAKE_GENERATOR_NAME%" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DCMAKE_INSTALL_PREFIX:PATH=install
   - cmake --build . --config %CONFIGURATION% --target install
   - ctest -R spdlog_setup_unit_test -V
+  - cmake .. -G "%CMAKE_GENERATOR_NAME%" -DSPDLOG_SETUP_INCLUDE_UNIT_TESTS=ON -DSPDLOG_SETUP_CPPTOML_EXTERNAL=ON -DCMAKE_INSTALL_PREFIX:PATH=install
+  - cmake --build . --config %CONFIGURATION% --target install
+  - ctest -R spdlog_setup_unit_test -V

@@ -17,6 +17,9 @@
 
 #include "spdlog_setup/conf.h"
 #include "spdlog_setup/details/third_party/cpptoml.h"
+#if defined(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+#include "cpptoml.h"
+#endif
 
 #include <fstream>
 #include <iostream>
