@@ -16,8 +16,6 @@
 #endif
 #include "setup_error.h"
 
-
-
 // Just so that it works for v1.3.0
 #include "spdlog/spdlog.h"
 
