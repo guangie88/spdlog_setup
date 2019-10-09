@@ -161,7 +161,6 @@ static constexpr auto PATTERN = "pattern";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
 static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
-static constexpr auto SYNC = "sync";
 static constexpr auto SYSLOG_FACILITY = "syslog_facility";
 static constexpr auto SYSLOG_OPTION = "syslog_option";
 static constexpr auto TRUNCATE = "truncate";
@@ -1090,7 +1089,7 @@ inline void setup_loggers_impl(
     using names::NAME;
     using names::PATTERN;
     using names::SINKS;
-    using names::SYNC;
+    using names::TYPE;
 
     // fmt
     using fmt::format;
@@ -1142,7 +1141,7 @@ inline void setup_loggers_impl(
             logger_sinks.push_back(move(sink));
         }
 
-        const auto sync = enum_from_table_opt(logger_table, SYNC, SYNC_MAPPER)
+        const auto sync = enum_from_table_opt(logger_table, TYPE, SYNC_MAPPER)
                               .value_or(sync_type::Sync);
 
         const auto logger =
