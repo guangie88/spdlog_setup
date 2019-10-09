@@ -131,10 +131,10 @@ enum class sync_type {
     Async,
 };
 
-const std::unordered_map<const char *, sync_type> SYNC_MAPPER({
+const std::unordered_map<std::string, sync_type> SYNC_MAPPER{{
     {"sync", sync_type::Sync},
     {"async", sync_type::Async},
-});
+}};
 
 static constexpr auto DEFAULT_ASYNC_OVERFLOW_POLICY =
     spdlog::async_overflow_policy::block;
@@ -451,7 +451,7 @@ auto enum_from_table_opt(
 
     if (static_cast<bool>(value_opt)) {
         const auto &value = *value_opt;
-        const auto &it = m.find(value.c_str());
+        const auto &it = m.find(value);
 
         if (it == m.cend()) {
             throw setup_error(
