@@ -19,6 +19,9 @@
 // Just so that it works for v1.3.0
 #include "spdlog/spdlog.h"
 
+// To support all asynchronous loggers
+#include "spdlog/async.h"
+
 #include "spdlog/fmt/fmt.h"
 
 #include "spdlog/sinks/basic_file_sink.h"
@@ -117,6 +120,27 @@ enum class sink_type {
     SyslogSinkMt,
 };
 
+/**
+ * Describes the logger sync types in enumeration form.
+ */
+enum class sync_type {
+    /** Represent sync type */
+    Sync,
+
+    /** Represent async type */
+    Async,
+};
+
+const std::unordered_map<const char *, sync_type> SYNC_MAPPER({
+    {"sync", sync_type::Sync},
+    {"async", sync_type::Async},
+});
+
+static constexpr auto DEFAULT_ASYNC_OVERFLOW_POLICY =
+    spdlog::async_overflow_policy::block;
+static constexpr auto DEFAULT_THREAD_POOL_QUEUE_SIZE = 8192;
+static constexpr auto DEFAULT_THREAD_POOL_NUM_THREADS = 1;
+
 namespace names {
 // table names
 static constexpr auto LOGGER_TABLE = "logger";
@@ -137,6 +161,7 @@ static constexpr auto PATTERN = "pattern";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
 static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
+static constexpr auto SYNC = "sync";
 static constexpr auto SYSLOG_FACILITY = "syslog_facility";
 static constexpr auto SYSLOG_OPTION = "syslog_option";
 static constexpr auto TRUNCATE = "truncate";
@@ -405,6 +430,38 @@ auto value_from_table_opt(
     using std::string;
 
     return table->get_as<string>(field);
+}
+
+template <class Map>
+auto enum_from_table_opt(
+    const std::shared_ptr<cpptoml::table> &table,
+    const char field[],
+    const Map &m) -> cpptoml::option<typename Map::mapped_type> {
+    // cpptoml
+    using cpptoml::option;
+
+    // fmt
+    using fmt::format;
+
+    // std
+    using std::exception;
+    using std::string;
+
+    const auto &value_opt = value_from_table_opt<string>(table, field);
+
+    if (static_cast<bool>(value_opt)) {
+        const auto &value = *value_opt;
+        const auto &it = m.find(value.c_str());
+
+        if (it == m.cend()) {
+            throw setup_error(
+                format("Invalid enum value '{}' found: {}", field));
+        }
+
+        return option<typename Map::mapped_type>(it->second);
+    } else {
+        return option<typename Map::mapped_type>();
+    }
 }
 
 template <class T>
@@ -1033,6 +1090,7 @@ inline void setup_loggers_impl(
     using names::NAME;
     using names::PATTERN;
     using names::SINKS;
+    using names::SYNC;
 
     // fmt
     using fmt::format;
@@ -1084,8 +1142,31 @@ inline void setup_loggers_impl(
             logger_sinks.push_back(move(sink));
         }
 
-        const auto logger = make_shared<spdlog::logger>(
-            name, logger_sinks.cbegin(), logger_sinks.cend());
+        const auto sync = enum_from_table_opt(logger_table, SYNC, SYNC_MAPPER)
+                              .value_or(sync_type::Sync);
+
+        const auto logger =
+            [sync, &logger_sinks, &name]() -> shared_ptr<spdlog::logger> {
+            switch (sync) {
+            case sync_type::Sync:
+                return make_shared<spdlog::logger>(
+                    name, logger_sinks.cbegin(), logger_sinks.cend());
+
+            case sync_type::Async:
+                spdlog::init_thread_pool(
+                    DEFAULT_THREAD_POOL_QUEUE_SIZE,
+                    DEFAULT_THREAD_POOL_NUM_THREADS);
+                return make_shared<spdlog::async_logger>(
+                    name,
+                    logger_sinks.cbegin(),
+                    logger_sinks.cend(),
+                    spdlog::thread_pool(),
+                    DEFAULT_ASYNC_OVERFLOW_POLICY);
+            }
+
+            throw setup_error("Reached a buggy scenario of sync_type not fully "
+                              "pattern matched. Please raise an issue.");
+        }();
 
         // optional fields
         add_msg_on_err(
