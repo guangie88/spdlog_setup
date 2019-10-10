@@ -143,9 +143,11 @@ static constexpr auto DEFAULT_THREAD_POOL_NUM_THREADS = 1;
 
 namespace names {
 // table names
+static constexpr auto GLOBAL_THREAD_POOL_TABLE = "global_thread_pool";
 static constexpr auto LOGGER_TABLE = "logger";
 static constexpr auto PATTERN_TABLE = "pattern";
 static constexpr auto SINK_TABLE = "sink";
+static constexpr auto THREAD_POOL_TABLE = "thread_pool";
 
 // field names
 static constexpr auto BASE_FILENAME = "base_filename";
@@ -157,7 +159,9 @@ static constexpr auto LEVEL = "level";
 static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
+static constexpr auto NUM_THREADS = "num_threads";
 static constexpr auto PATTERN = "pattern";
+static constexpr auto QUEUE_SIZE = "queue_size";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
 static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
@@ -1007,7 +1011,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
     return sinks_map;
 }
 
-inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
+inline auto setup_patterns_impl(const std::shared_ptr<cpptoml::table> &config)
     -> std::unordered_map<std::string, std::string> {
 
     using names::NAME;
@@ -1025,19 +1029,19 @@ inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
     // possible to return an entire empty pattern map
     unordered_map<string, string> patterns_map;
 
-    const auto formats = config->get_table_array(PATTERN_TABLE);
+    const auto patterns = config->get_table_array(PATTERN_TABLE);
 
-    if (formats) {
-        for (const auto &format_table : *formats) {
+    if (patterns) {
+        for (const auto &pattern_table : *patterns) {
             auto name = value_from_table<string>(
-                format_table,
+                pattern_table,
                 NAME,
-                format("One of the formats does not have a '{}' field", NAME));
+                format("One of the patterns does not have a '{}' field", NAME));
 
             auto value = value_from_table<string>(
-                format_table,
+                pattern_table,
                 VALUE,
-                format("Format '{}' does not have '{}' field", name, VALUE));
+                format("Pattern '{}' does not have '{}' field", name, VALUE));
 
             patterns_map.emplace(move(name), move(value));
         }
@@ -1046,11 +1050,94 @@ inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
     return patterns_map;
 }
 
+inline auto
+setup_thread_pools_impl(const std::shared_ptr<cpptoml::table> &config) -> std::
+    unordered_map<std::string, std::shared_ptr<spdlog::details::thread_pool>> {
+
+    using names::GLOBAL_THREAD_POOL_TABLE;
+    using names::NAME;
+    using names::NUM_THREADS;
+    using names::QUEUE_SIZE;
+    using names::THREAD_POOL_TABLE;
+
+    // fmt
+    using fmt::format;
+
+    // spdlog
+    using spdlog::init_thread_pool;
+    using spdlog::details::thread_pool;
+
+    // std
+    using std::make_shared;
+    using std::move;
+    using std::shared_ptr;
+    using std::string;
+    using std::unordered_map;
+
+    // reinitialize global thread pool for async loggers if present
+    const auto global_thread_pool_table =
+        config->get_table(GLOBAL_THREAD_POOL_TABLE);
+
+    if (global_thread_pool_table) {
+        const auto queue_size = value_from_table_or<size_t>(
+            global_thread_pool_table,
+            QUEUE_SIZE,
+            DEFAULT_THREAD_POOL_QUEUE_SIZE);
+
+        const auto num_threads = value_from_table_or<size_t>(
+            global_thread_pool_table,
+            NUM_THREADS,
+            DEFAULT_THREAD_POOL_NUM_THREADS);
+
+        init_thread_pool(queue_size, num_threads);
+    }
+
+    // possible to return an entire empty thread pools map
+    unordered_map<string, shared_ptr<thread_pool>> thread_pools_map;
+
+    const auto thread_pools = config->get_table_array(THREAD_POOL_TABLE);
+
+    if (thread_pools) {
+        for (const auto &thread_pool_table : *thread_pools) {
+            auto name = value_from_table<string>(
+                thread_pool_table,
+                NAME,
+                format(
+                    "One of the thread pools does not have a '{}' field",
+                    NAME));
+
+            const auto queue_size = value_from_table<size_t>(
+                thread_pool_table,
+                QUEUE_SIZE,
+                format(
+                    "Thread pool '{}' does not have '{}' field",
+                    name,
+                    QUEUE_SIZE));
+
+            const auto num_threads = value_from_table<size_t>(
+                thread_pool_table,
+                NUM_THREADS,
+                format(
+                    "Thread pool '{}' does not have '{}' field",
+                    name,
+                    NUM_THREADS));
+
+            thread_pools_map.emplace(
+                move(name), make_shared<thread_pool>(queue_size, num_threads));
+        }
+    }
+
+    return thread_pools_map;
+}
+
 inline void setup_loggers_impl(
     const std::shared_ptr<cpptoml::table> &config,
     const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
         &sinks_map,
-    const std::unordered_map<std::string, std::string> &patterns_map) {
+    const std::unordered_map<std::string, std::string> &patterns_map,
+    const std::unordered_map<
+        std::string,
+        std::shared_ptr<spdlog::details::thread_pool>> &thread_pools_map) {
 
     using names::GLOBAL_PATTERN;
     using names::LOGGER_TABLE;
@@ -1077,7 +1164,7 @@ inline void setup_loggers_impl(
     }
 
     // set up possibly the global pattern if present
-    auto global_pattern_opt =
+    const auto global_pattern_opt =
         value_from_table_opt<string>(config, GLOBAL_PATTERN);
 
     for (const auto &logger_table : *loggers) {
@@ -1180,6 +1267,8 @@ inline void setup_loggers_impl(
 
             : pattern_option_t();
 
+        // global_pattern_opt cannot be moved since it needs to be cloned for
+        // each iteration
         const auto selected_pattern_opt =
             pattern_value_opt ? move(pattern_value_opt) : global_pattern_opt;
 
@@ -1201,10 +1290,13 @@ inline void setup_impl(const std::shared_ptr<cpptoml::table> &config) {
     const auto sinks_map = setup_sinks_impl(config);
 
     // set up patterns
-    const auto patterns_map = setup_formats_impl(config);
+    const auto patterns_map = setup_patterns_impl(config);
+
+    // set up thread pools
+    const auto thread_pools_map = setup_thread_pools_impl(config);
 
     // set up loggers, setting the respective sinks and patterns
-    setup_loggers_impl(config, sinks_map, patterns_map);
+    setup_loggers_impl(config, sinks_map, patterns_map, thread_pools_map);
 }
 } // namespace details
 } // namespace spdlog_setup

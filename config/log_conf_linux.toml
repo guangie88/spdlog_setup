@@ -13,6 +13,20 @@
 # check out https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
 global_pattern = "[%Y-%m-%dT%T%z] [%L] <%n>: %v"
 
+[global_thread_pool]
+queue_size = 8192
+num_threads = 1
+
+[[thread_pool]]
+name = "tp_1"
+queue_size = 4096
+num_threads = 2
+
+[[thread_pool]]
+name = "tp_2"
+queue_size = 2048
+num_threads = 4
+
 [[sink]]
 name = "console_st"
 type = "stdout_sink_st"
