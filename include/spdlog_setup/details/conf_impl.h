@@ -167,6 +167,7 @@ static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
 static constexpr auto SYSLOG_FACILITY = "syslog_facility";
 static constexpr auto SYSLOG_OPTION = "syslog_option";
+static constexpr auto THREAD_POOL = "thread_pool";
 static constexpr auto TRUNCATE = "truncate";
 static constexpr auto TYPE = "type";
 static constexpr auto VALUE = "value";
@@ -1144,6 +1145,7 @@ inline void setup_loggers_impl(
     using names::NAME;
     using names::PATTERN;
     using names::SINKS;
+    using names::THREAD_POOL;
     using names::TYPE;
 
     // fmt
@@ -1211,22 +1213,41 @@ inline void setup_loggers_impl(
                 : sync_type::Sync;
 
         const auto logger =
-            [sync, &logger_sinks, &name]() -> shared_ptr<spdlog::logger> {
+            [sync, &logger_sinks, &logger_table, &name, &thread_pools_map]()
+            -> shared_ptr<spdlog::logger> {
             switch (sync) {
             case sync_type::Sync:
                 return make_shared<spdlog::logger>(
                     name, logger_sinks.cbegin(), logger_sinks.cend());
 
-            case sync_type::Async:
-                spdlog::init_thread_pool(
-                    DEFAULT_THREAD_POOL_QUEUE_SIZE,
-                    DEFAULT_THREAD_POOL_NUM_THREADS);
+            case sync_type::Async: {
+                // TODO: Add impl to read overflow policy
+                // try to find named thread pool to assign to if present
+                const auto &thread_pool_name_opt =
+                    value_from_table_opt<string>(logger_table, THREAD_POOL);
+
+                auto thread_pool = static_cast<bool>(thread_pool_name_opt)
+                    ? [&name, &thread_pools_map, &thread_pool_name_opt]() {
+                        const auto &thread_pool_name = *thread_pool_name_opt;
+
+                        return find_value_from_map(
+                            thread_pools_map,
+                            thread_pool_name,
+                            format(
+                                "Unable to find thread pool '{}' for logger '{}'",
+                                thread_pool_name,
+                                name));
+                    }()
+
+                    : spdlog::thread_pool();
+
                 return make_shared<spdlog::async_logger>(
                     name,
                     logger_sinks.cbegin(),
                     logger_sinks.cend(),
-                    spdlog::thread_pool(),
+                    move(thread_pool),
                     DEFAULT_ASYNC_OVERFLOW_POLICY);
+            }
             }
 
             throw setup_error("Reached a buggy scenario of sync_type not fully "
