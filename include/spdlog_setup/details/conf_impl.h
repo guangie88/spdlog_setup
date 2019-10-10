@@ -131,7 +131,7 @@ enum class sync_type {
     Async,
 };
 
-const std::unordered_map<std::string, sync_type> SYNC_MAPPER{{
+const std::unordered_map<std::string, sync_type> SYNC_MAP{{
     {"sync", sync_type::Sync},
     {"async", sync_type::Async},
 }};
@@ -429,38 +429,6 @@ auto value_from_table_opt(
     using std::string;
 
     return table->get_as<string>(field);
-}
-
-template <class Map>
-auto enum_from_table_opt(
-    const std::shared_ptr<cpptoml::table> &table,
-    const char field[],
-    const Map &m) -> cpptoml::option<typename Map::mapped_type> {
-    // cpptoml
-    using cpptoml::option;
-
-    // fmt
-    using fmt::format;
-
-    // std
-    using std::exception;
-    using std::string;
-
-    const auto &value_opt = value_from_table_opt<string>(table, field);
-
-    if (static_cast<bool>(value_opt)) {
-        const auto &value = *value_opt;
-        const auto &it = m.find(value);
-
-        if (it == m.cend()) {
-            throw setup_error(
-                format("Invalid enum value '{}' found: {}", field));
-        }
-
-        return option<typename Map::mapped_type>(it->second);
-    } else {
-        return option<typename Map::mapped_type>();
-    }
 }
 
 template <class T>
@@ -1141,8 +1109,19 @@ inline void setup_loggers_impl(
             logger_sinks.push_back(move(sink));
         }
 
-        const auto sync = enum_from_table_opt(logger_table, TYPE, SYNC_MAPPER)
-                              .value_or(sync_type::Sync);
+        const auto &sync_raw_opt =
+            value_from_table_opt<string>(logger_table, TYPE);
+
+        const auto sync =
+            sync_raw_opt
+                ? find_value_from_map(
+                      SYNC_MAP,
+                      *sync_raw_opt,
+                      format(
+                          "Invalid sync type given '{}' for logger '{}'",
+                          *sync_raw_opt,
+                          name))
+                : sync_type::Sync;
 
         const auto logger =
             [sync, &logger_sinks, &name]() -> shared_ptr<spdlog::logger> {
