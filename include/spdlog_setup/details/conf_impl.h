@@ -136,10 +136,18 @@ const std::unordered_map<std::string, sync_type> SYNC_MAP{{
     {"async", sync_type::Async},
 }};
 
-static constexpr auto DEFAULT_ASYNC_OVERFLOW_POLICY =
+const std::unordered_map<std::string, spdlog::async_overflow_policy>
+    ASYNC_OVERFLOW_POLICY_MAP{{
+        {"block", spdlog::async_overflow_policy::block},
+        {"overrun_oldest", spdlog::async_overflow_policy::overrun_oldest},
+    }};
+
+namespace defaults {
+static constexpr auto ASYNC_OVERFLOW_POLICY =
     spdlog::async_overflow_policy::block;
-static constexpr auto DEFAULT_THREAD_POOL_QUEUE_SIZE = 8192;
-static constexpr auto DEFAULT_THREAD_POOL_NUM_THREADS = 1;
+static constexpr auto THREAD_POOL_QUEUE_SIZE = 8192;
+static constexpr auto THREAD_POOL_NUM_THREADS = 1;
+} // namespace defaults
 
 namespace names {
 // table names
@@ -160,6 +168,7 @@ static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
 static constexpr auto NUM_THREADS = "num_threads";
+static constexpr auto OVERFLOW_POLICY = "overflow_policy";
 static constexpr auto PATTERN = "pattern";
 static constexpr auto QUEUE_SIZE = "queue_size";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
@@ -1083,12 +1092,12 @@ setup_thread_pools_impl(const std::shared_ptr<cpptoml::table> &config) -> std::
         const auto queue_size = value_from_table_or<size_t>(
             global_thread_pool_table,
             QUEUE_SIZE,
-            DEFAULT_THREAD_POOL_QUEUE_SIZE);
+            defaults::THREAD_POOL_QUEUE_SIZE);
 
         const auto num_threads = value_from_table_or<size_t>(
             global_thread_pool_table,
             NUM_THREADS,
-            DEFAULT_THREAD_POOL_NUM_THREADS);
+            defaults::THREAD_POOL_NUM_THREADS);
 
         init_thread_pool(queue_size, num_threads);
     }
@@ -1143,6 +1152,7 @@ inline void setup_loggers_impl(
     using names::GLOBAL_PATTERN;
     using names::LOGGER_TABLE;
     using names::NAME;
+    using names::OVERFLOW_POLICY;
     using names::PATTERN;
     using names::SINKS;
     using names::THREAD_POOL;
@@ -1221,8 +1231,6 @@ inline void setup_loggers_impl(
                     name, logger_sinks.cbegin(), logger_sinks.cend());
 
             case sync_type::Async: {
-                // TODO: Add impl to read overflow policy
-                // try to find named thread pool to assign to if present
                 const auto &thread_pool_name_opt =
                     value_from_table_opt<string>(logger_table, THREAD_POOL);
 
@@ -1238,15 +1246,32 @@ inline void setup_loggers_impl(
                                 thread_pool_name,
                                 name));
                     }()
-
                     : spdlog::thread_pool();
+
+                const auto &async_overflow_policy_raw_opt =
+                    value_from_table_opt<string>(logger_table, OVERFLOW_POLICY);
+
+                const auto async_overflow_policy = static_cast<bool>(async_overflow_policy_raw_opt)
+                    ? [&async_overflow_policy_raw_opt, &name]() {
+                        const auto &async_overflow_policy_raw = *async_overflow_policy_raw_opt;
+
+                        return find_value_from_map(
+                            ASYNC_OVERFLOW_POLICY_MAP,
+                            async_overflow_policy_raw,
+                            format(
+                                "Invalid async overflow policy type given '{}' for logger '{}'",
+                                async_overflow_policy_raw,
+                                name)
+                        );
+                    }()
+                    : defaults::ASYNC_OVERFLOW_POLICY;
 
                 return make_shared<spdlog::async_logger>(
                     name,
                     logger_sinks.cbegin(),
                     logger_sinks.cend(),
                     move(thread_pool),
-                    DEFAULT_ASYNC_OVERFLOW_POLICY);
+                    async_overflow_policy);
             }
             }
 
