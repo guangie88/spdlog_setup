@@ -9,5 +9,4 @@ docker run \
     -u "$(id -u):$(id -g)" \
     --rm -t \
     guangie88/clang-cmake:7 \
-    find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -print0 | \
-        xargs -0 -I {} clang-format -i {}
+    sh -c 'find include/ src/ -type f \( -iname *.h -o -iname *.cpp \) -exec clang-format -i {} \;'
