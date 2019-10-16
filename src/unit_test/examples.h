@@ -1,5 +1,7 @@
 #pragma once
 
+#include "spdlog_setup/conf.h"
+
 #include <cstddef>
 #include <cstdio>
 #include <fstream>
