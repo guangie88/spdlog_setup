@@ -99,9 +99,10 @@ install(
 endif()
   
 # spdlog_setup_unit_test
+FILE(GLOB unit_test_cpps src/unit_test/*.cpp)
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
   add_executable(spdlog_setup_unit_test
-    src/unit_test/unit_test.cpp)
+    ${unit_test_cpps})
 
   set_property(TARGET spdlog_setup_unit_test PROPERTY CXX_STANDARD 11)
 

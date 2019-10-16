@@ -131,17 +131,6 @@ enum class sync_type {
     Async,
 };
 
-const std::unordered_map<std::string, sync_type> SYNC_MAP{{
-    {"sync", sync_type::Sync},
-    {"async", sync_type::Async},
-}};
-
-const std::unordered_map<std::string, spdlog::async_overflow_policy>
-    ASYNC_OVERFLOW_POLICY_MAP{{
-        {"block", spdlog::async_overflow_policy::block},
-        {"overrun_oldest", spdlog::async_overflow_policy::overrun_oldest},
-    }};
-
 namespace defaults {
 static constexpr auto ASYNC_OVERFLOW_POLICY =
     spdlog::async_overflow_policy::block;
@@ -158,7 +147,9 @@ static constexpr auto SINK_TABLE = "sink";
 static constexpr auto THREAD_POOL_TABLE = "thread_pool";
 
 // field names
+static constexpr auto ASYNC = "async";
 static constexpr auto BASE_FILENAME = "base_filename";
+static constexpr auto BLOCK = "block";
 static constexpr auto CREATE_PARENT_DIR = "create_parent_dir";
 static constexpr auto FILENAME = "filename";
 static constexpr auto GLOBAL_PATTERN = "global_pattern";
@@ -168,12 +159,14 @@ static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
 static constexpr auto NUM_THREADS = "num_threads";
+static constexpr auto OVERRUN_OLDEST = "overrun_oldest";
 static constexpr auto OVERFLOW_POLICY = "overflow_policy";
 static constexpr auto PATTERN = "pattern";
 static constexpr auto QUEUE_SIZE = "queue_size";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
 static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
+static constexpr auto SYNC = "sync";
 static constexpr auto SYSLOG_FACILITY = "syslog_facility";
 static constexpr auto SYSLOG_OPTION = "syslog_option";
 static constexpr auto THREAD_POOL = "thread_pool";
@@ -181,6 +174,17 @@ static constexpr auto TRUNCATE = "truncate";
 static constexpr auto TYPE = "type";
 static constexpr auto VALUE = "value";
 } // namespace names
+
+const std::unordered_map<std::string, sync_type> SYNC_MAP{{
+    {names::SYNC, sync_type::Sync},
+    {names::ASYNC, sync_type::Async},
+}};
+
+const std::unordered_map<std::string, spdlog::async_overflow_policy>
+    ASYNC_OVERFLOW_POLICY_MAP{{
+        {names::BLOCK, spdlog::async_overflow_policy::block},
+        {names::OVERRUN_OLDEST, spdlog::async_overflow_policy::overrun_oldest},
+    }};
 
 inline auto get_parent_path(const std::string &file_path) -> std::string {
     // string
