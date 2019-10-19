@@ -1,6 +1,12 @@
+/**
+ * Unit tests implementation.
+ * @author Chen Weiguang
+ * @version 0.3.0-alpha.2
+ */
+
 #pragma once
 
-#include "spdlog_setup/conf.h"
+#include "conf.h"
 
 #include <cstddef>
 #include <cstdio>

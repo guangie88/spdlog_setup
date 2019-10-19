@@ -699,8 +699,7 @@ inline void set_sink_level_if_present(
 }
 
 template <class BasicFileSink>
-auto basic_file_sink_from_table(
-    const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_basic_file_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::FILENAME;
@@ -733,8 +732,7 @@ auto basic_file_sink_from_table(
 }
 
 template <class RotatingFileSink>
-auto rotating_file_sink_from_table(
-    const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_rotating_file_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::BASE_FILENAME;
@@ -779,8 +777,7 @@ auto rotating_file_sink_from_table(
 }
 
 template <class DailyFileSink>
-auto daily_file_sink_from_table(
-    const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_daily_file_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::BASE_FILENAME;
@@ -825,7 +822,7 @@ auto daily_file_sink_from_table(
 #ifdef SPDLOG_ENABLE_SYSLOG
 
 template <class SyslogSink>
-auto syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_syslog_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::IDENT;
@@ -906,22 +903,22 @@ inline auto sink_from_sink_type(
         return make_shared<color_stdout_sink_mt>();
 
     case sink_type::BasicFileSinkSt:
-        return basic_file_sink_from_table<basic_file_sink_st>(sink_table);
+        return setup_basic_file_sink<basic_file_sink_st>(sink_table);
 
     case sink_type::BasicFileSinkMt:
-        return basic_file_sink_from_table<basic_file_sink_mt>(sink_table);
+        return setup_basic_file_sink<basic_file_sink_mt>(sink_table);
 
     case sink_type::RotatingFileSinkSt:
-        return rotating_file_sink_from_table<rotating_file_sink_st>(sink_table);
+        return setup_rotating_file_sink<rotating_file_sink_st>(sink_table);
 
     case sink_type::RotatingFileSinkMt:
-        return rotating_file_sink_from_table<rotating_file_sink_mt>(sink_table);
+        return setup_rotating_file_sink<rotating_file_sink_mt>(sink_table);
 
     case sink_type::DailyFileSinkSt:
-        return daily_file_sink_from_table<daily_file_sink_st>(sink_table);
+        return setup_daily_file_sink<daily_file_sink_st>(sink_table);
 
     case sink_type::DailyFileSinkMt:
-        return daily_file_sink_from_table<daily_file_sink_mt>(sink_table);
+        return setup_daily_file_sink<daily_file_sink_mt>(sink_table);
 
     case sink_type::NullSinkSt:
         return make_shared<null_sink_st>();
@@ -931,10 +928,10 @@ inline auto sink_from_sink_type(
 
 #ifdef SPDLOG_ENABLE_SYSLOG
     case sink_type::SyslogSinkSt:
-        return syslog_sink_from_table<syslog_sink_st>(sink_table);
+        return setup_syslog_sink<syslog_sink_st>(sink_table);
 
     case sink_type::SyslogSinkMt:
-        return syslog_sink_from_table<syslog_sink_mt>(sink_table);
+        return setup_syslog_sink<syslog_sink_mt>(sink_table);
 #endif
 
     default:
@@ -944,7 +941,23 @@ inline auto sink_from_sink_type(
     }
 }
 
-inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
+inline void set_logger_level_if_present(
+    const std::shared_ptr<cpptoml::table> &logger_table,
+    const std::shared_ptr<spdlog::logger> &logger) {
+
+    using names::LEVEL;
+
+    // std
+    using std::string;
+
+    if_value_from_table<string>(
+        logger_table, LEVEL, [&logger](const string &level) {
+            const auto level_enum = level_from_str(level);
+            logger->set_level(level_enum);
+        });
+}
+
+inline auto setup_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::TYPE;
@@ -968,23 +981,7 @@ inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
     return sink;
 }
 
-inline void set_logger_level_if_present(
-    const std::shared_ptr<cpptoml::table> &logger_table,
-    const std::shared_ptr<spdlog::logger> &logger) {
-
-    using names::LEVEL;
-
-    // std
-    using std::string;
-
-    if_value_from_table<string>(
-        logger_table, LEVEL, [&logger](const string &level) {
-            const auto level_enum = level_from_str(level);
-            logger->set_level(level_enum);
-        });
-}
-
-inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
+inline auto setup_sinks(const std::shared_ptr<cpptoml::table> &config)
     -> std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>> {
 
     using names::NAME;
@@ -1014,7 +1011,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
             format("One of the sinks does not have a '{}' field", NAME));
 
         auto sink = add_msg_on_err(
-            [&sink_table] { return sink_from_table(sink_table); },
+            [&sink_table] { return setup_sink(sink_table); },
             [&name](const string &err_msg) {
                 return format("Sink '{}' error:\n > {}", name, err_msg);
             });
@@ -1025,7 +1022,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
     return sinks_map;
 }
 
-inline auto setup_patterns_impl(const std::shared_ptr<cpptoml::table> &config)
+inline auto setup_patterns(const std::shared_ptr<cpptoml::table> &config)
     -> std::unordered_map<std::string, std::string> {
 
     using names::NAME;
@@ -1065,7 +1062,7 @@ inline auto setup_patterns_impl(const std::shared_ptr<cpptoml::table> &config)
 }
 
 inline auto
-setup_thread_pools_impl(const std::shared_ptr<cpptoml::table> &config) -> std::
+setup_thread_pools(const std::shared_ptr<cpptoml::table> &config) -> std::
     unordered_map<std::string, std::shared_ptr<spdlog::details::thread_pool>> {
 
     using names::GLOBAL_THREAD_POOL_TABLE;
@@ -1144,7 +1141,7 @@ setup_thread_pools_impl(const std::shared_ptr<cpptoml::table> &config) -> std::
     return thread_pools_map;
 }
 
-inline auto setup_sync_logger_impl(
+inline auto setup_sync_logger(
     const std::string &name,
     const std::vector<std::shared_ptr<spdlog::sinks::sink>> &logger_sinks)
     -> std::shared_ptr<spdlog::logger> {
@@ -1152,7 +1149,7 @@ inline auto setup_sync_logger_impl(
         name, logger_sinks.cbegin(), logger_sinks.cend());
 }
 
-inline auto setup_async_logger_impl(
+inline auto setup_async_logger(
     const std::string &name,
     const std::shared_ptr<cpptoml::table> &logger_table,
     const std::vector<std::shared_ptr<spdlog::sinks::sink>> &logger_sinks,
@@ -1203,7 +1200,7 @@ inline auto setup_async_logger_impl(
         async_overflow_policy);
 }
 
-inline auto setup_logger_impl(
+inline auto setup_logger(
     const std::shared_ptr<cpptoml::table> &logger_table,
     const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
         &sinks_map,
@@ -1253,10 +1250,10 @@ inline auto setup_logger_impl(
 
     switch (sync) {
     case sync_type::Sync:
-        return setup_sync_logger_impl(name, logger_sinks);
+        return setup_sync_logger(name, logger_sinks);
 
     case sync_type::Async:
-        return setup_async_logger_impl(
+        return setup_async_logger(
             name, logger_table, logger_sinks, thread_pools_map);
 
     default:
@@ -1265,7 +1262,7 @@ inline auto setup_logger_impl(
     }
 }
 
-inline void setup_loggers_impl(
+inline void setup_loggers(
     const std::shared_ptr<cpptoml::table> &config,
     const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
         &sinks_map,
@@ -1306,7 +1303,7 @@ inline void setup_loggers_impl(
 
     for (const auto &logger_table : *loggers) {
         const auto logger =
-            setup_logger_impl(logger_table, sinks_map, thread_pools_map);
+            setup_logger(logger_table, sinks_map, thread_pools_map);
 
         // optional fields
         add_msg_on_err(
@@ -1364,18 +1361,18 @@ inline void setup_loggers_impl(
     }
 }
 
-inline void setup_impl(const std::shared_ptr<cpptoml::table> &config) {
+inline void setup(const std::shared_ptr<cpptoml::table> &config) {
     // set up sinks
-    const auto sinks_map = setup_sinks_impl(config);
+    const auto sinks_map = setup_sinks(config);
 
     // set up patterns
-    const auto patterns_map = setup_patterns_impl(config);
+    const auto patterns_map = setup_patterns(config);
 
     // set up thread pools
-    const auto thread_pools_map = setup_thread_pools_impl(config);
+    const auto thread_pools_map = setup_thread_pools(config);
 
     // set up loggers, setting the respective sinks and patterns
-    setup_loggers_impl(config, sinks_map, patterns_map, thread_pools_map);
+    setup_loggers(config, sinks_map, patterns_map, thread_pools_map);
 }
 } // namespace details
 } // namespace spdlog_setup

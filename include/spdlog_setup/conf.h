@@ -110,7 +110,7 @@ void from_file_with_tag_replacement(
         cpptoml::parser parser(toml_ss);
         const auto config = parser.parse();
 
-        details::setup_impl(config);
+        details::setup(config);
     } catch (const setup_error &) {
         throw;
     } catch (const exception &e) {
@@ -158,7 +158,7 @@ auto from_file_and_override_with_tag_replacement(
             details::merge_config_root(merged_config, override_config);
         }
 
-        details::setup_impl(merged_config);
+        details::setup(merged_config);
         return has_override;
     } catch (const setup_error &) {
         throw;
@@ -174,7 +174,7 @@ inline void from_file(const std::string &toml_path) {
 
     try {
         const auto config = cpptoml::parse_file(toml_path);
-        details::setup_impl(config);
+        details::setup(config);
     } catch (const exception &e) {
         throw setup_error(e.what());
     }
@@ -205,7 +205,7 @@ inline auto from_file_and_override(
             details::merge_config_root(merged_config, override_config);
         }
 
-        details::setup_impl(merged_config);
+        details::setup(merged_config);
         return has_override;
     } catch (const exception &e) {
         throw setup_error(e.what());
