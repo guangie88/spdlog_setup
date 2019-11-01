@@ -22,10 +22,18 @@ TEST_CASE("Parse global thread pool", "[parse_global_thread_pool]") {
 }
 
 TEST_CASE("Parse simple thread pool", "[parse_simple_thread_pool]") {
+    // No way to test non-global thread pool from spdlog sadly
     const auto thread_pools = spdlog_setup::details::setup_thread_pools(
         generate_simple_thread_pool());
 
     REQUIRE(thread_pools.size() == 1);
+}
+
+TEST_CASE("Parse multiple thread pools", "[parse_multiple_thread_pools]") {
+    const auto thread_pools = spdlog_setup::details::setup_thread_pools(
+        generate_multiple_thread_pools(10));
+
+    REQUIRE(thread_pools.size() == 10);
 }
 
 TEST_CASE(
