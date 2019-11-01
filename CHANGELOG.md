@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add support for async logger. This fixes
+  ([#44](https://github.com/guangie88/spdlog_setup/issues/44))
+  - This makes logger accepts `type`, which takes in `sync` or `async`.
+    `sync` is default. Refer to the README for more details.
 - Change support to `spdlog` `v1.y.z` tag release, currently tested all `v1.0.0`
   to `v1.3.1` to be working. This fixes
   ([#26](https://github.com/guangie88/spdlog_setup/issues/26)).
