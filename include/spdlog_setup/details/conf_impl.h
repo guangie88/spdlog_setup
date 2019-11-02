@@ -19,6 +19,9 @@
 // Just so that it works for v1.3.0
 #include "spdlog/spdlog.h"
 
+// To support all asynchronous loggers
+#include "spdlog/async.h"
+
 #include "spdlog/fmt/fmt.h"
 
 #include "spdlog/sinks/basic_file_sink.h"
@@ -117,14 +120,36 @@ enum class sink_type {
     SyslogSinkMt,
 };
 
+/**
+ * Describes the logger sync types in enumeration form.
+ */
+enum class sync_type {
+    /** Represent sync type */
+    Sync,
+
+    /** Represent async type */
+    Async,
+};
+
+namespace defaults {
+static constexpr auto ASYNC_OVERFLOW_POLICY =
+    spdlog::async_overflow_policy::block;
+static constexpr auto THREAD_POOL_QUEUE_SIZE = 8192;
+static constexpr auto THREAD_POOL_NUM_THREADS = 1;
+} // namespace defaults
+
 namespace names {
 // table names
+static constexpr auto GLOBAL_THREAD_POOL_TABLE = "global_thread_pool";
 static constexpr auto LOGGER_TABLE = "logger";
 static constexpr auto PATTERN_TABLE = "pattern";
 static constexpr auto SINK_TABLE = "sink";
+static constexpr auto THREAD_POOL_TABLE = "thread_pool";
 
 // field names
+static constexpr auto ASYNC = "async";
 static constexpr auto BASE_FILENAME = "base_filename";
+static constexpr auto BLOCK = "block";
 static constexpr auto CREATE_PARENT_DIR = "create_parent_dir";
 static constexpr auto FILENAME = "filename";
 static constexpr auto GLOBAL_PATTERN = "global_pattern";
@@ -133,16 +158,33 @@ static constexpr auto LEVEL = "level";
 static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
+static constexpr auto NUM_THREADS = "num_threads";
+static constexpr auto OVERRUN_OLDEST = "overrun_oldest";
+static constexpr auto OVERFLOW_POLICY = "overflow_policy";
 static constexpr auto PATTERN = "pattern";
+static constexpr auto QUEUE_SIZE = "queue_size";
 static constexpr auto ROTATION_HOUR = "rotation_hour";
 static constexpr auto ROTATION_MINUTE = "rotation_minute";
 static constexpr auto SINKS = "sinks";
+static constexpr auto SYNC = "sync";
 static constexpr auto SYSLOG_FACILITY = "syslog_facility";
 static constexpr auto SYSLOG_OPTION = "syslog_option";
+static constexpr auto THREAD_POOL = "thread_pool";
 static constexpr auto TRUNCATE = "truncate";
 static constexpr auto TYPE = "type";
 static constexpr auto VALUE = "value";
 } // namespace names
+
+const std::unordered_map<std::string, sync_type> SYNC_MAP{{
+    {names::SYNC, sync_type::Sync},
+    {names::ASYNC, sync_type::Async},
+}};
+
+const std::unordered_map<std::string, spdlog::async_overflow_policy>
+    ASYNC_OVERFLOW_POLICY_MAP{{
+        {names::BLOCK, spdlog::async_overflow_policy::block},
+        {names::OVERRUN_OLDEST, spdlog::async_overflow_policy::overrun_oldest},
+    }};
 
 inline auto get_parent_path(const std::string &file_path) -> std::string {
     // string
@@ -657,8 +699,7 @@ inline void set_sink_level_if_present(
 }
 
 template <class BasicFileSink>
-auto basic_file_sink_from_table(
-    const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_basic_file_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::FILENAME;
@@ -691,8 +732,7 @@ auto basic_file_sink_from_table(
 }
 
 template <class RotatingFileSink>
-auto rotating_file_sink_from_table(
-    const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_rotating_file_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::BASE_FILENAME;
@@ -737,8 +777,7 @@ auto rotating_file_sink_from_table(
 }
 
 template <class DailyFileSink>
-auto daily_file_sink_from_table(
-    const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_daily_file_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::BASE_FILENAME;
@@ -783,7 +822,7 @@ auto daily_file_sink_from_table(
 #ifdef SPDLOG_ENABLE_SYSLOG
 
 template <class SyslogSink>
-auto syslog_sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
+auto setup_syslog_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::IDENT;
@@ -864,22 +903,22 @@ inline auto sink_from_sink_type(
         return make_shared<color_stdout_sink_mt>();
 
     case sink_type::BasicFileSinkSt:
-        return basic_file_sink_from_table<basic_file_sink_st>(sink_table);
+        return setup_basic_file_sink<basic_file_sink_st>(sink_table);
 
     case sink_type::BasicFileSinkMt:
-        return basic_file_sink_from_table<basic_file_sink_mt>(sink_table);
+        return setup_basic_file_sink<basic_file_sink_mt>(sink_table);
 
     case sink_type::RotatingFileSinkSt:
-        return rotating_file_sink_from_table<rotating_file_sink_st>(sink_table);
+        return setup_rotating_file_sink<rotating_file_sink_st>(sink_table);
 
     case sink_type::RotatingFileSinkMt:
-        return rotating_file_sink_from_table<rotating_file_sink_mt>(sink_table);
+        return setup_rotating_file_sink<rotating_file_sink_mt>(sink_table);
 
     case sink_type::DailyFileSinkSt:
-        return daily_file_sink_from_table<daily_file_sink_st>(sink_table);
+        return setup_daily_file_sink<daily_file_sink_st>(sink_table);
 
     case sink_type::DailyFileSinkMt:
-        return daily_file_sink_from_table<daily_file_sink_mt>(sink_table);
+        return setup_daily_file_sink<daily_file_sink_mt>(sink_table);
 
     case sink_type::NullSinkSt:
         return make_shared<null_sink_st>();
@@ -889,10 +928,10 @@ inline auto sink_from_sink_type(
 
 #ifdef SPDLOG_ENABLE_SYSLOG
     case sink_type::SyslogSinkSt:
-        return syslog_sink_from_table<syslog_sink_st>(sink_table);
+        return setup_syslog_sink<syslog_sink_st>(sink_table);
 
     case sink_type::SyslogSinkMt:
-        return syslog_sink_from_table<syslog_sink_mt>(sink_table);
+        return setup_syslog_sink<syslog_sink_mt>(sink_table);
 #endif
 
     default:
@@ -902,7 +941,23 @@ inline auto sink_from_sink_type(
     }
 }
 
-inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
+inline void set_logger_level_if_present(
+    const std::shared_ptr<cpptoml::table> &logger_table,
+    const std::shared_ptr<spdlog::logger> &logger) {
+
+    using names::LEVEL;
+
+    // std
+    using std::string;
+
+    if_value_from_table<string>(
+        logger_table, LEVEL, [&logger](const string &level) {
+            const auto level_enum = level_from_str(level);
+            logger->set_level(level_enum);
+        });
+}
+
+inline auto setup_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::TYPE;
@@ -926,23 +981,7 @@ inline auto sink_from_table(const std::shared_ptr<cpptoml::table> &sink_table)
     return sink;
 }
 
-inline void set_logger_level_if_present(
-    const std::shared_ptr<cpptoml::table> &logger_table,
-    const std::shared_ptr<spdlog::logger> &logger) {
-
-    using names::LEVEL;
-
-    // std
-    using std::string;
-
-    if_value_from_table<string>(
-        logger_table, LEVEL, [&logger](const string &level) {
-            const auto level_enum = level_from_str(level);
-            logger->set_level(level_enum);
-        });
-}
-
-inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
+inline auto setup_sinks(const std::shared_ptr<cpptoml::table> &config)
     -> std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>> {
 
     using names::NAME;
@@ -972,7 +1011,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
             format("One of the sinks does not have a '{}' field", NAME));
 
         auto sink = add_msg_on_err(
-            [&sink_table] { return sink_from_table(sink_table); },
+            [&sink_table] { return setup_sink(sink_table); },
             [&name](const string &err_msg) {
                 return format("Sink '{}' error:\n > {}", name, err_msg);
             });
@@ -983,7 +1022,7 @@ inline auto setup_sinks_impl(const std::shared_ptr<cpptoml::table> &config)
     return sinks_map;
 }
 
-inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
+inline auto setup_patterns(const std::shared_ptr<cpptoml::table> &config)
     -> std::unordered_map<std::string, std::string> {
 
     using names::NAME;
@@ -1001,19 +1040,19 @@ inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
     // possible to return an entire empty pattern map
     unordered_map<string, string> patterns_map;
 
-    const auto formats = config->get_table_array(PATTERN_TABLE);
+    const auto patterns = config->get_table_array(PATTERN_TABLE);
 
-    if (formats) {
-        for (const auto &format_table : *formats) {
+    if (patterns) {
+        for (const auto &pattern_table : *patterns) {
             auto name = value_from_table<string>(
-                format_table,
+                pattern_table,
                 NAME,
-                format("One of the formats does not have a '{}' field", NAME));
+                format("One of the patterns does not have a '{}' field", NAME));
 
             auto value = value_from_table<string>(
-                format_table,
+                pattern_table,
                 VALUE,
-                format("Format '{}' does not have '{}' field", name, VALUE));
+                format("Pattern '{}' does not have '{}' field", name, VALUE));
 
             patterns_map.emplace(move(name), move(value));
         }
@@ -1022,17 +1061,224 @@ inline auto setup_formats_impl(const std::shared_ptr<cpptoml::table> &config)
     return patterns_map;
 }
 
-inline void setup_loggers_impl(
+inline auto
+setup_thread_pools(const std::shared_ptr<cpptoml::table> &config) -> std::
+    unordered_map<std::string, std::shared_ptr<spdlog::details::thread_pool>> {
+
+    using names::GLOBAL_THREAD_POOL_TABLE;
+    using names::NAME;
+    using names::NUM_THREADS;
+    using names::QUEUE_SIZE;
+    using names::THREAD_POOL_TABLE;
+
+    // fmt
+    using fmt::format;
+
+    // spdlog
+    using spdlog::init_thread_pool;
+    using spdlog::details::thread_pool;
+
+    // std
+    using std::make_shared;
+    using std::move;
+    using std::shared_ptr;
+    using std::string;
+    using std::unordered_map;
+
+    // reinitialize global thread pool for async loggers if present
+    const auto global_thread_pool_table =
+        config->get_table(GLOBAL_THREAD_POOL_TABLE);
+
+    if (global_thread_pool_table) {
+        const auto queue_size = value_from_table_or<size_t>(
+            global_thread_pool_table,
+            QUEUE_SIZE,
+            defaults::THREAD_POOL_QUEUE_SIZE);
+
+        const auto num_threads = value_from_table_or<size_t>(
+            global_thread_pool_table,
+            NUM_THREADS,
+            defaults::THREAD_POOL_NUM_THREADS);
+
+        init_thread_pool(queue_size, num_threads);
+    }
+
+    // possible to return an entire empty thread pools map
+    unordered_map<string, shared_ptr<thread_pool>> thread_pools_map;
+
+    const auto thread_pools = config->get_table_array(THREAD_POOL_TABLE);
+
+    if (thread_pools) {
+        for (const auto &thread_pool_table : *thread_pools) {
+            auto name = value_from_table<string>(
+                thread_pool_table,
+                NAME,
+                format(
+                    "One of the thread pools does not have a '{}' field",
+                    NAME));
+
+            const auto queue_size = value_from_table<size_t>(
+                thread_pool_table,
+                QUEUE_SIZE,
+                format(
+                    "Thread pool '{}' does not have '{}' field",
+                    name,
+                    QUEUE_SIZE));
+
+            const auto num_threads = value_from_table<size_t>(
+                thread_pool_table,
+                NUM_THREADS,
+                format(
+                    "Thread pool '{}' does not have '{}' field",
+                    name,
+                    NUM_THREADS));
+
+            thread_pools_map.emplace(
+                move(name), make_shared<thread_pool>(queue_size, num_threads));
+        }
+    }
+
+    return thread_pools_map;
+}
+
+inline auto setup_sync_logger(
+    const std::string &name,
+    const std::vector<std::shared_ptr<spdlog::sinks::sink>> &logger_sinks)
+    -> std::shared_ptr<spdlog::logger> {
+    return std::make_shared<spdlog::logger>(
+        name, logger_sinks.cbegin(), logger_sinks.cend());
+}
+
+inline auto setup_async_logger(
+    const std::string &name,
+    const std::shared_ptr<cpptoml::table> &logger_table,
+    const std::vector<std::shared_ptr<spdlog::sinks::sink>> &logger_sinks,
+    const std::unordered_map<
+        std::string,
+        std::shared_ptr<spdlog::details::thread_pool>> &thread_pools_map)
+    -> std::shared_ptr<spdlog::logger> {
+    const auto &thread_pool_name_opt =
+        value_from_table_opt<std::string>(logger_table, names::THREAD_POOL);
+
+    auto thread_pool = static_cast<bool>(thread_pool_name_opt)
+                ? [&name, &thread_pools_map, &thread_pool_name_opt]() {
+                    const auto &thread_pool_name = *thread_pool_name_opt;
+
+                    return find_value_from_map(
+                        thread_pools_map,
+                        thread_pool_name,
+                        fmt::format(
+                            "Unable to find thread pool '{}' for logger '{}'",
+                            thread_pool_name,
+                            name));
+                }()
+                : spdlog::thread_pool();
+
+    const auto &async_overflow_policy_raw_opt =
+        value_from_table_opt<std::string>(logger_table, names::OVERFLOW_POLICY);
+
+    const auto async_overflow_policy = static_cast<bool>(async_overflow_policy_raw_opt)
+                ? [&async_overflow_policy_raw_opt, &name]() {
+                    const auto &async_overflow_policy_raw = *async_overflow_policy_raw_opt;
+
+                    return find_value_from_map(
+                        ASYNC_OVERFLOW_POLICY_MAP,
+                        async_overflow_policy_raw,
+                        fmt::format(
+                            "Invalid async overflow policy type given '{}' for logger '{}'",
+                            async_overflow_policy_raw,
+                            name)
+                    );
+                }()
+                : defaults::ASYNC_OVERFLOW_POLICY;
+
+    return std::make_shared<spdlog::async_logger>(
+        name,
+        logger_sinks.cbegin(),
+        logger_sinks.cend(),
+        std::move(thread_pool),
+        async_overflow_policy);
+}
+
+inline auto setup_logger(
+    const std::shared_ptr<cpptoml::table> &logger_table,
+    const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
+        &sinks_map,
+    const std::unordered_map<
+        std::string,
+        std::shared_ptr<spdlog::details::thread_pool>> &thread_pools_map)
+    -> std::shared_ptr<spdlog::logger> {
+    const auto name = value_from_table<std::string>(
+        logger_table,
+        names::NAME,
+        fmt::format(
+            "One of the loggers does not have a '{}' field", names::NAME));
+
+    const auto sinks = array_from_table<std::string>(
+        logger_table,
+        names::SINKS,
+        fmt::format(
+            "Logger '{}' does not have a '{}' field of sink names",
+            name,
+            names::SINKS));
+
+    std::vector<std::shared_ptr<spdlog::sinks::sink>> logger_sinks;
+    logger_sinks.reserve(sinks.size());
+
+    for (const auto &sink_name : sinks) {
+        auto sink = find_value_from_map(
+            sinks_map,
+            sink_name,
+            fmt::format(
+                "Unable to find sink '{}' for logger '{}'", sink_name, name));
+
+        logger_sinks.push_back(move(sink));
+    }
+
+    const auto &sync_raw_opt =
+        value_from_table_opt<std::string>(logger_table, names::TYPE);
+
+    const auto sync =
+        sync_raw_opt ? find_value_from_map(
+                           SYNC_MAP,
+                           *sync_raw_opt,
+                           fmt::format(
+                               "Invalid sync type given '{}' for logger '{}'",
+                               *sync_raw_opt,
+                               name))
+                     : sync_type::Sync;
+
+    switch (sync) {
+    case sync_type::Sync:
+        return setup_sync_logger(name, logger_sinks);
+
+    case sync_type::Async:
+        return setup_async_logger(
+            name, logger_table, logger_sinks, thread_pools_map);
+
+    default:
+        throw setup_error("Reached a buggy scenario of sync_type not fully "
+                          "pattern matched. Please raise an issue.");
+    }
+}
+
+inline void setup_loggers(
     const std::shared_ptr<cpptoml::table> &config,
     const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
         &sinks_map,
-    const std::unordered_map<std::string, std::string> &patterns_map) {
+    const std::unordered_map<std::string, std::string> &patterns_map,
+    const std::unordered_map<
+        std::string,
+        std::shared_ptr<spdlog::details::thread_pool>> &thread_pools_map) {
 
     using names::GLOBAL_PATTERN;
     using names::LOGGER_TABLE;
     using names::NAME;
+    using names::OVERFLOW_POLICY;
     using names::PATTERN;
     using names::SINKS;
+    using names::THREAD_POOL;
+    using names::TYPE;
 
     // fmt
     using fmt::format;
@@ -1052,49 +1298,23 @@ inline void setup_loggers_impl(
     }
 
     // set up possibly the global pattern if present
-    auto global_pattern_opt =
+    const auto global_pattern_opt =
         value_from_table_opt<string>(config, GLOBAL_PATTERN);
 
     for (const auto &logger_table : *loggers) {
-        const auto name = value_from_table<string>(
-            logger_table,
-            NAME,
-            format("One of the loggers does not have a '{}' field", NAME));
-
-        const auto sinks = array_from_table<string>(
-            logger_table,
-            SINKS,
-            format(
-                "Logger '{}' does not have a '{}' field of sink names",
-                name,
-                SINKS));
-
-        vector<shared_ptr<spdlog::sinks::sink>> logger_sinks;
-        logger_sinks.reserve(sinks.size());
-
-        for (const auto &sink_name : sinks) {
-            auto sink = find_value_from_map(
-                sinks_map,
-                sink_name,
-                format(
-                    "Unable to find sink '{}' for logger '{}'",
-                    sink_name,
-                    name));
-
-            logger_sinks.push_back(move(sink));
-        }
-
-        const auto logger = make_shared<spdlog::logger>(
-            name, logger_sinks.cbegin(), logger_sinks.cend());
+        const auto logger =
+            setup_logger(logger_table, sinks_map, thread_pools_map);
 
         // optional fields
         add_msg_on_err(
             [&logger_table, &logger] {
                 set_logger_level_if_present(logger_table, logger);
             },
-            [&name](const string &err_msg) {
+            [&logger](const string &err_msg) {
                 return format(
-                    "Logger '{}' set level error:\n > {}", name, err_msg);
+                    "Logger '{}' set level error:\n > {}",
+                    logger->name(),
+                    err_msg);
             });
 
         const auto pattern_name_opt =
@@ -1103,7 +1323,7 @@ inline void setup_loggers_impl(
         using pattern_option_t = cpptoml::option<string>;
 
         auto pattern_value_opt =
-            pattern_name_opt ? [&name,
+            pattern_name_opt ? [&logger,
                                 &patterns_map,
                                 &pattern_name_opt]() {
             const auto &pattern_name = *pattern_name_opt;
@@ -1114,13 +1334,15 @@ inline void setup_loggers_impl(
                 format(
                     "Pattern name '{}' cannot be found for logger '{}'",
                     pattern_name,
-                    name));
+                    logger->name()));
 
             return pattern_option_t(pattern_value);
         }()
 
             : pattern_option_t();
 
+        // global_pattern_opt cannot be moved since it needs to be cloned for
+        // each iteration
         const auto selected_pattern_opt =
             pattern_value_opt ? move(pattern_value_opt) : global_pattern_opt;
 
@@ -1130,22 +1352,27 @@ inline void setup_loggers_impl(
             }
         } catch (const exception &e) {
             throw setup_error(format(
-                "Error setting pattern to logger '{}': {}", name, e.what()));
+                "Error setting pattern to logger '{}': {}",
+                logger->name(),
+                e.what()));
         }
 
         spdlog::register_logger(logger);
     }
 }
 
-inline void setup_impl(const std::shared_ptr<cpptoml::table> &config) {
+inline void setup(const std::shared_ptr<cpptoml::table> &config) {
     // set up sinks
-    const auto sinks_map = setup_sinks_impl(config);
+    const auto sinks_map = setup_sinks(config);
 
     // set up patterns
-    const auto patterns_map = setup_formats_impl(config);
+    const auto patterns_map = setup_patterns(config);
+
+    // set up thread pools
+    const auto thread_pools_map = setup_thread_pools(config);
 
     // set up loggers, setting the respective sinks and patterns
-    setup_loggers_impl(config, sinks_map, patterns_map);
+    setup_loggers(config, sinks_map, patterns_map, thread_pools_map);
 }
 } // namespace details
 } // namespace spdlog_setup
