@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## v0.3
+## v0.3.0
 
 - Add support for async logger. This fixes
   ([#44](https://github.com/guangie88/spdlog_setup/issues/44))
