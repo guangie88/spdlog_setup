@@ -109,6 +109,29 @@ static constexpr auto FULL_CONF = R"x(
     name = "console"
     sinks = ["console_st", "console_mt"]
     pattern = "succient"
+
+    [global_thread_pool]
+    queue_size = 8192
+    num_threads = 1
+
+    [[thread_pool]]
+    name = "tp"
+    queue_size = 4096
+    num_threads = 2
+
+    [[logger]]
+    type = "async"
+    name = "global_async"
+    sinks = ["console_mt"]
+    pattern = "succient"
+
+    [[logger]]
+    type = "async"
+    name = "local_async"
+    sinks = ["console_mt"]
+    pattern = "succient"
+    thread_pool = "tp"
+    overflow_policy = "overrun_oldest"  # block (default) | overrun_oldest
 )x";
 #else
 static constexpr auto FULL_CONF = R"x(
@@ -212,6 +235,29 @@ static constexpr auto FULL_CONF = R"x(
     name = "console"
     sinks = ["console_st", "console_mt"]
     pattern = "succient"
+
+    [global_thread_pool]
+    queue_size = 8192
+    num_threads = 1
+
+    [[thread_pool]]
+    name = "tp"
+    queue_size = 4096
+    num_threads = 2
+
+    [[logger]]
+    type = "async"
+    name = "global_async"
+    sinks = ["console_mt"]
+    pattern = "succient"
+
+    [[logger]]
+    type = "async"
+    name = "local_async"
+    sinks = ["console_mt"]
+    pattern = "succient"
+    thread_pool = "tp"
+    overflow_policy = "overrun_oldest"  # block (default) | overrun_oldest
 )x";
 #endif
 
