@@ -5,6 +5,18 @@ project(spdlog_setup VERSION 0.3.1 LANGUAGES CXX)
 set(SPDLOG_MIN_VERSION "1.0.0")
 set(CPPTOML_MIN_VERSION "0.1.0")
 
+#---------------------------------------------------------------------------------------
+# Set SPDLOG_SETUP_MASTER_PROJECT to ON if we are building spdlog_setup
+#---------------------------------------------------------------------------------------
+# Check if spdlog_setup is being used directly or via add_subdirectory, but allow overriding
+if (NOT DEFINED SPDLOG_SETUP_MASTER_PROJECT)
+  if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(SPDLOG_SETUP_MASTER_PROJECT ON)
+  else()
+    set(SPDLOG_SETUP_MASTER_PROJECT OFF)
+  endif()
+endif ()
+
 # general fixed compiler settings
 if(${MSVC})
   set(DEBUG_FLAGS /W4)
@@ -17,6 +29,8 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 else()
   set(DEBUG_FLAGS -Wall)
 endif()
+
+option(SPDLOG_SETUP_INSTALL "Generate the install target" ${SPDLOG_SETUP_MASTER_PROJECT})
 
 option(SPDLOG_SETUP_INCLUDE_UNIT_TESTS "Build with unittests" OFF)
 
@@ -64,40 +78,42 @@ target_link_libraries(spdlog_setup
   INTERFACE
     spdlog)
 
-install(TARGETS spdlog_setup EXPORT spdlog_setup)
-install(DIRECTORY include/spdlog_setup DESTINATION include)
+if(SPDLOG_SETUP_INSTALL)
+  install(TARGETS spdlog_setup EXPORT spdlog_setup)
+  install(DIRECTORY include/spdlog_setup DESTINATION include)
 
-install(EXPORT spdlog_setup
-  FILE spdlog_setup-targets.cmake
-  NAMESPACE spdlog_setup::
-  DESTINATION lib/cmake/spdlog_setup)
+  install(EXPORT spdlog_setup
+    FILE spdlog_setup-targets.cmake
+    NAMESPACE spdlog_setup::
+    DESTINATION lib/cmake/spdlog_setup)
 
-include(CMakePackageConfigHelpers)
+  include(CMakePackageConfigHelpers)
 
-configure_package_config_file(
-  cmake/spdlog_setup-config.cmake.in
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config.cmake"
-  INSTALL_DESTINATION lib/cmake/spdlog_setup
-  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+  configure_package_config_file(
+    cmake/spdlog_setup-config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config.cmake"
+    INSTALL_DESTINATION lib/cmake/spdlog_setup
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
-  VERSION ${spdlog_setup_VERSION}
-  COMPATIBILITY SameMajorVersion)
+  write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
+    VERSION ${spdlog_setup_VERSION}
+    COMPATIBILITY SameMajorVersion)
 
-install(
-  FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config.cmake"
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
-  DESTINATION lib/cmake/spdlog_setup)
+  install(
+    FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/spdlog_setup-config-version.cmake"
+    DESTINATION lib/cmake/spdlog_setup)
 
-if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
-install(
-  FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h"
-  DESTINATION include/spdlog_setup/details/third_party)
+  if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
+  install(
+    FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h"
+    DESTINATION include/spdlog_setup/details/third_party)
+  endif()
 endif()
-  
+
 # spdlog_setup_unit_test
 FILE(GLOB unit_test_cpps src/unit_test/*.cpp)
 if(SPDLOG_SETUP_INCLUDE_UNIT_TESTS)
