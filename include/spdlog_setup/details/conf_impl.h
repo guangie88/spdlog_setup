@@ -33,6 +33,7 @@
 
 #ifdef _WIN32
 #include "spdlog/sinks/wincolor_sink.h"
+#include "spdlog/sinks/msvc_sink.h"
 #else
 #include "spdlog/sinks/ansicolor_sink.h"
 #include "spdlog/sinks/syslog_sink.h"
@@ -76,7 +77,8 @@ enum class sink_type {
 
     /** Represents stdout_sink_mt */
     StdoutSinkMt,
-
+    MSVCSinkSt,
+    MSVCSinkMt,
     /**
      * Represents either wincolor_stdout_sink_st (Windows) or
      * ansicolor_stdout_sink_st (Linux)
@@ -589,6 +591,8 @@ inline auto sink_type_from_str(const std::string &type) -> sink_type {
     static const unordered_map<string, sink_type> MAPPING{
         {"stdout_sink_st", sink_type::StdoutSinkSt},
         {"stdout_sink_mt", sink_type::StdoutSinkMt},
+        {"msvc_sink_st", sink_type::MSVCSinkSt},
+        {"msvc_sink_mt", sink_type::MSVCSinkMt},
         {"color_stdout_sink_st", sink_type::ColorStdoutSinkSt},
         {"color_stdout_sink_mt", sink_type::ColorStdoutSinkMt},
         {"basic_file_sink_st", sink_type::BasicFileSinkSt},
@@ -881,6 +885,8 @@ inline auto sink_from_sink_type(
 #ifdef _WIN32
     using color_stdout_sink_st = spdlog::sinks::wincolor_stdout_sink_st;
     using color_stdout_sink_mt = spdlog::sinks::wincolor_stdout_sink_mt;
+    using msvc_sink_st = spdlog::sinks::msvc_sink_st;
+    using msvc_sink_mt = spdlog::sinks::msvc_sink_mt;
 #else
     using color_stdout_sink_st = spdlog::sinks::ansicolor_stdout_sink_st;
     using color_stdout_sink_mt = spdlog::sinks::ansicolor_stdout_sink_mt;
@@ -895,6 +901,13 @@ inline auto sink_from_sink_type(
 
     case sink_type::StdoutSinkMt:
         return make_shared<stdout_sink_mt>();
+        
+#ifdef _WIN32
+    case sink_type::MSVCSinkSt:
+        return make_shared<msvc_sink_st>();
+    case sink_type::MSVCSinkMt:
+        return make_shared<msvc_sink_mt>();
+#endif
 
     case sink_type::ColorStdoutSinkSt:
         return make_shared<color_stdout_sink_st>();
