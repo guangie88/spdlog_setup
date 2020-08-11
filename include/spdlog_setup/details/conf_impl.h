@@ -363,7 +363,7 @@ inline void merge_config_items(
         auto &base_items_ref = *base_items;
         const auto &ovr_items_ref = *ovr_items;
 
-        for (const auto ovr_item : ovr_items_ref) {
+        for (const auto &ovr_item : ovr_items_ref) {
             const auto &ovr_item_ref = *ovr_item;
             const auto ovr_name_opt = ovr_item->get_as<string>(NAME);
 
@@ -381,7 +381,7 @@ inline void merge_config_items(
                 // merge from override to base
                 auto &found_base_item_ref = *found_base_item;
 
-                for (const auto ovr_item_kv : ovr_item_ref) {
+                for (const auto &ovr_item_kv : ovr_item_ref) {
                     found_base_item_ref.insert(
                         ovr_item_kv.first, ovr_item_kv.second);
                 }
