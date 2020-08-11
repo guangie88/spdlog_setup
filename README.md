@@ -278,6 +278,16 @@ type = "syslog_sink_mt"
 # syslog_option = 0 (default)
 # syslog_facility = LOG_USER (default macro value)
 
+# only works for Windows
+[[sink]]
+name = "msvc_st"
+type = "msvc_sink_st"
+
+# only works for Windows
+[[sink]]
+name = "msvc_mt"
+type = "msvc_sink_mt"
+
 [[pattern]]
 name = "succient"
 value = "%c-%L: %v"
@@ -293,6 +303,10 @@ sinks = [
     "null_sink_st", "null_sink_mt",
     "syslog_st", "syslog_mt"]
 level = "trace"
+
+[[logger]]
+name = "windows_only"
+sinks = ["msvc_st", "msvc_mt"]
 
 [[logger]]
 name = "console"
@@ -329,7 +343,7 @@ overflow_policy = "overrun_oldest"  # block (default) | overrun_oldest
 
 ```toml
 # level is optional for both sinks and loggers
-# level for error logging is 'err', not'error'
+# level for error logging is 'err', not 'error'
 
 # max_size supports suffix
 # - T (terabyte)
