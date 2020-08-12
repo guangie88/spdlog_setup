@@ -90,6 +90,14 @@ static constexpr auto FULL_CONF = R"x(
     name = "null_sink_mt"
     type = "null_sink_mt"
 
+    [[sink]]
+    name = "msvc_sink_st"
+    type = "msvc_sink_st"
+
+    [[sink]]
+    name = "msvc_sink_mt"
+    type = "msvc_sink_mt"
+
     [[pattern]]
     name = "succient"
     value = "%c-%L: %v"
@@ -102,7 +110,8 @@ static constexpr auto FULL_CONF = R"x(
         "daily_out", "daily_err",
         "file_out", "file_err",
         "rotate_out", "rotate_err",
-        "null_sink_st", "null_sink_mt"]
+        "null_sink_st", "null_sink_mt",
+        "msvc_sink_st", "msvc_sink_mt"]
     level = "trace"
 
     [[logger]]
