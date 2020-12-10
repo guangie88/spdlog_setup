@@ -34,6 +34,22 @@ TEST_CASE("Parse default logger", "[parse_simple_default_logger]") {
     REQUIRE(typeid(*logger) == typeid(const spdlog::logger &));
 }
 
+TEST_CASE(
+    "Parse default logger with properties",
+    "[parse_simple_default_logger_with_properties]") {
+    const auto logger = spdlog_setup::details::setup_logger(
+        generate_simple_default_logger_with_properties_table(),
+        EMPTY_SINKS_MAP,
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
+
+    REQUIRE(logger->name() == TEST_LOGGER_NAME);
+    REQUIRE(typeid(*logger) == typeid(const spdlog::logger &));
+    REQUIRE(logger->level() == spdlog::level::err);
+    REQUIRE(logger->flush_level() == spdlog::level::critical);
+}
+
 TEST_CASE("Parse sync logger", "[parse_simple_sync_logger]") {
     const auto logger = spdlog_setup::details::setup_logger(
         generate_simple_sync_logger_table(),
