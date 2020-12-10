@@ -162,6 +162,7 @@ static constexpr auto FILENAME = "filename";
 static constexpr auto GLOBAL_PATTERN = "global_pattern";
 static constexpr auto IDENT = "ident";
 static constexpr auto LEVEL = "level";
+static constexpr auto FLUSH_LEVEL = "flush_level";
 static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
@@ -974,6 +975,22 @@ inline void set_logger_level_if_present(
         });
 }
 
+inline void set_logger_flush_level_if_present(
+    const std::shared_ptr<cpptoml::table> &logger_table,
+    const std::shared_ptr<spdlog::logger> &logger) {
+
+    using names::FLUSH_LEVEL;
+
+    // std
+    using std::string;
+
+    if_value_from_table<string>(
+        logger_table, FLUSH_LEVEL, [&logger](const string &flush_level) {
+            const auto level_enum = level_from_str(flush_level);
+            logger->flush_on(level_enum);
+        });
+}
+
 inline auto setup_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
@@ -1298,6 +1315,17 @@ inline auto setup_logger(
         [&logger](const string &err_msg) {
             return format(
                 "Logger '{}' set level error:\n > {}", logger->name(), err_msg);
+        });
+
+    add_msg_on_err(
+        [&logger_table, &logger] {
+            set_logger_flush_level_if_present(logger_table, logger);
+        },
+        [&logger](const string &err_msg) {
+            return format(
+                "Logger '{}' set flush level error:\n > {}",
+                logger->name(),
+                err_msg);
         });
 
     const auto pattern_name_opt =
