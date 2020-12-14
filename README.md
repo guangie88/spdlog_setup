@@ -160,11 +160,12 @@ The header files should be installed in `build/install/include`.
 - `daily_file_sink_mt`
 - `null_sink_st`
 - `null_sink_mt`
+- `dist_sink_st`
+- `dist_sink_mt`
 - `syslog_sink` (only for Linux, `SPDLOG_ENABLE_SYSLOG` preprocessor definition
   must be defined before any `spdlog`/`spdlog_setup` header is included)
 
-Currently `ostream_sink` and `dist_sink` do not fit into the use case and are
-not supported.
+Currently `ostream_sink` does not fit into the use case and is not supported.
 
 For more information about how the above sinks work in `spdlog`, please refer to
 the original `spdlog` sinks wiki page at:
