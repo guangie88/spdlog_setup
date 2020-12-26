@@ -1,7 +1,7 @@
 /**
  * Implementation of non-public facing functions in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.1-pre
+ * @version 0.3.1
  */
 
 #pragma once

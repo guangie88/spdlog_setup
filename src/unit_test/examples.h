@@ -1,7 +1,7 @@
 /**
  * Unit tests implementation.
  * @author Chen Weiguang
- * @version 0.3.1-pre
+ * @version 0.3.1
  */
 
 #pragma once
