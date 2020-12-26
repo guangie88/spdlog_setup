@@ -1,7 +1,7 @@
 /**
  * Unit tests implementation.
  * @author Chen Weiguang
- * @version 0.3.1-pre
+ * @version 0.3.2-pre
  */
 
 #include "catch.hpp"
@@ -16,25 +16,47 @@
 
 const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
     EMPTY_SINKS_MAP;
+const std::unordered_map<std::string, std::string> EMPTY_PATTERNS_MAP;
 const std::
     unordered_map<std::string, std::shared_ptr<spdlog::details::thread_pool>>
         EMPTY_THREAD_POOLS_MAP;
+const cpptoml::option<std::string> EMPTY_GLOBAL_PATTERN_OPT;
 
 TEST_CASE("Parse default logger", "[parse_simple_default_logger]") {
     const auto logger = spdlog_setup::details::setup_logger(
         generate_simple_default_logger_table(),
         EMPTY_SINKS_MAP,
-        EMPTY_THREAD_POOLS_MAP);
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
 
     REQUIRE(logger->name() == TEST_LOGGER_NAME);
     REQUIRE(typeid(*logger) == typeid(const spdlog::logger &));
+}
+
+TEST_CASE(
+    "Parse default logger with properties",
+    "[parse_simple_default_logger_with_properties]") {
+    const auto logger = spdlog_setup::details::setup_logger(
+        generate_simple_default_logger_with_properties_table(),
+        EMPTY_SINKS_MAP,
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
+
+    REQUIRE(logger->name() == TEST_LOGGER_NAME);
+    REQUIRE(typeid(*logger) == typeid(const spdlog::logger &));
+    REQUIRE(logger->level() == spdlog::level::err);
+    REQUIRE(logger->flush_level() == spdlog::level::critical);
 }
 
 TEST_CASE("Parse sync logger", "[parse_simple_sync_logger]") {
     const auto logger = spdlog_setup::details::setup_logger(
         generate_simple_sync_logger_table(),
         EMPTY_SINKS_MAP,
-        EMPTY_THREAD_POOLS_MAP);
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
 
     REQUIRE(logger->name() == TEST_LOGGER_NAME);
     REQUIRE(typeid(*logger) == typeid(const spdlog::logger &));
@@ -44,7 +66,9 @@ TEST_CASE("Parse async logger", "[parse_simple_async_logger]") {
     const auto logger = spdlog_setup::details::setup_logger(
         generate_simple_async_logger_table(),
         EMPTY_SINKS_MAP,
-        EMPTY_THREAD_POOLS_MAP);
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
 
     REQUIRE(logger->name() == TEST_LOGGER_NAME);
     REQUIRE(typeid(*logger) == typeid(const spdlog::async_logger &));
@@ -55,7 +79,9 @@ TEST_CASE("Parse invalid sync logger", "[parse_invalid_sync_logger]") {
         spdlog_setup::details::setup_logger(
             generate_invalid_sync_logger_table(),
             EMPTY_SINKS_MAP,
-            EMPTY_THREAD_POOLS_MAP),
+            EMPTY_PATTERNS_MAP,
+            EMPTY_THREAD_POOLS_MAP,
+            EMPTY_GLOBAL_PATTERN_OPT),
         spdlog_setup::setup_error);
 }
 
@@ -65,7 +91,9 @@ TEST_CASE(
     const auto logger = spdlog_setup::details::setup_logger(
         generate_async_overflow_policy_block_logger_table(),
         EMPTY_SINKS_MAP,
-        EMPTY_THREAD_POOLS_MAP);
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
 
     REQUIRE(logger->name() == TEST_LOGGER_NAME);
     REQUIRE(typeid(*logger) == typeid(const spdlog::async_logger &));
@@ -77,7 +105,9 @@ TEST_CASE(
     const auto logger = spdlog_setup::details::setup_logger(
         generate_async_overflow_policy_overrun_oldest_logger_table(),
         EMPTY_SINKS_MAP,
-        EMPTY_THREAD_POOLS_MAP);
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
 
     REQUIRE(logger->name() == TEST_LOGGER_NAME);
     REQUIRE(typeid(*logger) == typeid(const spdlog::async_logger &));
@@ -90,7 +120,9 @@ TEST_CASE(
         spdlog_setup::details::setup_logger(
             generate_invalid_async_overflow_policy_logger_table(),
             EMPTY_SINKS_MAP,
-            EMPTY_THREAD_POOLS_MAP),
+            EMPTY_PATTERNS_MAP,
+            EMPTY_THREAD_POOLS_MAP,
+            EMPTY_GLOBAL_PATTERN_OPT),
         spdlog_setup::setup_error);
 }
 
@@ -103,7 +135,9 @@ TEST_CASE("Parse logger with sink", "[parse_logger_with_sink]") {
     const auto logger = spdlog_setup::details::setup_logger(
         generate_simple_logger_with_sink_table(),
         sinks_map,
-        EMPTY_THREAD_POOLS_MAP);
+        EMPTY_PATTERNS_MAP,
+        EMPTY_THREAD_POOLS_MAP,
+        EMPTY_GLOBAL_PATTERN_OPT);
 
     REQUIRE(logger->name() == TEST_LOGGER_NAME);
     REQUIRE(logger->sinks()[0] == sinks_map.at(TEST_SINK_NAME));
@@ -120,6 +154,8 @@ TEST_CASE(
         spdlog_setup::details::setup_logger(
             generate_simple_logger_with_sink_table(),
             sinks_map,
-            EMPTY_THREAD_POOLS_MAP),
+            EMPTY_PATTERNS_MAP,
+            EMPTY_THREAD_POOLS_MAP,
+            EMPTY_GLOBAL_PATTERN_OPT),
         spdlog_setup::setup_error);
 }

@@ -1,7 +1,7 @@
 /**
  * Implementation of non-public facing functions in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.1-pre
+ * @version 0.3.2-pre
  */
 
 #pragma once
@@ -180,6 +180,7 @@ static constexpr auto FILENAME = "filename";
 static constexpr auto GLOBAL_PATTERN = "global_pattern";
 static constexpr auto IDENT = "ident";
 static constexpr auto LEVEL = "level";
+static constexpr auto FLUSH_LEVEL = "flush_level";
 static constexpr auto MAX_FILES = "max_files";
 static constexpr auto MAX_SIZE = "max_size";
 static constexpr auto NAME = "name";
@@ -1014,6 +1015,22 @@ inline void set_logger_level_if_present(
         });
 }
 
+inline void set_logger_flush_level_if_present(
+    const std::shared_ptr<cpptoml::table> &logger_table,
+    const std::shared_ptr<spdlog::logger> &logger) {
+
+    using names::FLUSH_LEVEL;
+
+    // std
+    using std::string;
+
+    if_value_from_table<string>(
+        logger_table, FLUSH_LEVEL, [&logger](const string &flush_level) {
+            const auto level_enum = level_from_str(flush_level);
+            logger->flush_on(level_enum);
+        });
+}
+
 inline auto setup_sink(const std::shared_ptr<cpptoml::table> &sink_table)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
@@ -1261,10 +1278,18 @@ inline auto setup_logger(
     const std::shared_ptr<cpptoml::table> &logger_table,
     const std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
         &sinks_map,
+    const std::unordered_map<std::string, std::string> &patterns_map,
     const std::unordered_map<
         std::string,
-        std::shared_ptr<spdlog::details::thread_pool>> &thread_pools_map)
+        std::shared_ptr<spdlog::details::thread_pool>> &thread_pools_map,
+    const cpptoml::option<std::string> &global_pattern_opt)
     -> std::shared_ptr<spdlog::logger> {
+
+    using fmt::format;
+    using names::PATTERN;
+    using std::exception;
+    using std::string;
+
     const auto name = value_from_table<std::string>(
         logger_table,
         names::NAME,
@@ -1305,18 +1330,85 @@ inline auto setup_logger(
                                name))
                      : sync_type::Sync;
 
+    std::shared_ptr<spdlog::logger> logger;
+
     switch (sync) {
     case sync_type::Sync:
-        return setup_sync_logger(name, logger_sinks);
+        logger = setup_sync_logger(name, logger_sinks);
+        break;
 
     case sync_type::Async:
-        return setup_async_logger(
+        logger = setup_async_logger(
             name, logger_table, logger_sinks, thread_pools_map);
+        break;
 
     default:
         throw setup_error("Reached a buggy scenario of sync_type not fully "
                           "pattern matched. Please raise an issue.");
     }
+
+    // optional fields
+    add_msg_on_err(
+        [&logger_table, &logger] {
+            set_logger_level_if_present(logger_table, logger);
+        },
+        [&logger](const string &err_msg) {
+            return format(
+                "Logger '{}' set level error:\n > {}", logger->name(), err_msg);
+        });
+
+    add_msg_on_err(
+        [&logger_table, &logger] {
+            set_logger_flush_level_if_present(logger_table, logger);
+        },
+        [&logger](const string &err_msg) {
+            return format(
+                "Logger '{}' set flush level error:\n > {}",
+                logger->name(),
+                err_msg);
+        });
+
+    const auto pattern_name_opt =
+        value_from_table_opt<string>(logger_table, PATTERN);
+
+    using pattern_option_t = cpptoml::option<string>;
+
+    auto pattern_value_opt =
+        pattern_name_opt ? [&logger,
+                            &patterns_map,
+                            &pattern_name_opt]() {
+        const auto &pattern_name = *pattern_name_opt;
+
+        const auto pattern_value = find_value_from_map(
+            patterns_map,
+            pattern_name,
+            format(
+                "Pattern name '{}' cannot be found for logger '{}'",
+                pattern_name,
+                logger->name()));
+
+        return pattern_option_t(pattern_value);
+    }()
+
+        : pattern_option_t();
+
+    // global_pattern_opt cannot be moved since it needs to be cloned for
+    // each iteration
+    const auto selected_pattern_opt =
+        pattern_value_opt ? move(pattern_value_opt) : global_pattern_opt;
+
+    try {
+        if (selected_pattern_opt) {
+            logger->set_pattern(*selected_pattern_opt);
+        }
+    } catch (const exception &e) {
+        throw setup_error(format(
+            "Error setting pattern to logger '{}': {}",
+            logger->name(),
+            e.what()));
+    }
+
+    return logger;
 }
 
 inline void setup_loggers(
@@ -1330,23 +1422,9 @@ inline void setup_loggers(
 
     using names::GLOBAL_PATTERN;
     using names::LOGGER_TABLE;
-    using names::NAME;
-    using names::OVERFLOW_POLICY;
-    using names::PATTERN;
-    using names::SINKS;
-    using names::THREAD_POOL;
-    using names::TYPE;
-
-    // fmt
-    using fmt::format;
 
     // std
-    using std::exception;
-    using std::make_shared;
-    using std::move;
-    using std::shared_ptr;
     using std::string;
-    using std::vector;
 
     const auto loggers = config->get_table_array(LOGGER_TABLE);
 
@@ -1359,60 +1437,12 @@ inline void setup_loggers(
         value_from_table_opt<string>(config, GLOBAL_PATTERN);
 
     for (const auto &logger_table : *loggers) {
-        const auto logger =
-            setup_logger(logger_table, sinks_map, thread_pools_map);
-
-        // optional fields
-        add_msg_on_err(
-            [&logger_table, &logger] {
-                set_logger_level_if_present(logger_table, logger);
-            },
-            [&logger](const string &err_msg) {
-                return format(
-                    "Logger '{}' set level error:\n > {}",
-                    logger->name(),
-                    err_msg);
-            });
-
-        const auto pattern_name_opt =
-            value_from_table_opt<string>(logger_table, PATTERN);
-
-        using pattern_option_t = cpptoml::option<string>;
-
-        auto pattern_value_opt =
-            pattern_name_opt ? [&logger,
-                                &patterns_map,
-                                &pattern_name_opt]() {
-            const auto &pattern_name = *pattern_name_opt;
-
-            const auto pattern_value = find_value_from_map(
-                patterns_map,
-                pattern_name,
-                format(
-                    "Pattern name '{}' cannot be found for logger '{}'",
-                    pattern_name,
-                    logger->name()));
-
-            return pattern_option_t(pattern_value);
-        }()
-
-            : pattern_option_t();
-
-        // global_pattern_opt cannot be moved since it needs to be cloned for
-        // each iteration
-        const auto selected_pattern_opt =
-            pattern_value_opt ? move(pattern_value_opt) : global_pattern_opt;
-
-        try {
-            if (selected_pattern_opt) {
-                logger->set_pattern(*selected_pattern_opt);
-            }
-        } catch (const exception &e) {
-            throw setup_error(format(
-                "Error setting pattern to logger '{}': {}",
-                logger->name(),
-                e.what()));
-        }
+        const auto logger = setup_logger(
+            logger_table,
+            sinks_map,
+            patterns_map,
+            thread_pools_map,
+            global_pattern_opt);
 
         spdlog::register_logger(logger);
     }
