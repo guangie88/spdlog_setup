@@ -1,7 +1,7 @@
 /**
  * Implementation of the mini template engine in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.1-pre
+ * @version 0.3.2-pre
  */
 
 #pragma once

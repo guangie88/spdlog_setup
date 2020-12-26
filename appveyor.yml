@@ -1,4 +1,4 @@
-version: 0.3.1-pre.{build}
+version: 0.3.2-pre.{build}
 
 image:
   - Visual Studio 2015

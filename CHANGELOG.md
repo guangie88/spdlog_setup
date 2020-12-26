@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## v0.3.1
+
+- Add option for CMake to target and link only `spdlog` headers
+  ([#61](https://github.com/guangie88/spdlog_setup/pull/61/))
+  - Fix [#60](https://github.com/guangie88/spdlog_setup/issues/60)
+- Add Windows `msvc_sink` support ([#58](https://github.com/guangie88/spdlog_setup/pull/58))
+- Fix loop not using const-ref to resolve compile errors on Xcode 12
+  ([#56](https://github.com/guangie88/spdlog_setup/pull/56))
+- Add option for CMake to disable generation of install target
+  ([#51](https://github.com/guangie88/spdlog_setup/pull/51))
+
 ## v0.3.0
 
 - Add support for async logger. This fixes
@@ -24,7 +35,7 @@
   - `save_logger_to_file`
   - `delete_logger_in_file`
 
-## v0.2 (Tested to support `v0.16.z` to `v0.17.0`)
+## v0.2.0 (Tested to support `v0.16.z` to `v0.17.0`)
 
 - Use `spdlog_setup/conf.h` instead of `spdlog_setup.h`. Reason for change is
   to allow inlining of `cpptoml` and `fmt` libraries.
@@ -40,6 +51,6 @@
   replaceable and likely to work if replaced with custom and newer versions,
   unless there are major API changes.
 
-## v0.1
+## v0.1.0
 
 - Basic implementation that reads from TOML configuration for set-up.
