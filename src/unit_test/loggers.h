@@ -25,6 +25,22 @@ inline auto generate_simple_default_logger_table()
     return std::move(logger_table);
 }
 
+inline auto generate_simple_default_logger_with_properties_table()
+    -> std::shared_ptr<cpptoml::table> {
+    namespace details = spdlog_setup::details;
+    namespace names = details::names;
+
+    auto err_str = details::level_to_str(spdlog::level::err);
+    auto crit_str = details::level_to_str(spdlog::level::critical);
+
+    auto logger_table = cpptoml::make_table();
+    logger_table->insert(names::NAME, std::string(TEST_LOGGER_NAME));
+    logger_table->insert(names::SINKS, cpptoml::make_array());
+    logger_table->insert(names::LEVEL, err_str);
+    logger_table->insert(names::FLUSH_LEVEL, crit_str);
+    return std::move(logger_table);
+}
+
 inline auto generate_simple_sync_logger_table()
     -> std::shared_ptr<cpptoml::table> {
     namespace names = spdlog_setup::details::names;
