@@ -1,7 +1,7 @@
 /**
  * Unit tests implementation.
  * @author Chen Weiguang
- * @version 0.3.1
+ * @version 0.3.2-pre
  */
 
 #include "catch.hpp"

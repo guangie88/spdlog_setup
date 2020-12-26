@@ -1,7 +1,7 @@
 /**
  * Implementation of setup_error in spdlog_setup.
  * @author Chen Weiguang
- * @version 0.3.1
+ * @version 0.3.2-pre
  */
 
 #pragma once
