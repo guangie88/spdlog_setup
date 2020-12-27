@@ -78,6 +78,12 @@ enum class sink_type {
     /** Represents stdout_sink_mt */
     StdoutSinkMt,
 
+    /** Represents stderr_sink_st */
+    StderrSinkSt,
+
+    /** Represents stderr_sink_mt */
+    StderrSinkMt,
+
     /**
      * Represents either wincolor_stdout_sink_st (Windows) or
      * ansicolor_stdout_sink_st (Linux)
@@ -89,6 +95,18 @@ enum class sink_type {
      * ansicolor_stdout_sink_mt (Linux)
      */
     ColorStdoutSinkMt,
+
+    /**
+     * Represents either wincolor_stderr_sink_st (Windows) or
+     * ansicolor_stderr_sink_st (Linux)
+     */
+    ColorStderrSinkSt,
+
+    /**
+     * Represents either wincolor_stderr_sink_mt (Windows) or
+     * ansicolor_stderr_sink_mt (Linux)
+     */
+    ColorStderrSinkMt,
 
     /** Represents basic_file_sink_st */
     BasicFileSinkSt,
@@ -597,8 +615,12 @@ inline auto sink_type_from_str(const std::string &type) -> sink_type {
     static const unordered_map<string, sink_type> MAPPING{
         {"stdout_sink_st", sink_type::StdoutSinkSt},
         {"stdout_sink_mt", sink_type::StdoutSinkMt},
+        {"stderr_sink_st", sink_type::StderrSinkSt},
+        {"stderr_sink_mt", sink_type::StderrSinkMt},
         {"color_stdout_sink_st", sink_type::ColorStdoutSinkSt},
         {"color_stdout_sink_mt", sink_type::ColorStdoutSinkMt},
+        {"color_stderr_sink_st", sink_type::ColorStderrSinkSt},
+        {"color_stderr_sink_mt", sink_type::ColorStderrSinkMt},
         {"basic_file_sink_st", sink_type::BasicFileSinkSt},
         {"basic_file_sink_mt", sink_type::BasicFileSinkMt},
         {"rotating_file_sink_st", sink_type::RotatingFileSinkSt},
@@ -881,6 +903,8 @@ inline auto sink_from_sink_type(
     using spdlog::sinks::rotating_file_sink_mt;
     using spdlog::sinks::rotating_file_sink_st;
     using spdlog::sinks::sink;
+    using spdlog::sinks::stderr_sink_mt;
+    using spdlog::sinks::stderr_sink_st;
     using spdlog::sinks::stdout_sink_mt;
     using spdlog::sinks::stdout_sink_st;
 
@@ -890,11 +914,15 @@ inline auto sink_from_sink_type(
 #ifdef _WIN32
     using color_stdout_sink_st = spdlog::sinks::wincolor_stdout_sink_st;
     using color_stdout_sink_mt = spdlog::sinks::wincolor_stdout_sink_mt;
+    using color_stderr_sink_st = spdlog::sinks::wincolor_stderr_sink_st;
+    using color_stderr_sink_mt = spdlog::sinks::wincolor_stderr_sink_mt;
     using msvc_sink_st = spdlog::sinks::msvc_sink_st;
     using msvc_sink_mt = spdlog::sinks::msvc_sink_mt;
 #else
     using color_stdout_sink_st = spdlog::sinks::ansicolor_stdout_sink_st;
     using color_stdout_sink_mt = spdlog::sinks::ansicolor_stdout_sink_mt;
+    using color_stderr_sink_st = spdlog::sinks::ansicolor_stderr_sink_st;
+    using color_stderr_sink_mt = spdlog::sinks::ansicolor_stderr_sink_mt;
 
     using spdlog::sinks::syslog_sink_mt;
     using spdlog::sinks::syslog_sink_st;
@@ -907,11 +935,23 @@ inline auto sink_from_sink_type(
     case sink_type::StdoutSinkMt:
         return make_shared<stdout_sink_mt>();
 
+    case sink_type::StderrSinkSt:
+        return make_shared<stderr_sink_st>();
+
+    case sink_type::StderrSinkMt:
+        return make_shared<stderr_sink_mt>();
+
     case sink_type::ColorStdoutSinkSt:
         return make_shared<color_stdout_sink_st>();
 
     case sink_type::ColorStdoutSinkMt:
         return make_shared<color_stdout_sink_mt>();
+
+    case sink_type::ColorStderrSinkSt:
+        return make_shared<color_stderr_sink_st>();
+
+    case sink_type::ColorStderrSinkMt:
+        return make_shared<color_stderr_sink_mt>();
 
     case sink_type::BasicFileSinkSt:
         return setup_basic_file_sink<basic_file_sink_st>(sink_table);

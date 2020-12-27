@@ -146,8 +146,12 @@ The header files should be installed in `build/install/include`.
 
 - `stdout_sink_st`
 - `stdout_sink_mt`
+- `stderr_sink_st`
+- `stderr_sink_mt`
 - `color_stdout_sink_st`
 - `color_stdout_sink_mt`
+- `color_stderr_sink_st`
+- `color_stderr_sink_mt`
 - `basic_file_sink_st`
 - `basic_file_sink_mt`
 - `rotating_file_sink_st`
