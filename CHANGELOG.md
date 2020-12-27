@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.3.2
+
+- Add support for stderr sinks
+  ([#63](https://github.com/guangie88/spdlog_setup/pull/63))
+- Add support for setting logging flush level
+  ([#62](https://github.com/guangie88/spdlog_setup/pull/62))
+
 ## v0.3.1
 
 - Add option for CMake to target and link only `spdlog` headers
