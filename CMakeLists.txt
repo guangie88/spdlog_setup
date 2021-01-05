@@ -39,7 +39,7 @@ if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
   configure_file(cmake/cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" @ONLY)
 endif()
 
-option(SPDLOG_SETUP_SPDLOG_EXTERNAL "Use external spdlog library in" OFF)
+option(SPDLOG_SETUP_SPDLOG_EXTERNAL "Use external spdlog library" OFF)
 
 # allow thread library to be used for linking
 set(THREADS_PREFER_PTHREAD_FLAG ON)
