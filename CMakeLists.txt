@@ -39,6 +39,8 @@ if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
   configure_file(cmake/cpptoml_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/spdlog_setup/details/third_party/cpptoml.h" @ONLY)
 endif()
 
+option(SPDLOG_SETUP_SPDLOG_EXTERNAL "Use external spdlog library in" OFF)
+
 # allow thread library to be used for linking
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(THREADS_PTHREAD_ARG "0" CACHE STRING "Result from TRY_RUN" FORCE)
@@ -47,12 +49,14 @@ find_package(Threads REQUIRED)
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
+if (NOT SPDLOG_SETUP_SPDLOG_EXTERNAL)
 if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
   add_subdirectory(deps/spdlog)
 else()
   # allow usage of installed dependency
   find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
   add_library(${PROJECT_NAME}_spdlog INTERFACE IMPORTED)
+endif()
 endif()
 
 if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
