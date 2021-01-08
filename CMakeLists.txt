@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 # project variables
-project(spdlog_setup VERSION 0.3.2 LANGUAGES CXX)
+project(spdlog_setup VERSION 0.3.3 LANGUAGES CXX)
 set(SPDLOG_MIN_VERSION "1.0.0")
 set(CPPTOML_MIN_VERSION "0.1.0")
 
