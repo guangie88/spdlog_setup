@@ -26,6 +26,7 @@
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/sinks/dist_sink.h"
 #include "spdlog/sinks/null_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/sink.h"
@@ -49,6 +50,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -131,6 +133,12 @@ enum class sink_type {
 
     /** Represents null_sink_mt */
     NullSinkMt,
+
+    /** Represents dist_sink_st */
+    DistSinkSt,
+
+    /** Represents dist_sink_mt */
+    DistSinkMt,
 
     /** Represents syslog_sink_st */
     SyslogSinkSt,
@@ -629,6 +637,8 @@ inline auto sink_type_from_str(const std::string &type) -> sink_type {
         {"daily_file_sink_mt", sink_type::DailyFileSinkMt},
         {"null_sink_st", sink_type::NullSinkSt},
         {"null_sink_mt", sink_type::NullSinkMt},
+        {"dist_sink_st", sink_type::DistSinkSt},
+        {"dist_sink_mt", sink_type::DistSinkMt},
 #ifdef SPDLOG_ENABLE_SYSLOG
         {"syslog_sink_st", sink_type::SyslogSinkSt},
         {"syslog_sink_mt", sink_type::SyslogSinkMt},
@@ -886,8 +896,30 @@ auto setup_syslog_sink(const std::shared_ptr<cpptoml::table> &sink_table)
 
 #endif
 
+template <class DistSink>
+auto setup_dist_sink(
+    const std::shared_ptr<cpptoml::table> &sink_table,
+    std::vector<std::string> &ref_sinks)
+    -> std::shared_ptr<spdlog::sinks::sink> {
+
+    using names::SINKS;
+
+    // std
+    using std::make_shared;
+    using std::string;
+
+    ref_sinks = array_from_table<string>(
+        sink_table,
+        SINKS,
+        fmt::format("Missing '{}' field of sink names for dist_sink", SINKS));
+
+    return make_shared<DistSink>();
+}
+
 inline auto sink_from_sink_type(
-    const sink_type sink_val, const std::shared_ptr<cpptoml::table> &sink_table)
+    const sink_type sink_val,
+    const std::shared_ptr<cpptoml::table> &sink_table,
+    std::vector<std::string> &ref_sinks)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     // fmt
@@ -898,6 +930,8 @@ inline auto sink_from_sink_type(
     using spdlog::sinks::basic_file_sink_st;
     using spdlog::sinks::daily_file_sink_mt;
     using spdlog::sinks::daily_file_sink_st;
+    using spdlog::sinks::dist_sink_mt;
+    using spdlog::sinks::dist_sink_st;
     using spdlog::sinks::null_sink_mt;
     using spdlog::sinks::null_sink_st;
     using spdlog::sinks::rotating_file_sink_mt;
@@ -977,6 +1011,12 @@ inline auto sink_from_sink_type(
     case sink_type::NullSinkMt:
         return make_shared<null_sink_mt>();
 
+    case sink_type::DistSinkSt:
+        return setup_dist_sink<dist_sink_st>(sink_table, ref_sinks);
+
+    case sink_type::DistSinkMt:
+        return setup_dist_sink<dist_sink_mt>(sink_table, ref_sinks);
+
 #ifdef SPDLOG_ENABLE_SYSLOG
     case sink_type::SyslogSinkSt:
         return setup_syslog_sink<syslog_sink_st>(sink_table);
@@ -1031,7 +1071,9 @@ inline void set_logger_flush_level_if_present(
         });
 }
 
-inline auto setup_sink(const std::shared_ptr<cpptoml::table> &sink_table)
+inline auto setup_sink(
+    const std::shared_ptr<cpptoml::table> &sink_table,
+    std::vector<std::string> &ref_sinks)
     -> std::shared_ptr<spdlog::sinks::sink> {
 
     using names::TYPE;
@@ -1047,12 +1089,82 @@ inline auto setup_sink(const std::shared_ptr<cpptoml::table> &sink_table)
         sink_table, TYPE, format("Sink missing '{}' field", TYPE));
 
     const auto sink_val = sink_type_from_str(type_val);
-    auto sink = sink_from_sink_type(sink_val, sink_table);
+    auto sink = sink_from_sink_type(sink_val, sink_table, ref_sinks);
 
     // set optional parts and return back the same sink
     set_sink_level_if_present(sink_table, sink);
 
     return sink;
+}
+
+inline void check_ref_sinks_no_cycles_dfs(
+    const std::string &name,
+    const std::unordered_map<std::string, std::vector<std::string>>
+        &ref_sinks_map,
+    std::unordered_set<std::string> &visited) {
+
+    // fmt
+    using fmt::format;
+
+    auto ref_sinks = ref_sinks_map.find(name);
+    if (ref_sinks == ref_sinks_map.end()) {
+        throw setup_error(format("Reference to unknown sink '{}'", name));
+    }
+
+    for (const auto &ref_sink : ref_sinks->second) {
+        auto result = visited.insert(ref_sink);
+        if (result.second) {
+            check_ref_sinks_no_cycles_dfs(ref_sink, ref_sinks_map, visited);
+        } else {
+            throw setup_error(
+                format("Cyclic reference with sink '{}'", ref_sink));
+        }
+    }
+}
+
+inline void setup_ref_sinks(
+    std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>
+        &sinks_map,
+    const std::unordered_map<std::string, std::vector<std::string>>
+        &ref_sinks_map) {
+
+    // spdlog
+    using spdlog::sink_ptr;
+    using spdlog::sinks::dist_sink_mt;
+    using spdlog::sinks::dist_sink_st;
+
+    // std
+    using std::move;
+    using std::string;
+    using std::unordered_set;
+    using std::vector;
+
+    for (const auto &kv : ref_sinks_map) {
+        unordered_set<string> visited{kv.first};
+        check_ref_sinks_no_cycles_dfs(kv.first, ref_sinks_map, visited);
+
+        auto sink = sinks_map[kv.first];
+        auto *dist_st = dynamic_cast<dist_sink_st *>(sink.get());
+        auto *dist_mt = dynamic_cast<dist_sink_mt *>(sink.get());
+
+        if (!dist_st && !dist_mt) {
+            if (kv.second.empty())
+                continue;
+
+            throw setup_error(
+                "Internal error: only dist sinks may connect to other sinks");
+        }
+
+        vector<sink_ptr> sinks;
+        for (const auto &ref_sink : kv.second) {
+            sinks.emplace_back(sinks_map[ref_sink]);
+        }
+        if (dist_st) {
+            dist_st->set_sinks(move(sinks));
+        } else {
+            dist_mt->set_sinks(move(sinks));
+        }
+    }
 }
 
 inline auto setup_sinks(const std::shared_ptr<cpptoml::table> &config)
@@ -1068,7 +1180,9 @@ inline auto setup_sinks(const std::shared_ptr<cpptoml::table> &config)
     using std::move;
     using std::shared_ptr;
     using std::string;
+    using std::unique_ptr;
     using std::unordered_map;
+    using std::vector;
 
     const auto sinks = config->get_table_array(SINK_TABLE);
 
@@ -1077,6 +1191,7 @@ inline auto setup_sinks(const std::shared_ptr<cpptoml::table> &config)
     }
 
     unordered_map<string, shared_ptr<spdlog::sinks::sink>> sinks_map;
+    unordered_map<string, vector<string>> ref_sinks_map;
 
     for (const auto &sink_table : *sinks) {
         auto name = value_from_table<string>(
@@ -1084,14 +1199,19 @@ inline auto setup_sinks(const std::shared_ptr<cpptoml::table> &config)
             NAME,
             format("One of the sinks does not have a '{}' field", NAME));
 
+        auto &ref_sinks = ref_sinks_map[name];
         auto sink = add_msg_on_err(
-            [&sink_table] { return setup_sink(sink_table); },
+            [&sink_table, &ref_sinks] {
+                return setup_sink(sink_table, ref_sinks);
+            },
             [&name](const string &err_msg) {
                 return format("Sink '{}' error:\n > {}", name, err_msg);
             });
 
         sinks_map.emplace(move(name), move(sink));
     }
+
+    setup_ref_sinks(sinks_map, ref_sinks_map);
 
     return sinks_map;
 }

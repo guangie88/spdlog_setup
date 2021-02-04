@@ -127,7 +127,9 @@ TEST_CASE(
 }
 
 TEST_CASE("Parse logger with sink", "[parse_logger_with_sink]") {
-    auto sink = spdlog_setup::details::setup_sink(generate_stdout_sink_st());
+    std::vector<std::string> ref_sinks;
+    auto sink =
+        spdlog_setup::details::setup_sink(generate_stdout_sink_st(), ref_sinks);
     const auto sinks_map =
         std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>{
             {TEST_SINK_NAME, std::move(sink)}};
@@ -145,7 +147,9 @@ TEST_CASE("Parse logger with sink", "[parse_logger_with_sink]") {
 
 TEST_CASE(
     "Parse logger with missing sink", "[parse_logger_with_missing_sink]") {
-    auto sink = spdlog_setup::details::setup_sink(generate_stdout_sink_st());
+    std::vector<std::string> ref_sinks;
+    auto sink =
+        spdlog_setup::details::setup_sink(generate_stdout_sink_st(), ref_sinks);
     const auto sinks_map =
         std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>>{
             {"xxx", std::move(sink)}};
