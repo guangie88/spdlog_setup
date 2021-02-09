@@ -231,24 +231,32 @@ inline auto get_parent_path(const std::string &file_path) -> std::string {
     return file_path.substr(0, last_slash_index);
 }
 
-inline bool native_create_dir(const std::string &dir_path) noexcept {
+inline auto dir_exists(const std::string &file_path) noexcept -> bool {
 #ifdef _WIN32
-    // non-zero for success in Windows
-    return CreateDirectoryA(dir_path.c_str(), nullptr) != 0;
+    const DWORD attributes = GetFileAttributesA(file_path.c_str());
+    return attributes != INVALID_FILE_ATTRIBUTES &&
+           (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 #else
-    // zero for success for GNU
-    return mkdir(dir_path.c_str(), 0775) == 0;
+    struct stat statbuf;
+    return stat(file_path.c_str(), &statbuf) != 0 && S_ISDIR(statbuf.st_mode);
 #endif
 }
 
-inline auto file_exists(const std::string &file_path) noexcept -> bool {
-    static constexpr auto FILE_NOT_FOUND = -1;
+inline bool native_create_dir(const std::string &dir_path) noexcept {
+    bool success;
 
 #ifdef _WIN32
-    return _access(file_path.c_str(), F_OK) != FILE_NOT_FOUND;
+    // non-zero for success in Windows
+    success = CreateDirectoryA(dir_path.c_str(), nullptr) != 0 ||
+              GetLastError() == ERROR_ALREADY_EXISTS;
 #else
-    return access(file_path.c_str(), F_OK) != FILE_NOT_FOUND;
+    // zero for success for GNU
+    success = mkdir(dir_path.c_str(), 0775) == 0 || errno == EEXIST;
 #endif
+
+    // not relying on EEXIST, since the operating system could give priority
+    // to other errors like EACCES or EROFS (see CPython os.makedirs())
+    return success || dir_exists(dir_path);
 }
 
 inline void create_dirs_impl(const std::string &dir_path) {
@@ -266,13 +274,11 @@ inline void create_dirs_impl(const std::string &dir_path) {
     }
 #endif
 
-    if (!file_exists(dir_path)) {
-        create_dirs_impl(get_parent_path(dir_path));
+    create_dirs_impl(get_parent_path(dir_path));
 
-        if (!native_create_dir(dir_path)) {
-            throw setup_error(
-                format("Unable to create directory at '{}'", dir_path));
-        }
+    if (!native_create_dir(dir_path)) {
+        throw setup_error(
+            format("Unable to create directory at '{}'", dir_path));
     }
 }
 
