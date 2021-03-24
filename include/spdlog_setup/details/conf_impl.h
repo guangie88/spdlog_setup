@@ -6,7 +6,7 @@
 
 #pragma once
 
-#ifndef FMT_HEADER_ONLY
+#if !defined(SPDLOG_COMPILED_LIB) && !defined(FMT_HEADER_ONLY)
 #define FMT_HEADER_ONLY
 #endif
 
