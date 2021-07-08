@@ -47,12 +47,14 @@ find_package(Threads REQUIRED)
 add_compile_options("$<$<CONFIG:DEBUG>:${DEBUG_FLAGS}>")
 include(CMakeToolsHelpers OPTIONAL)
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
-  add_subdirectory(deps/spdlog)
-else()
-  # allow usage of installed dependency
-  find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
-  add_library(${PROJECT_NAME}_spdlog INTERFACE IMPORTED)
+if(NOT TARGET spdlog::spdlog)
+  if (EXISTS ${CMAKE_SOURCE_DIR}/deps/spdlog/CMakeLists.txt)
+    add_subdirectory(deps/spdlog)
+  else()
+    # allow usage of installed dependency
+    find_package(spdlog ${SPDLOG_MIN_VERSION} REQUIRED)
+    add_library(${PROJECT_NAME}_spdlog INTERFACE IMPORTED)
+  endif()
 endif()
 
 if(SPDLOG_SETUP_CPPTOML_EXTERNAL)
